@@ -203,7 +203,8 @@ Rules:
 - Each question has EXACTLY 4 options (A, B, C, D). Only ONE correct.
 - Wrong options must be plausible.
 - Cover variety: algorithms, system design, language internals, databases, networking, security.
-- Write a 3-5 sentence explanation for the correct answer.
+- Keep the explanation CONCISE (1-2 short sentences max) to ensure the response isn't cut off.
+- You must complete all {n} questions and properly close the JSON array.
 
 IMPORTANT: Return ONLY a raw JSON array — no markdown, no code fences, no extra text:
 [
