@@ -122,25 +122,23 @@ body::before {
   border-radius: var(--doodle-md);
   box-shadow: var(--shadow-md);
   padding: 24px;
-  transition: transform var(--dur-fast) var(--ease-spring),
-              box-shadow var(--dur-fast) var(--ease-spring),
-              border-color var(--dur-norm) var(--ease-out);
-  will-change: transform;
+  transition: box-shadow var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .card:hover {
-    transform: translate3d(-2px, -2px, 0);
     box-shadow: var(--shadow-lg);
   }
 }
 
-.card-pink   { border-color: var(--pink);   box-shadow: 4px 4px 0px var(--pink); }
-.card-blue   { border-color: var(--blue);   box-shadow: 4px 4px 0px var(--blue); }
-.card-green  { border-color: var(--green);  box-shadow: 4px 4px 0px var(--green); }
-.card-purple { border-color: var(--purple); box-shadow: 4px 4px 0px var(--purple); }
-.card-yellow { border-color: var(--yellow); box-shadow: 4px 4px 0px var(--yellow); }
-.card-teal   { border-color: var(--teal);   box-shadow: 4px 4px 0px var(--teal); }
+.card-pink   { border-color: var(--pink);   box-shadow: 4px 4px 0 var(--pink); }
+.card-blue   { border-color: var(--blue);   box-shadow: 4px 4px 0 var(--blue); }
+.card-green  { border-color: var(--green);  box-shadow: 4px 4px 0 var(--green); }
+.card-purple { border-color: var(--purple); box-shadow: 4px 4px 0 var(--purple); }
+.card-yellow { border-color: var(--yellow); box-shadow: 4px 4px 0 var(--yellow); }
+.card-teal   { border-color: var(--teal);   box-shadow: 4px 4px 0 var(--teal); }
 
 /* ── Doodle Buttons ──────────────────────────────────────────────────────────── */
 .btn {
@@ -263,12 +261,12 @@ body::before {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border: 2px solid currentColor;
-  transition: transform var(--dur-fast) var(--ease-spring);
+  transition: opacity var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .badge:hover {
-    transform: scale(1.04);
+    opacity: 0.92;
   }
 }
 
@@ -416,12 +414,12 @@ body::before {
   font-size: 0.8rem;
   font-weight: 700;
   border: 2px solid currentColor;
-  transition: transform var(--dur-fast) var(--ease-spring);
+  transition: opacity var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .pill:hover {
-    transform: scale(1.05);
+    opacity: 0.9;
   }
 }
 
