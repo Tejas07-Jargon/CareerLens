@@ -3,34 +3,59 @@
 import { useState } from "react";
 import SubmitForm from "@/components/ui/SubmitForm";
 import ReportView from "@/components/evidence/ReportView";
+import QuizTab from "@/components/quiz/QuizTab";
+import RoadmapTab from "@/components/roadmap/RoadmapTab";
+import DashboardTab from "@/components/dashboard/DashboardTab";
+import BatchTab from "@/components/batch/BatchTab";
 import type { ProfileReport } from "@/types";
 
-const FEATURES = [
-  { icon: "🔍", label: "Evidence-backed scoring", color: "var(--blue-light)", border: "var(--blue)" },
-  { icon: "🔗", label: "Click-through provenance", color: "var(--purple-light)", border: "var(--purple)" },
-  { icon: "📈", label: "Consistency timeline", color: "var(--green-light)", border: "var(--green)" },
-  { icon: "🗺️", label: "Personalised roadmap", color: "var(--yellow-light)", border: "var(--yellow)" },
-  { icon: "🎯", label: "Placement dashboard", color: "var(--pink-light)", border: "var(--pink)" },
-  { icon: "⚡", label: "What-if simulator", color: "var(--orange-light)", border: "var(--orange)" },
+type Tab = "analyse" | "quiz" | "roadmap" | "dashboard" | "batch";
+
+const TABS: { id: Tab; icon: string; label: string; description: string }[] = [
+  { id: "analyse",   icon: "🔍", label: "Analyse",    description: "Score your profile against real evidence" },
+  { id: "quiz",      icon: "🧠", label: "Quiz",       description: "Expert-level MCQs powered by Gemini AI" },
+  { id: "roadmap",   icon: "🗺️", label: "Roadmap",    description: "Personalised 10-week skill-up plan" },
+  { id: "dashboard", icon: "📊", label: "Dashboard",  description: "Gap analysis, market intel & timeline" },
+  { id: "batch",     icon: "🏢", label: "Batch",      description: "Placement-cell cohort analytics" },
 ];
 
 export default function HomePage() {
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("analyse");
   const [report, setReport] = useState<ProfileReport | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [persona, setPersona] = useState<"student" | "placement">("student");
 
   return (
     <main>
-      {/* ── Nav ─────────────────────────────────────────────────────── */}
+      {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <nav className="nav-bar">
-        <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 24px" }}>
+        <div
+          className="container"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "12px 24px",
+          }}
+        >
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 38, height: 38, background: "var(--blue)", borderRadius: "10px 13px 9px 12px",
-              border: "2.5px solid var(--text)", boxShadow: "2px 2px 0 var(--text)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem"
-            }}>🔍</div>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                background: "var(--blue)",
+                borderRadius: "10px 13px 9px 12px",
+                border: "2.5px solid var(--text)",
+                boxShadow: "2px 2px 0 var(--text)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.2rem",
+              }}
+            >
+              🔍
+            </div>
             <span style={{ fontWeight: 900, fontSize: "1.25rem", letterSpacing: "-0.02em" }}>
               Career<span className="gradient-text">Lens</span>
             </span>
@@ -42,14 +67,21 @@ export default function HomePage() {
               <button
                 key={p}
                 id={`persona-${p}`}
-                onClick={() => setPersona(p)}
+                onClick={() => {
+                  setPersona(p);
+                  if (p === "placement") setActiveTab("batch");
+                  else setActiveTab("analyse");
+                }}
                 className="btn"
                 style={{
                   padding: "7px 18px",
                   fontSize: "0.82rem",
-                  background: persona === p
-                    ? (i === 0 ? "var(--blue)" : "var(--purple)")
-                    : "var(--white)",
+                  background:
+                    persona === p
+                      ? i === 0
+                        ? "var(--blue)"
+                        : "var(--purple)"
+                      : "var(--white)",
                   color: persona === p ? "white" : "var(--text-mid)",
                   borderColor: persona === p ? "var(--text)" : "var(--border)",
                   boxShadow: persona === p ? "var(--shadow-sm)" : "none",
@@ -62,144 +94,302 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* ── Hero ────────────────────────────────────────────────────── */}
-      {!profileId && (
-        <section style={{ padding: "60px 0 40px", textAlign: "center" }}>
+      {/* ── Tab bar ──────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          background: "var(--white)",
+          borderBottom: "2.5px solid var(--border)",
+          position: "sticky",
+          top: "65px",
+          zIndex: 90,
+        }}
+      >
+        <div className="container" style={{ padding: "0 24px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 4,
+              overflowX: "auto",
+              paddingBottom: "2px",
+            }}
+          >
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  id={`tab-${tab.id}`}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "12px 18px",
+                    fontFamily: "var(--font)",
+                    fontWeight: 800,
+                    fontSize: "0.88rem",
+                    border: "none",
+                    borderBottom: isActive
+                      ? "3px solid var(--blue)"
+                      : "3px solid transparent",
+                    background: "transparent",
+                    cursor: "pointer",
+                    color: isActive ? "var(--blue)" : "var(--text-mid)",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.15s var(--ease)",
+                    borderRadius: 0,
+                  }}
+                >
+                  <span style={{ fontSize: "1rem" }}>{tab.icon}</span>
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Hero (only on Analyse tab, no report) ────────────────────────────── */}
+      {activeTab === "analyse" && !report && (
+        <section style={{ padding: "52px 0 32px", textAlign: "center" }}>
           <div className="container">
             {/* Live badge */}
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "6px 16px",
-              background: "var(--green-light)",
-              border: "2px solid var(--green)",
-              borderRadius: "99px",
-              marginBottom: 28,
-              boxShadow: "2px 2px 0 var(--green)",
-            }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 16px",
+                background: "var(--green-light)",
+                border: "2px solid var(--green)",
+                borderRadius: "99px",
+                marginBottom: 24,
+                boxShadow: "2px 2px 0 var(--green)",
+              }}
+            >
               <div className="pulse-dot" />
-              <span style={{ fontSize: "0.78rem", color: "var(--green)", fontWeight: 800, letterSpacing: "0.04em" }}>
+              <span
+                style={{
+                  fontSize: "0.78rem",
+                  color: "var(--green)",
+                  fontWeight: 800,
+                  letterSpacing: "0.04em",
+                }}
+              >
                 DataQuest 3.0 · CareerLens is Live!
               </span>
             </div>
 
-            {/* Headline */}
-            <h1 style={{
-              fontSize: "clamp(2.2rem, 5vw, 3.8rem)",
-              fontWeight: 900,
-              lineHeight: 1.1,
-              letterSpacing: "-0.03em",
-              marginBottom: 20,
-              color: "var(--text)",
-            }}>
-              Know exactly how<br />
+            <h1
+              style={{
+                fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                fontWeight: 900,
+                lineHeight: 1.1,
+                letterSpacing: "-0.03em",
+                marginBottom: 16,
+                color: "var(--text)",
+              }}
+            >
+              Know exactly how
+              <br />
               <span className="gradient-text">job-ready you are</span> 🚀
             </h1>
 
-            <p style={{
-              fontSize: "1.1rem",
-              color: "var(--text-mid)",
-              maxWidth: 560,
-              margin: "0 auto 44px",
-              lineHeight: 1.7,
-              fontWeight: 600,
-            }}>
-              Every skill claim verified against real proof of work — GitHub, portfolio, resume.
-              Get an explainable score, not just a number.
+            <p
+              style={{
+                fontSize: "1.05rem",
+                color: "var(--text-mid)",
+                maxWidth: 540,
+                margin: "0 auto 32px",
+                lineHeight: 1.7,
+                fontWeight: 600,
+              }}
+            >
+              Every skill claim verified against real proof of work — GitHub,
+              portfolio, resume. Get an explainable score, not just a number.
             </p>
 
-            {/* Feature pills */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginBottom: 52 }}>
-              {FEATURES.map((f) => (
-                <span
-                  key={f.label}
+            {/* Quick-action cards */}
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                justifyContent: "center",
+                flexWrap: "wrap",
+                marginBottom: 36,
+              }}
+            >
+              {[
+                { tab: "quiz" as Tab, icon: "🧠", label: "Take Expert Quiz", color: "var(--purple)", bg: "var(--purple-light)" },
+                { tab: "roadmap" as Tab, icon: "🗺️", label: "View Roadmap", color: "var(--green)", bg: "var(--green-light)" },
+                { tab: "dashboard" as Tab, icon: "📊", label: "Market Intel", color: "var(--orange)", bg: "var(--orange-light)" },
+              ].map((a) => (
+                <button
+                  key={a.tab}
+                  id={`quick-action-${a.tab}`}
+                  onClick={() => setActiveTab(a.tab)}
+                  className="btn"
                   style={{
-                    padding: "7px 16px",
-                    background: f.color,
-                    border: `2px solid ${f.border}`,
-                    borderRadius: "99px",
-                    fontSize: "0.84rem",
-                    color: "var(--text)",
-                    fontWeight: 700,
-                    boxShadow: `2px 2px 0 ${f.border}`,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
+                    background: a.bg,
+                    borderColor: a.color,
+                    boxShadow: `3px 3px 0 ${a.color}`,
+                    color: a.color,
+                    fontWeight: 800,
+                    fontSize: "0.88rem",
+                    padding: "10px 20px",
                   }}
                 >
-                  {f.icon} {f.label}
-                </span>
+                  {a.icon} {a.label}
+                </button>
               ))}
-            </div>
-
-            {/* Doodle decorations */}
-            <div style={{ position: "relative", display: "inline-block" }}>
-              <div style={{
-                position: "absolute", top: -30, right: -60,
-                fontSize: "2.5rem", transform: "rotate(15deg)", opacity: 0.7,
-                animation: "bounceIn 0.8s 0.3s both",
-              }}>⭐</div>
-              <div style={{
-                position: "absolute", top: -20, left: -70,
-                fontSize: "2rem", transform: "rotate(-10deg)", opacity: 0.7,
-                animation: "bounceIn 0.8s 0.5s both",
-              }}>✨</div>
             </div>
           </div>
         </section>
       )}
 
-      {/* ── Stats bar (only on landing) ─────────────────────────────── */}
-      {!profileId && (
-        <div className="container" style={{ marginBottom: 40 }}>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            {[
-              { label: "Evidence-based", value: "100%", color: "var(--blue)", bg: "var(--blue-light)" },
-              { label: "No LLM scoring", value: "Pure math", color: "var(--purple)", bg: "var(--purple-light)" },
-              { label: "Privacy-first", value: "GDPR-aligned", color: "var(--green)", bg: "var(--green-light)" },
-            ].map((s) => (
-              <div key={s.label} className="card" style={{
-                borderColor: s.color,
-                boxShadow: `3px 3px 0 ${s.color}`,
-                background: s.bg,
-                padding: "14px 24px",
-                textAlign: "center",
-                minWidth: 160,
-              }}>
-                <div style={{ fontWeight: 900, fontSize: "1.3rem", color: s.color }}>{s.value}</div>
-                <div style={{ fontWeight: 700, fontSize: "0.8rem", color: "var(--text-mid)" }}>{s.label}</div>
-              </div>
-            ))}
+      {/* ── Hero on Quiz tab ─────────────────────────────────────────────────── */}
+      {activeTab === "quiz" && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "32px 0 24px",
+            borderBottom: "2px dashed var(--border)",
+            marginBottom: 32,
+          }}
+        >
+          <div className="container">
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
+              🧠 Expert <span className="gradient-text">Technical Quiz</span>
+            </h1>
+            <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
+              Gemini AI generates FAANG-level questions tailored to your role &amp; skills.
+              Find out where you actually stand.
+            </p>
           </div>
         </div>
       )}
 
-      {/* ── Main content ─────────────────────────────────────────────── */}
+      {/* ── Roadmap hero ─────────────────────────────────────────────────────── */}
+      {activeTab === "roadmap" && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "32px 0 24px",
+            borderBottom: "2px dashed var(--border)",
+            marginBottom: 32,
+          }}
+        >
+          <div className="container">
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
+              🗺️ Your <span className="gradient-text">Career Roadmap</span>
+            </h1>
+            <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
+              A structured, week-by-week plan to close your skill gaps and become placement-ready.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Dashboard hero ───────────────────────────────────────────────────── */}
+      {activeTab === "dashboard" && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "32px 0 24px",
+            borderBottom: "2px dashed var(--border)",
+            marginBottom: 32,
+          }}
+        >
+          <div className="container">
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
+              📊 <span className="gradient-text">Placement Dashboard</span>
+            </h1>
+            <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
+              Market intelligence, skill gap analysis, and your consistency timeline in one place.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Batch hero ───────────────────────────────────────────────────────── */}
+      {activeTab === "batch" && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "32px 0 24px",
+            borderBottom: "2px dashed var(--border)",
+            marginBottom: 32,
+          }}
+        >
+          <div className="container">
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
+              🏢 <span className="gradient-text">Placement Cell</span> Portal
+            </h1>
+            <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
+              View batch analytics, identify cohort gaps, and optimise workshop scheduling.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Main content ─────────────────────────────────────────────────────── */}
       <div className="container" style={{ paddingBottom: 80 }}>
-        {!report ? (
-          <SubmitForm
-            onProfileCreated={(id) => setProfileId(id)}
-            onReportReady={(r) => setReport(r)}
-          />
-        ) : (
-          <ReportView
-            report={report}
-            persona={persona}
-            onReset={() => { setReport(null); setProfileId(null); }}
-          />
+        {activeTab === "analyse" && (
+          <>
+            {!report ? (
+              <SubmitForm
+                onProfileCreated={(id) => setProfileId(id)}
+                onReportReady={(r) => setReport(r)}
+              />
+            ) : (
+              <ReportView
+                report={report}
+                persona={persona}
+                onReset={() => {
+                  setReport(null);
+                  setProfileId(null);
+                }}
+              />
+            )}
+          </>
         )}
+
+        {activeTab === "quiz" && <QuizTab />}
+        {activeTab === "roadmap" && <RoadmapTab />}
+        {activeTab === "dashboard" && <DashboardTab />}
+        {activeTab === "batch" && <BatchTab />}
       </div>
 
-      {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer style={{
-        borderTop: "2.5px solid var(--text)",
-        background: "var(--white)",
-        padding: "20px 0",
-        textAlign: "center",
-      }}>
+      {/* ── Footer ───────────────────────────────────────────────────────────── */}
+      <footer
+        style={{
+          borderTop: "2.5px solid var(--text)",
+          background: "var(--white)",
+          padding: "20px 0",
+          textAlign: "center",
+        }}
+      >
         <div className="container">
-          <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text-mid)" }}>
-            Built with ❤️ for DataQuest 3.0 · CareerLens Team
-          </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+            <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text-mid)" }}>
+              Built with ❤️ for DataQuest 3.0 · CareerLens Team
+            </span>
+            <div style={{ display: "flex", gap: 8 }}>
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    fontSize: "0.78rem", fontWeight: 700, color: "var(--text-soft)",
+                    padding: "2px 8px", fontFamily: "var(--font)",
+                  }}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
     </main>

@@ -10,6 +10,8 @@ import type {
   WhatIfActionInput,
   WhatIfResultItem,
   ProgressEvent,
+  QuizRequest,
+  QuizResponse,
 } from "@/types";
 
 const BASE = "/api";
@@ -119,3 +121,19 @@ export async function optimiseWorkshops(
   if (!res.ok) throw new Error("Workshop optimisation failed");
   return res.json();
 }
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+
+export async function generateQuiz(req: QuizRequest): Promise<QuizResponse> {
+  const res = await fetch(`${BASE}/quiz/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Quiz generation failed");
+  }
+  return res.json();
+}
+

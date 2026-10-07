@@ -166,3 +166,32 @@ export interface ProgressEvent {
   score?: ScoreInterval;
   error?: string;
 }
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+
+export interface QuizOption {
+  label: string; // A | B | C | D
+  text: string;
+}
+
+export interface QuizQuestion {
+  id: number;
+  question: string;
+  options: QuizOption[];
+  correct: string; // A | B | C | D
+  explanation: string;
+  topic: string;
+  difficulty: string;
+}
+
+export interface QuizRequest {
+  role: string;
+  skills: string[];
+  interests: string;
+  num_questions: number;
+}
+
+export interface QuizResponse {
+  role: string;
+  questions: QuizQuestion[];
+}
