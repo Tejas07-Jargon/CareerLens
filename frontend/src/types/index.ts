@@ -189,6 +189,7 @@ export interface QuizRequest {
   skills: string[];
   interests: string;
   num_questions: number;
+  difficulty?: string;
 }
 
 export interface QuizResponse {

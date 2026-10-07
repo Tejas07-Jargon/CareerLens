@@ -32,6 +32,7 @@ class QuizRequest(BaseModel):
     skills: List[str] = []
     interests: str = ""
     num_questions: int = 10
+    difficulty: str = "Expert"
 
 
 class QuizOption(BaseModel):
@@ -182,18 +183,23 @@ async def generate_quiz(req: QuizRequest):
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY not set in .env")
 
     skills_str = ", ".join(req.skills) if req.skills else "general software engineering"
-    n = min(max(req.num_questions, 3), 15)
+    n = min(max(req.num_questions, 3), 30)
+    diff_lower = req.difficulty.lower()
 
-    prompt = f"""You are a senior FAANG principal engineer creating an extremely hard technical interview quiz.
+    prompt = f"""You are a senior technical interviewer creating a quiz.
 
 Role: {req.role}
 Skills / topics: {skills_str}
 Domain interests: {req.interests or "general"}
+Difficulty: {req.difficulty}
 
-Generate EXACTLY {n} expert-level multiple-choice questions.
+Generate EXACTLY {n} {diff_lower}-level multiple-choice questions.
 
 Rules:
-- Questions must be hard: edge cases, internals, trade-offs, concurrency, complexity.
+- Difficulty must match the requested level ({req.difficulty}):
+  - Easy: basic concepts, syntax, common definitions.
+  - Hard: practical application, common edge cases, system architecture basics.
+  - Expert: obscure edge cases, internals, deep trade-offs, concurrency, complexity.
 - Each question has EXACTLY 4 options (A, B, C, D). Only ONE correct.
 - Wrong options must be plausible.
 - Cover variety: algorithms, system design, language internals, databases, networking, security.
@@ -213,7 +219,7 @@ IMPORTANT: Return ONLY a raw JSON array — no markdown, no code fences, no extr
     "correct": "A",
     "explanation": "...",
     "topic": "System Design",
-    "difficulty": "expert"
+    "difficulty": "{diff_lower}"
   }}
 ]"""
 

@@ -213,11 +213,12 @@ interface ConfigProps {
   skills: string; setSkills: (v: string) => void;
   interests: string; setInterests: (v: string) => void;
   numQ: number; setNumQ: (v: number) => void;
+  difficulty: string; setDifficulty: (v: string) => void;
   error: string | null;
   onStart: () => void;
 }
 
-function ConfigScreen({ role, setRole, skills, setSkills, interests, setInterests, numQ, setNumQ, error, onStart }: ConfigProps) {
+function ConfigScreen({ role, setRole, skills, setSkills, interests, setInterests, numQ, setNumQ, difficulty, setDifficulty, error, onStart }: ConfigProps) {
   return (
     <div style={{ maxWidth: 680, margin: "0 auto" }}>
       <div className="card fade-in-up" style={{ borderColor: "var(--purple)", boxShadow: "5px 5px 0 var(--purple)" }}>
@@ -252,14 +253,33 @@ function ConfigScreen({ role, setRole, skills, setSkills, interests, setInterest
               style={{ borderColor: "var(--teal)" }} autoComplete="off" />
           </div>
           <div>
+            <label className="input-label" htmlFor="quiz-difficulty">Difficulty</label>
+            <div style={{ display: "flex", gap: 10 }}>
+              {["Easy", "Hard", "Expert"].map((lvl) => (
+                <button key={lvl} type="button" onClick={() => setDifficulty(lvl)}
+                  style={{
+                    flex: 1, padding: "10px", borderRadius: "var(--doodle-sm)", fontWeight: 700, fontSize: "0.9rem",
+                    border: `2px solid ${difficulty === lvl ? "var(--purple)" : "var(--border)"}`,
+                    background: difficulty === lvl ? "var(--purple-light)" : "var(--white)",
+                    color: difficulty === lvl ? "var(--purple)" : "var(--text-mid)",
+                    boxShadow: difficulty === lvl ? "3px 3px 0 var(--purple)" : "none",
+                    cursor: "pointer", transition: "all 0.15s var(--bounce)"
+                  }}
+                >
+                  {lvl}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
             <label className="input-label" htmlFor="quiz-num">Questions: {numQ}</label>
-            <input id="quiz-num" type="range" min={3} max={15} value={numQ}
+            <input id="quiz-num" type="range" min={3} max={30} value={numQ}
               onChange={(e) => setNumQ(Number(e.target.value))}
               style={{ width: "100%", accentColor: "var(--purple)", height: 6 }} />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-soft)", fontWeight: 700, marginTop: 4 }}>
               <span>3 Quick</span>
               <span style={{ color: "var(--purple)", fontWeight: 900 }}>{numQ} questions</span>
-              <span>15 Full</span>
+              <span>30 Full</span>
             </div>
           </div>
 
@@ -606,7 +626,10 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   <div style={{ minWidth: 34, height: 34, borderRadius: "50%", background: isCorrect ? "var(--green)" : "var(--pink)", color: "white", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: 800, fontSize: "0.9rem", marginBottom: 8, lineHeight: 1.6 }}>{q.question}</p>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                      <p style={{ fontWeight: 800, fontSize: "0.9rem", marginBottom: 8, lineHeight: 1.6, flex: 1 }}>{q.question}</p>
+                      <span className="badge" style={{ background: "var(--white)", color: "var(--text-mid)", borderColor: "var(--border)", whiteSpace: "nowrap" }}>⏱️ {timePerQ[i]}s</span>
+                    </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
                       <span className="badge" style={{ background: "var(--bg-soft)", color: "var(--text-mid)", borderColor: "var(--border)" }}>📚 {q.topic}</span>
                       {isCorrect
@@ -646,6 +669,7 @@ export default function QuizTab() {
   const [skills, setSkills] = useState("");
   const [interests, setInterests] = useState("");
   const [numQ, setNumQ] = useState(10);
+  const [difficulty, setDifficulty] = useState("Expert");
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
@@ -663,6 +687,7 @@ export default function QuizTab() {
         skills: skills.split(",").map((s) => s.trim()).filter(Boolean),
         interests,
         num_questions: numQ,
+        difficulty,
       });
       setQuestions(data.questions);
       setCurrentQ(0);
@@ -705,7 +730,7 @@ export default function QuizTab() {
     setTimePerQ([]);
   }
 
-  if (phase === "config") return <ConfigScreen role={role} setRole={setRole} skills={skills} setSkills={setSkills} interests={interests} setInterests={setInterests} numQ={numQ} setNumQ={setNumQ} error={error} onStart={handleStart} />;
+  if (phase === "config") return <ConfigScreen role={role} setRole={setRole} skills={skills} setSkills={setSkills} interests={interests} setInterests={setInterests} numQ={numQ} setNumQ={setNumQ} difficulty={difficulty} setDifficulty={setDifficulty} error={error} onStart={handleStart} />;
   if (phase === "loading") return <LoadingScreen role={role} />;
   if (phase === "quiz" && questions.length > 0) return <QuizScreen questions={questions} role={role} current={currentQ} answers={answers} showExplanation={showExplanation} onAnswer={handleAnswer} onNext={handleNext} />;
   if (phase === "result") return <ResultScreen questions={questions} answers={answers} role={role} timePerQ={timePerQ} onReset={handleReset} />;
