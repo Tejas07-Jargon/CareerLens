@@ -45,8 +45,8 @@ RESUME_SOURCE_RELIABILITY = 0.55  # resumes are self-reported
 
 
 def _is_near_white(r: int, g: int, b: int) -> bool:
-    # Disabled: Flawed logic flags legitimate white text on dark backgrounds (e.g., sidebars)
-    return False
+    return (r + g + b) >= (WHITE_TEXT_BRIGHTNESS_THRESHOLD * 3)
+
 
 
 def _scan_for_injections(text: str) -> List[Dict[str, str]]:

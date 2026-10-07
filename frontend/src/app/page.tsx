@@ -11,6 +11,8 @@ import RoadmapTab from "@/components/roadmap/RoadmapTab";
 import DashboardTab from "@/components/dashboard/DashboardTab";
 import BatchTab from "@/components/batch/BatchTab";
 import EvidenceDashboardWidget from "@/components/evidence/EvidenceDashboardWidget";
+import ResumeBuilderTab from "@/components/resume/ResumeBuilderTab";
+import JobFitTab from "@/components/job-fit/JobFitTab";
 import type { ProfileReport } from "@/types";
 import {
   Search,
@@ -22,18 +24,23 @@ import {
   ShieldCheck,
   Sparkles,
   Zap,
-  ArrowRight
+  ArrowRight,
+  FileText,
+  Target
 } from "lucide-react";
 
-type Tab = "dashboard" | "analyse" | "roadmap" | "quiz" | "batch" | "evidence";
+type Tab = "dashboard" | "resume" | "jobfit" | "analyse" | "roadmap" | "quiz" | "batch" | "evidence";
 
 const TABS: { id: Tab; icon: React.ReactNode; label: string; description: string }[] = [
-  { id: "dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard",   description: "Command center · score, gaps, roadmap & next action" },
-  { id: "analyse",   icon: <Search size={18} />,          label: "Analyse",     description: "Score your profile against real evidence" },
-  { id: "roadmap",   icon: <Map size={18} />,             label: "Roadmap",     description: "Personalised 10-week skill-up plan" },
-  { id: "quiz",      icon: <BrainCircuit size={18} />,    label: "Quiz",        description: "Expert-level MCQs powered by Gemini AI" },
-  { id: "batch",     icon: <Building2 size={18} />,       label: "Cohort Batch", description: "Placement-cell cohort analytics" },
+  { id: "dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard",      description: "Command center · score, gaps, roadmap & next action" },
+  { id: "jobfit",    icon: <Target size={18} />,          label: "Job Fit",        description: "Evidence-aware JD matching, gap breakdown & what-if" },
+  { id: "resume",    icon: <FileText size={18} />,        label: "Resume Builder", description: "Build an ATS-ready resume from verified evidence" },
+  { id: "analyse",   icon: <Search size={18} />,          label: "Analyse",        description: "Score your profile against real evidence" },
+  { id: "roadmap",   icon: <Map size={18} />,             label: "Roadmap",        description: "Personalised 10-week skill-up plan" },
+  { id: "quiz",      icon: <BrainCircuit size={18} />,    label: "Quiz",           description: "Expert-level MCQs powered by Gemini AI" },
+  { id: "batch",     icon: <Building2 size={18} />,       label: "Cohort Batch",   description: "Placement-cell cohort analytics" },
 ];
+
 
 const SAMPLE_BENCHMARK_REPORT: ProfileReport = {
   profile_id: "demo-candidate-82",
@@ -416,6 +423,34 @@ export default function HomePage() {
               />
             </div>
           )}
+
+          {/* TAB 2: RESUME BUILDER */}
+          {activeTab === "resume" && (
+            <div key="resume-builder-view" className="fade-in-up">
+              <ResumeBuilderTab
+                profileId={profileId}
+                report={report}
+                persona={persona}
+                onNavigateTab={handleTabSwitch}
+                onNavigateWhatIf={(gapSkill) => {
+                  setActiveTab("dashboard");
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB 3: JOB FIT INTELLIGENCE */}
+          {activeTab === "jobfit" && (
+            <div key="job-fit-view" className="fade-in-up">
+              <JobFitTab
+                profileId={profileId}
+                report={report}
+                persona={persona}
+                onNavigateTab={handleTabSwitch}
+              />
+            </div>
+          )}
+
 
           {/* TAB 2: ANALYSE / REPORT VIEW */}
           {activeTab === "analyse" && (

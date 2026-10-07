@@ -246,3 +246,8 @@ export interface QuizResponse {
   role: string;
   questions: QuizQuestion[];
 }
+
+export * from "./resume";
+export * from "./jobFit";
+
+

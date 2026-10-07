@@ -81,3 +81,4 @@ class Profile(Base):
     quiz_attempts = relationship("QuizAttempt", back_populates="profile", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="profile", cascade="all, delete-orphan")
     snapshots = relationship("ProfileSnapshot", back_populates="profile", cascade="all, delete-orphan")
+    resumes = relationship("ResumeVersion", back_populates="profile", cascade="all, delete-orphan")

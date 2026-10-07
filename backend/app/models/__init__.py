@@ -13,6 +13,7 @@ from .dynamic_profile import (
     ProfileSnapshot,
     Recommendation,
 )
+from .resume import ResumeVersion
 
 __all__ = [
     "Profile",
@@ -28,4 +29,5 @@ __all__ = [
     "QuizQuestionResult",
     "ProfileSnapshot",
     "Recommendation",
+    "ResumeVersion",
 ]

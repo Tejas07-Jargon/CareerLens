@@ -31,6 +31,15 @@ class OptimiseRequest(BaseModel):
     readiness_threshold: float = 0.6
 
 
+@router.get("")
+@router.get("/")
+async def list_cohorts(session: AsyncSession = Depends(get_session)):
+    """List all cohorts."""
+    res = await session.execute(select(Cohort))
+    cohorts = res.scalars().all()
+    return [{"id": c.id, "name": c.name, "created_at": c.created_at} for c in cohorts]
+
+
 @router.get("/{cohort_id}/insights")
 async def cohort_insights(
     cohort_id: str,

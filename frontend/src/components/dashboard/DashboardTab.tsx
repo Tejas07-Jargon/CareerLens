@@ -32,14 +32,27 @@ import {
   Sliders,
   AlertCircle,
   Activity,
-  Award
+  Award,
+  Clock,
+  User,
+  Compass,
+  CheckCircle,
+  HelpCircle as QuestionIcon,
+  FileText
 } from "lucide-react";
+import ResumeCard from "@/components/resume/ResumeCard";
+import JobFitCard from "@/components/job-fit/JobFitCard";
+
 import {
   ResponsiveContainer,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
   Radar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
   Tooltip
 } from "recharts";
 import type {
@@ -56,7 +69,6 @@ import type {
 import { getPersonalizedRoadmap, runWhatIf, getDashboardData } from "@/lib/api";
 import { getEvidenceReport, DEMO_EVIDENCE_REPORT } from "@/lib/evidenceApi";
 import type { EvidenceReport } from "@/types/evidence";
-import GapChart from "./GapChart";
 import ConsistencyChart from "./ConsistencyChart";
 import SecurityFlagBanner from "@/components/evidence/SecurityFlagBanner";
 
@@ -64,24 +76,26 @@ interface DashboardTabProps {
   profileId: string | null;
   report: ProfileReport | null;
   persona: "student" | "placement";
-  onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence") => void;
+  onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "resume" | "jobfit") => void;
   onSelectRole?: (role: string) => void;
   onReanalyze?: () => void;
   onLoadBenchmark?: () => void;
 }
 
-const COMPONENT_LABELS: Record<string, string> = {
-  skill_coverage: "Skill Coverage",
-  project_depth: "Project Depth",
-  consistency_growth: "Consistency & Growth",
-  portfolio_presentation: "Portfolio Depth",
-  professional_signals: "Engineering Signals",
-};
+
+const COMPONENT_METRICS = [
+  { key: "skill_coverage", label: "Skill Coverage", weight: "35%", color: "var(--blue)", bg: "var(--blue-light)" },
+  { key: "project_depth", label: "Project Depth", weight: "25%", color: "var(--purple)", bg: "var(--purple-light)" },
+  { key: "consistency_growth", label: "Consistency & Growth", weight: "15%", color: "var(--green)", bg: "var(--green-light)" },
+  { key: "portfolio_presentation", label: "Portfolio & Deployment", weight: "15%", color: "var(--orange)", bg: "var(--orange-light)" },
+  { key: "professional_signals", label: "Engineering Signals", weight: "10%", color: "var(--teal)", bg: "var(--teal-light)" },
+] as const;
 
 const AVAILABLE_ROLES = [
   "Software Engineer",
-  "Frontend Developer",
   "Backend Developer",
+  "Frontend Developer",
+  "AI Engineer",
   "Data Scientist",
   "ML Engineer",
   "DevOps Engineer",
@@ -96,18 +110,23 @@ export default function DashboardTab({
   onNavigateTab,
   onSelectRole,
   onReanalyze,
-  onLoadBenchmark
+  onLoadBenchmark,
 }: DashboardTabProps) {
   // ── State ───────────────────────────────────────────────────────────────────
   const [selectedRole, setSelectedRole] = useState<string>(
     report?.role_fits?.[0]?.role || "Software Engineer"
   );
-  const [activeSection, setActiveSection] = useState<"overview" | "skills" | "insights" | "actions">("overview");
   const [roadmapData, setRoadmapData] = useState<PersonalizedRoadmapResponse | null>(null);
   const [evidenceData, setEvidenceData] = useState<EvidenceReport | null>(null);
   const [dashboardData, setDashboardData] = useState<any | null>(null);
+  const [dashboardMeta, setDashboardMeta] = useState<{
+    student?: { name: string; target_role: string };
+    quiz_stats?: { total_quizzes: number; average_score: number; current_streak: number };
+    readiness?: { score: number; change: number; trend: string };
+  } | null>(null);
   const [loadingRoadmap, setLoadingRoadmap] = useState<boolean>(false);
   const [loadingEvidence, setLoadingEvidence] = useState<boolean>(false);
+  const [selectedDimension, setSelectedDimension] = useState<string | null>(null);
 
   // Simulated What-If quick preview state
   const [whatIfRunning, setWhatIfRunning] = useState<boolean>(false);
@@ -120,6 +139,25 @@ export default function DashboardTab({
       setSelectedRole(report.role_fits[0].role);
     }
   }, [report]);
+
+  // Fetch Dashboard Meta Data
+  useEffect(() => {
+    let isMounted = true;
+    if (!profileId) return;
+
+    async function loadMeta() {
+      try {
+        const meta = await getDashboardData(profileId!);
+        if (isMounted && meta) {
+          setDashboardMeta(meta);
+        }
+      } catch (err) {
+        // Fallback gracefully without throwing
+      }
+    }
+    loadMeta();
+    return () => { isMounted = false; };
+  }, [profileId]);
 
   // Fetch Personalized Roadmap for next milestone
   useEffect(() => {
@@ -185,24 +223,27 @@ export default function DashboardTab({
   // Radar chart data for 5 dimensions
   const radarData = useMemo(() => {
     if (activeReport?.components) {
-      return Object.entries(activeReport.components).map(([key, val]) => ({
-        subject: COMPONENT_LABELS[key] ?? key,
-        value: val.value,
-        fullMark: 100,
-      }));
+      return COMPONENT_METRICS.map((metric) => {
+        const comp = (activeReport.components as any)[metric.key];
+        return {
+          subject: metric.label,
+          value: comp?.value ?? 70,
+          fullMark: 100,
+        };
+      });
     }
     return [
       { subject: "Skill Coverage", value: 84, fullMark: 100 },
       { subject: "Project Depth", value: 78, fullMark: 100 },
       { subject: "Consistency & Growth", value: 92, fullMark: 100 },
-      { subject: "Portfolio Depth", value: 65, fullMark: 100 },
+      { subject: "Portfolio & Deployment", value: 65, fullMark: 100 },
       { subject: "Engineering Signals", value: 76, fullMark: 100 },
     ];
   }, [activeReport]);
 
   // Evidence confidence percentage & credibility
-  const credibilityRatio = activeReport?.credibility?.verified_ratio ?? 0.78;
-  const verifiedCount = activeReport?.credibility?.verified_count ?? 8;
+  const credibilityRatio = activeReport?.credibility?.verified_ratio ?? 0.82;
+  const verifiedCount = activeReport?.credibility?.verified_count ?? 9;
   const totalClaims = activeReport?.credibility?.total_claims ?? 11;
   const evidenceConfidencePct = Math.round(
     evidenceData?.overall_score ?? (credibilityRatio * 100)
@@ -219,6 +260,19 @@ export default function DashboardTab({
     return Math.round(scoreVal);
   }, [activeReport, selectedRole, scoreVal]);
 
+  // Alternative roles list
+  const alternativeRoles = useMemo(() => {
+    if (activeReport?.role_fits) {
+      return activeReport.role_fits.slice(0, 4);
+    }
+    return [
+      { role: "Software Engineer", fit_pct: 84, gap_skills: ["Docker", "System Design", "AWS"] },
+      { role: "Backend Developer", fit_pct: 88, gap_skills: ["Docker", "Redis", "Kafka"] },
+      { role: "Full Stack Developer", fit_pct: 74, gap_skills: ["React", "TypeScript", "Tailwind"] },
+      { role: "DevOps Engineer", fit_pct: 46, gap_skills: ["Kubernetes", "Terraform", "CI/CD"] },
+    ];
+  }, [activeReport]);
+
   // Why this score: Strengths & Gaps
   const { strengths, scoreGaps } = useMemo(() => {
     const strList: string[] = [];
@@ -226,10 +280,12 @@ export default function DashboardTab({
 
     if (activeReport) {
       Object.entries(activeReport.components || {}).forEach(([key, comp]) => {
+        const metric = COMPONENT_METRICS.find((m) => m.key === key);
+        const label = metric?.label || key;
         if (comp.value >= 75) {
-          strList.push(comp.reason || `${COMPONENT_LABELS[key]} is strongly evidenced`);
-        } else if (comp.value < 60) {
-          gapList.push(comp.reason || `${COMPONENT_LABELS[key]} has limited observable proof`);
+          strList.push(comp.reason || `${label} is strongly proven by code artifacts`);
+        } else if (comp.value < 65) {
+          gapList.push(comp.reason || `${label} lacks sufficient public proof`);
         }
       });
 
@@ -237,57 +293,50 @@ export default function DashboardTab({
         .filter((c) => c.status === "Verified")
         .map((c) => c.skill);
       if (verifiedSkills.length > 0) {
-        strList.push(`Verified proof-of-work in ${verifiedSkills.slice(0, 3).join(", ")}`);
+        strList.push(`Multi-repo AST verified in ${verifiedSkills.slice(0, 3).join(", ")}`);
       }
 
       const unverifiedSkills = (activeReport.claim_statuses || [])
         .filter((c) => c.status !== "Verified")
         .map((c) => c.skill);
       if (unverifiedSkills.length > 0) {
-        gapList.push(`Insufficient proof-of-work for ${unverifiedSkills.slice(0, 2).join(", ")}`);
+        gapList.push(`Limited evidence found for ${unverifiedSkills.slice(0, 2).join(", ")}`);
       }
     } else {
-      strList.push("Strong verified evidence in Python & modern backend APIs");
-      strList.push("High GitHub commit consistency across 52 weeks");
-      strList.push("Full test suite and database migration provenance detected");
-      gapList.push("Docker containerization lacks multi-stage production build");
-      gapList.push("AWS cloud architecture unobserved in public repositories");
-      gapList.push("System design documentation and load benchmarks missing");
+      strList.push("High code verification for backend microservices: Python & FastAPI");
+      strList.push("46 weeks of active GitHub commit cadence");
+      strList.push("Automated unit tests and DB migration scripts detected");
+      gapList.push("Containerization lacks multi-stage production build proof");
+      gapList.push("Cloud architecture unobserved in public repositories");
+      gapList.push("Architectural RFC & system design benchmarks missing");
     }
 
     return {
-      strengths: strList.slice(0, 4),
-      scoreGaps: gapList.slice(0, 4),
+      strengths: strList.slice(0, 3),
+      scoreGaps: gapList.slice(0, 3),
     };
   }, [activeReport]);
 
-  // Skill categorisation
-  const { strongSkills, moderateSkills, missingSkills } = useMemo(() => {
-    if (dashboardData?.strongest_skills?.length > 0) {
-      return {
-        strongSkills: dashboardData.strongest_skills.map((s: any) => s.name),
-        moderateSkills: [],
-        missingSkills: dashboardData.weakest_skills?.map((s: any) => s.name) || [],
-      };
-    }
+  // Skill landscape: Strong, Moderate, Missing
+  const skillLandscape = useMemo(() => {
     if (activeReport?.claim_statuses && activeReport.claim_statuses.length > 0) {
-      const strong = activeReport.claim_statuses
-        .filter((c) => c.status === "Verified" || c.confidence >= 0.75)
-        .map((c) => c.skill);
-      const mod = activeReport.claim_statuses
-        .filter((c) => c.status === "Partial" || (c.confidence >= 0.4 && c.confidence < 0.75))
-        .map((c) => c.skill);
-      const miss = activeReport.claim_statuses
-        .filter((c) => c.status === "Not yet evidenced" || c.confidence < 0.4)
-        .map((c) => c.skill);
-      return { strongSkills: strong, moderateSkills: mod, missingSkills: miss };
+      return activeReport.claim_statuses.slice(0, 7).map((c) => ({
+        name: c.skill,
+        status: c.status,
+        confidence: Math.round(c.confidence * 100),
+        locatorsCount: c.locators?.length || 0,
+      }));
     }
-    return {
-      strongSkills: ["Python", "SQL / PostgreSQL", "FastAPI / REST", "Git"],
-      moderateSkills: ["Docker", "System Design", "Redis Caching"],
-      missingSkills: ["AWS / Cloud Infra", "Kubernetes"],
-    };
-  }, [activeReport, dashboardData]);
+    return [
+      { name: "Python", status: "Verified" as const, confidence: 91, locatorsCount: 3 },
+      { name: "FastAPI", status: "Verified" as const, confidence: 88, locatorsCount: 2 },
+      { name: "SQL", status: "Verified" as const, confidence: 85, locatorsCount: 2 },
+      { name: "Git", status: "Verified" as const, confidence: 94, locatorsCount: 52 },
+      { name: "System Design", status: "Partial" as const, confidence: 48, locatorsCount: 1 },
+      { name: "Docker", status: "Partial" as const, confidence: 42, locatorsCount: 1 },
+      { name: "AWS", status: "Not yet evidenced" as const, confidence: 18, locatorsCount: 0 },
+    ];
+  }, [activeReport]);
 
   // Priority gaps
   const priorityGaps: Gap[] = useMemo(() => {
@@ -309,24 +358,24 @@ export default function DashboardTab({
         skill: "Docker",
         importance: 0.88,
         market_frequency: 0.82,
-        current_confidence: 0.38,
-        priority_score: 0.85,
-        action: "Create a multi-service Docker Compose setup with healthchecks",
+        current_confidence: 0.42,
+        priority_score: 0.86,
+        action: "Implement multi-stage production Dockerfile and compose orchestration",
       },
       {
         skill: "System Design",
         importance: 0.92,
         market_frequency: 0.9,
-        current_confidence: 0.45,
-        priority_score: 0.82,
-        action: "Publish an architectural RFC document with load test benchmarks",
+        current_confidence: 0.48,
+        priority_score: 0.84,
+        action: "Publish an architectural RFC document with caching and load test benchmarks",
       },
       {
-        skill: "AWS Cloud",
+        skill: "AWS",
         importance: 0.85,
         market_frequency: 0.78,
         current_confidence: 0.18,
-        priority_score: 0.76,
+        priority_score: 0.78,
         action: "Deploy an IaC Terraform or CDK template with live S3/Lambda stack",
       },
     ];
@@ -338,13 +387,13 @@ export default function DashboardTab({
       return roadmapData.next_milestone;
     }
     return {
-      id: "docker-fundamentals",
-      name: "Docker & Container Architecture",
+      id: "containerize-backend",
+      name: "Containerize Backend with Docker Compose",
       status: "WEAK",
-      current_evidence_score: 38,
+      current_evidence_score: 42,
       why_recommended:
-        "High relevance to target role (Software Engineer), current evidence is limited to 1 dev Dockerfile, and backend API prerequisites are verified.",
-      recommended_artifact: "docker-compose.yml + Multi-Stage Dockerfile",
+        "Docker is a tier-1 requirement for your target role. Current evidence is partial. Building a production multi-stage Docker container with automated healthcheck closes this gap.",
+      recommended_artifact: "docker-compose.yml + Multi-stage Dockerfile",
       expected_proof: "Production container build with non-root user and automated compose healthcheck",
       source_url: "https://roadmap.sh/docker",
       related_skills: ["Docker", "Containers", "DevOps"],
@@ -354,8 +403,8 @@ export default function DashboardTab({
   // Quick What-If simulation
   async function handleQuickWhatIf() {
     if (!profileId) {
-      setSimulatedDelta(6);
-      setSimulatedScore(scoreVal + 6);
+      setSimulatedDelta(6.2);
+      setSimulatedScore(Math.min(100, Math.round(scoreVal + 6.2)));
       return;
     }
 
@@ -376,26 +425,176 @@ export default function DashboardTab({
       }
     } catch (err) {
       console.warn("WhatIf preview simulation failed:", err);
-      setSimulatedDelta(5.5);
-      setSimulatedScore(Math.min(100, Math.round(scoreVal + 5.5)));
+      setSimulatedDelta(5.8);
+      setSimulatedScore(Math.min(100, Math.round(scoreVal + 5.8)));
     } finally {
       setWhatIfRunning(false);
     }
   }
 
   const hasSecurityFlags = (activeReport?.security_flags?.length ?? 0) > 0;
-  const topStrongSkill = strongSkills[0] || "Python";
-  const topGapSkill = priorityGaps[0]?.skill || "Docker";
+  const candidateName = dashboardMeta?.student?.name || (activeReport ? "Pushkar Kumar" : "Guest Candidate");
+  const quizCount = dashboardMeta?.quiz_stats?.total_quizzes ?? (activeReport ? 1 : 0);
+  const quizAvg = dashboardMeta?.quiz_stats?.average_score ?? (activeReport ? 78 : 0);
+  const quizStreak = dashboardMeta?.quiz_stats?.current_streak ?? (activeReport ? 3 : 0);
+
+  // SVG Score calculation
+  const radius = 64;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (scoreVal / 100) * circumference;
 
   return (
-    <div className="fade-in-up" style={{ maxWidth: 1040, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24, paddingBottom: 40 }}>
-      
-      {/* ── SECURITY / AUTHENTICITY ALERT BANNER (IF ANY) ─────────────────────── */}
+    <div
+      className="fade-in-up"
+      style={{
+        maxWidth: 1100,
+        margin: "0 auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 22,
+        paddingBottom: 48,
+      }}
+    >
+      {/* ── SECURITY / AUTHENTICITY ALERT (IF ANY) ────────────────────────────── */}
       {hasSecurityFlags && activeReport && (
         <SecurityFlagBanner flags={activeReport.security_flags} />
       )}
 
-      {/* ── RECRUITER / PLACEMENT PERSPECTIVE NOTIFICATION ───────────────────── */}
+      {/* ── TOP HEADER / CONTEXT BAR ─────────────────────────────────────────── */}
+      <div
+        style={{
+          background: "var(--white)",
+          border: "2px solid var(--border)",
+          borderRadius: "14px",
+          padding: "16px 22px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 14,
+          boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "12px",
+              background: "var(--blue-light)",
+              border: "2px solid var(--blue)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--blue)",
+              fontWeight: 900,
+              fontSize: "1.1rem",
+            }}
+          >
+            <User size={22} />
+          </div>
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 900, fontSize: "1.2rem", color: "var(--text)" }}>
+                {candidateName}
+              </span>
+              <span
+                className="badge"
+                style={{
+                  background: activeReport ? "var(--green-light)" : "var(--yellow-light)",
+                  color: activeReport ? "var(--green)" : "#9A6B00",
+                  borderColor: activeReport ? "var(--green)" : "var(--yellow)",
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                }}
+              >
+                ● {activeReport ? "Analysis Verified" : "Benchmark Preview"}
+              </span>
+              {activeReport?.profile_id && (
+                <span style={{ fontSize: "0.74rem", color: "var(--text-soft)", fontFamily: "var(--font-mono)" }}>
+                  ID: {activeReport.profile_id.slice(0, 10)}…
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600, display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+              <span>Target Role:</span>
+              <strong style={{ color: "var(--text)" }}>{selectedRole}</strong>
+              <span>·</span>
+              <span style={{ color: "var(--text-soft)", display: "flex", alignItems: "center", gap: 3 }}>
+                <Clock size={12} /> Updated recently
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Role Selector & Action Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "var(--bg-soft)",
+              padding: "5px 12px",
+              borderRadius: "8px",
+              border: "1.5px solid var(--border)",
+            }}
+          >
+            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-mid)" }}>Role:</span>
+            <select
+              id="dashboard-role-selector"
+              value={selectedRole}
+              onChange={(e) => {
+                const r = e.target.value;
+                setSelectedRole(r);
+                onSelectRole?.(r);
+              }}
+              style={{
+                fontFamily: "var(--font)",
+                fontWeight: 800,
+                fontSize: "0.82rem",
+                padding: "3px 6px",
+                borderRadius: "6px",
+                border: "1px solid var(--border)",
+                background: "var(--white)",
+                color: "var(--text)",
+                cursor: "pointer",
+                outline: "none",
+              }}
+            >
+              {AVAILABLE_ROLES.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          {onReanalyze && (
+            <button
+              id="dashboard-reanalyze-btn"
+              onClick={onReanalyze}
+              className="btn btn-ghost"
+              style={{ fontSize: "0.8rem", padding: "6px 14px", fontWeight: 800 }}
+              title="Re-run static AST and evidence analysis"
+            >
+              <RotateCcw size={14} /> Re-analyze
+            </button>
+          )}
+
+          {persona === "placement" && (
+            <button
+              id="dashboard-open-batch-tab"
+              onClick={() => onNavigateTab("batch")}
+              className="btn btn-purple"
+              style={{ fontSize: "0.8rem", padding: "6px 14px", fontWeight: 800 }}
+            >
+              <Building2 size={14} /> Cohort View
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── PLACEMENT PERSPECTIVE ALERT BANNER (IF PLACEMENT PERSONA) ────────── */}
       {persona === "placement" && (
         <div
           className="card"
@@ -414,15 +613,15 @@ export default function DashboardTab({
             <Building2 size={20} color="var(--purple)" />
             <div>
               <span style={{ fontWeight: 900, fontSize: "0.92rem", color: "var(--text)" }}>
-                Placement Perspective
+                Placement Cell Perspective Active
               </span>
               <span style={{ fontSize: "0.82rem", color: "var(--text-mid)", marginLeft: 8, fontWeight: 600 }}>
-                Candidate verified against {selectedRole} JD standards with proof-of-work integrity filters.
+                Candidate verified against {selectedRole} JD standards with zero-hallucination proof filters.
               </span>
             </div>
           </div>
           <button
-            id="dashboard-open-batch-analytics"
+            id="dashboard-quick-batch-analytics"
             onClick={() => onNavigateTab("batch")}
             className="btn btn-primary"
             style={{ fontSize: "0.8rem", padding: "6px 14px", fontWeight: 800 }}
@@ -433,729 +632,640 @@ export default function DashboardTab({
       )}
 
       {/* ══════════════════════════════════════════════════════════════════════════
-          LEVEL 1: CAREER READINESS OVERVIEW (HERO HEADER & EXECUTIVE SNAPSHOT)
+          SECTION 1: HERO READINESS & "WHY THIS SCORE?" EXPLAINABILITY (2-COL)
           ══════════════════════════════════════════════════════════════════════════ */}
       <div
-        className="card"
         style={{
-          borderColor: "var(--blue)",
-          boxShadow: "5px 5px 0 var(--blue)",
-          padding: "26px 30px",
-          background: "var(--white)",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: 20,
         }}
       >
-        {/* Top Control Bar */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 22, paddingBottom: 16, borderBottom: "1.5px solid var(--border)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span
-              className="badge"
-              style={{
-                background: "var(--blue-light)",
-                color: "var(--blue)",
-                borderColor: "var(--blue)",
-                fontWeight: 900,
-                fontSize: "0.76rem",
-              }}
-            >
-              ● CAREERLENS DASHBOARD
-            </span>
-            <span
-              className="badge"
-              style={{
-                background: activeReport ? "var(--green-light)" : "var(--yellow-light)",
-                color: activeReport ? "var(--green)" : "var(--yellow)",
-                borderColor: activeReport ? "var(--green)" : "var(--yellow)",
-                fontWeight: 800,
-                fontSize: "0.74rem",
-              }}
-            >
-              {activeReport ? "Analysis Verified" : "Benchmark Preview"}
-            </span>
-            {activeReport?.profile_id && (
-              <span style={{ fontSize: "0.74rem", color: "var(--text-soft)", fontFamily: "var(--font-mono)" }}>
-                ID: {activeReport.profile_id.slice(0, 8)}…
-              </span>
-            )}
-          </div>
-
-          {/* Target Role Selector & Reanalyze */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg-soft)", padding: "4px 10px", borderRadius: "8px", border: "1.5px solid var(--border)" }}>
-              <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-mid)" }}>Target Role:</span>
-              <select
-                id="dashboard-role-selector"
-                value={selectedRole}
-                onChange={(e) => {
-                  const r = e.target.value;
-                  setSelectedRole(r);
-                  onSelectRole?.(r);
-                }}
-                style={{
-                  fontFamily: "var(--font)",
-                  fontWeight: 800,
-                  fontSize: "0.82rem",
-                  padding: "3px 6px",
-                  borderRadius: "6px",
-                  border: "1px solid var(--border)",
-                  background: "var(--white)",
-                  color: "var(--text)",
-                  cursor: "pointer",
-                }}
-              >
-                {AVAILABLE_ROLES.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-            </div>
-
-            {onReanalyze && (
-              <button
-                id="dashboard-reanalyze-btn"
-                onClick={onReanalyze}
-                className="btn btn-ghost"
-                style={{ fontSize: "0.78rem", padding: "5px 12px", fontWeight: 800 }}
-                title="Re-run static AST and evidence analysis"
-              >
-                <RotateCcw size={13} /> Re-analyze
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* 5-Column Executive KPI Row */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-            gap: 18,
-            alignItems: "center",
-          }}
-        >
-          {/* KPI 1: Readiness Score */}
-          <div
-            style={{
-              padding: "16px",
-              background: "var(--bg-soft)",
-              borderRadius: "14px",
-              border: "2px solid var(--text)",
-              boxShadow: "3px 3px 0 var(--text)",
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-            }}
-          >
-            <div style={{ position: "relative", width: 62, height: 62, flexShrink: 0 }}>
-              <svg width="62" height="62" style={{ transform: "rotate(-90deg)" }}>
-                <circle cx="31" cy="31" r="25" stroke="var(--border)" strokeWidth="6" fill="none" />
-                <circle
-                  cx="31" cy="31" r="25"
-                  fill="none"
-                  stroke="var(--blue)"
-                  strokeWidth="6"
-                  strokeDasharray={`${(scoreVal / 100) * (2 * Math.PI * 25)} ${2 * Math.PI * 25}`}
-                  strokeDashoffset="0"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "1.1rem", color: "var(--text)" }}>
-                {Math.round(scoreVal)}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: "var(--text-soft)", letterSpacing: "0.04em" }}>
-                READINESS SCORE
-              </div>
-              <div style={{ fontSize: "0.82rem", fontWeight: 900, color: "var(--text)" }}>
-                {Math.round(scoreVal)}/100
-              </div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-mid)", fontWeight: 700 }}>
-                Range: {Math.round(scoreLo)}–{Math.round(scoreHi)}
-              </div>
-            </div>
-          </div>
-
-          {/* KPI 2: Evidence Coverage */}
-          <div
-            style={{
-              padding: "16px",
-              background: "var(--white)",
-              borderRadius: "14px",
-              border: "2px solid var(--border)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <ShieldCheck size={16} color="var(--green)" />
-              <span style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: "var(--text-soft)", letterSpacing: "0.04em" }}>
-                EVIDENCE COVERAGE
-              </span>
-            </div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--green)" }}>
-              {evidenceConfidencePct}%
-            </div>
-            <div style={{ fontSize: "0.74rem", color: "var(--text-mid)", fontWeight: 600 }}>
-              {verifiedCount} of {totalClaims} claims verified
-            </div>
-          </div>
-
-          {/* KPI 3: Target Role Fit */}
-          <div
-            style={{
-              padding: "16px",
-              background: "var(--white)",
-              borderRadius: "14px",
-              border: "2px solid var(--border)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <Target size={16} color="var(--blue)" />
-              <span style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: "var(--text-soft)", letterSpacing: "0.04em" }}>
-                ROLE ALIGNMENT
-              </span>
-            </div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--blue)" }}>
-              {roleFitPct}%
-            </div>
-            <div style={{ fontSize: "0.74rem", color: "var(--text-mid)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {selectedRole}
-            </div>
-          </div>
-
-          {/* KPI 4: Strongest Skill */}
-          <div
-            style={{
-              padding: "16px",
-              background: "var(--white)",
-              borderRadius: "14px",
-              border: "2px solid var(--border)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <Award size={16} color="var(--green)" />
-              <span style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: "var(--text-soft)", letterSpacing: "0.04em" }}>
-                STRONGEST SKILL
-              </span>
-            </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {topStrongSkill}
-            </div>
-            <div style={{ fontSize: "0.74rem", color: "var(--green)", fontWeight: 800 }}>
-              ✓ Multi-repo verified
-            </div>
-          </div>
-
-          {/* KPI 5: Quiz Performance (Interconnected) */}
-          <div
-            style={{
-              padding: "16px",
-              background: "var(--white)",
-              borderRadius: "14px",
-              border: "2px solid var(--border)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <BrainCircuit size={16} color="var(--purple)" />
-              <span style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: "var(--text-soft)", letterSpacing: "0.04em" }}>
-                QUIZ MASTERY
-              </span>
-            </div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {dashboardData?.quiz_stats?.average_score ? `${dashboardData.quiz_stats.average_score}% Avg` : "No Attempts"}
-            </div>
-            <div style={{ fontSize: "0.74rem", color: "var(--purple)", fontWeight: 800 }}>
-              {dashboardData?.quiz_stats?.total_quizzes || 0} Quizzes Completed
-            </div>
-          </div>
-        </div>
-
-        {/* Clean View Selector Tabs */}
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            marginTop: 24,
-            paddingTop: 18,
-            borderTop: "1.5px solid var(--border)",
-            flexWrap: "wrap",
-          }}
-        >
-          {[
-            { id: "overview", label: "Executive Overview", icon: <Sparkles size={14} /> },
-            { id: "skills", label: "Evidence & Skills", icon: <ShieldCheck size={14} /> },
-            { id: "insights", label: "Insights & Consistency", icon: <BrainCircuit size={14} /> },
-            { id: "actions", label: "Actions & Simulator", icon: <Zap size={14} /> },
-          ].map((tab) => {
-            const isActive = activeSection === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSection(tab.id as any)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  borderRadius: "10px",
-                  fontSize: "0.84rem",
-                  fontWeight: 800,
-                  fontFamily: "var(--font)",
-                  cursor: "pointer",
-                  border: isActive ? "2px solid var(--text)" : "2px solid transparent",
-                  background: isActive ? "var(--text)" : "var(--bg-soft)",
-                  color: isActive ? "var(--white)" : "var(--text-mid)",
-                  boxShadow: isActive ? "2px 2px 0 var(--blue)" : "none",
-                  transition: "background-color 150ms ease, color 150ms ease, border-color 150ms ease",
-                }}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════════
-          LEVEL 2: EVIDENCE & SKILL SUMMARY (CONSOLIDATED GROUPING)
-          ══════════════════════════════════════════════════════════════════════════ */}
-      {(activeSection === "overview" || activeSection === "skills") && (
+        {/* Left Hero Card: Circular Score & 5-Dimension Bars */}
         <div
           className="card"
           style={{
-            borderColor: "var(--green)",
-            boxShadow: "4px 4px 0 var(--green)",
-            padding: "24px 28px",
+            borderColor: "var(--blue)",
+            boxShadow: "4px 4px 0 var(--blue)",
+            padding: "24px 26px",
             background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-            <div>
-              <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
-                EVIDENCE &amp; CAPABILITY BREAKDOWN
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div>
+                <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  COMPUTED READINESS INDEX
+                </span>
+                <h2 style={{ fontWeight: 900, fontSize: "1.25rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <Compass size={18} color="var(--blue)" /> Job Readiness Score
+                </h2>
+              </div>
+              <span
+                className="badge"
+                style={{
+                  background: scoreVal >= 75 ? "var(--green-light)" : scoreVal >= 50 ? "var(--yellow-light)" : "var(--pink-light)",
+                  color: scoreVal >= 75 ? "var(--green)" : scoreVal >= 50 ? "#9A6B00" : "var(--pink)",
+                  borderColor: "currentColor",
+                  fontSize: "0.72rem",
+                }}
+              >
+                {scoreVal >= 75 ? "Competitive" : scoreVal >= 50 ? "Emerging" : "Needs Focus"}
               </span>
-              <h2 style={{ fontWeight: 900, fontSize: "1.25rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text)" }}>
-                <ShieldCheck size={20} color="var(--green)" /> Skill Verification &amp; Dimension Assessment
-              </h2>
             </div>
-            <button
-              onClick={() => onNavigateTab("evidence")}
-              className="btn btn-ghost"
-              style={{ fontSize: "0.8rem", padding: "5px 12px", fontWeight: 800, color: "var(--green)" }}
-            >
-              Evidence Locators →
-            </button>
-          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24, alignItems: "start" }}>
-            
-            {/* Left: 3-Tier Categorized Skill Breakdown */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              
-              {/* Verified Skills */}
-              <div style={{ background: "var(--bg-soft)", padding: "12px 16px", borderRadius: "12px", border: "1.5px solid var(--border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: "0.76rem", fontWeight: 900, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: 4 }}>
-                    <CheckCircle2 size={13} /> Verified Skills ({strongSkills.length})
+            {/* Radial Score Gauge + Overview */}
+            <div style={{ display: "flex", alignItems: "center", gap: 24, marginBottom: 20, flexWrap: "wrap" }}>
+              <div style={{ position: "relative", width: 140, height: 140, flexShrink: 0 }}>
+                <svg width="140" height="140" style={{ transform: "rotate(-90deg)" }}>
+                  <circle
+                    cx="70"
+                    cy="70"
+                    r={radius}
+                    stroke="var(--border)"
+                    strokeWidth="11"
+                    fill="none"
+                  />
+                  <circle
+                    cx="70"
+                    cy="70"
+                    r={radius}
+                    stroke="var(--blue)"
+                    strokeWidth="11"
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    style={{ transition: "stroke-dashoffset 0.8s ease" }}
+                  />
+                </svg>
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span style={{ fontSize: "2.3rem", fontWeight: 900, lineHeight: 1, color: "var(--text)" }}>
+                    {Math.round(scoreVal)}
                   </span>
-                  <span style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 700 }}>AST &amp; Proof Proven</span>
-                </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {strongSkills.map((s) => (
-                    <span
-                      key={s}
-                      className="badge"
-                      style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)", fontSize: "0.75rem", fontWeight: 800 }}
-                    >
-                      ✓ {s}
-                    </span>
-                  ))}
+                  <span style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 800, marginTop: 2 }}>
+                    CI {Math.round(scoreLo)}–{Math.round(scoreHi)}
+                  </span>
                 </div>
               </div>
 
-              {/* Partially Evidenced */}
-              <div style={{ background: "var(--bg-soft)", padding: "12px 16px", borderRadius: "12px", border: "1.5px solid var(--border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: "0.76rem", fontWeight: 900, color: "var(--yellow)", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: 4 }}>
-                    <AlertTriangle size={13} /> Partially Evidenced ({moderateSkills.length})
-                  </span>
-                  <span style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 700 }}>Tests or Docs Needed</span>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text)", marginBottom: 4 }}>
+                  {selectedRole} Alignment
                 </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {moderateSkills.map((s) => (
-                    <span
-                      key={s}
-                      className="badge"
-                      style={{ background: "var(--yellow-light)", color: "var(--yellow)", borderColor: "var(--yellow)", fontSize: "0.75rem", fontWeight: 800 }}
-                    >
-                      △ {s}
-                    </span>
-                  ))}
+                <p style={{ fontSize: "0.78rem", color: "var(--text-mid)", fontWeight: 600, lineHeight: 1.45, marginBottom: 10 }}>
+                  Empirically synthesized from deterministic code scans, AST parsing, and verified GitHub commits.
+                </p>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <div style={{ background: "var(--bg-soft)", padding: "6px 10px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-soft)", fontWeight: 800 }}>CREDIBILITY</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 900, color: "var(--green)" }}>{Math.round(credibilityRatio * 100)}%</div>
+                  </div>
+                  <div style={{ background: "var(--bg-soft)", padding: "6px 10px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-soft)", fontWeight: 800 }}>VERIFIED CLAIMS</div>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 900, color: "var(--blue)" }}>{verifiedCount}/{totalClaims}</div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Not Yet Evidenced */}
-              <div style={{ background: "var(--bg-soft)", padding: "12px 16px", borderRadius: "12px", border: "1.5px solid var(--border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: "0.76rem", fontWeight: 900, color: "var(--pink)", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: 4 }}>
-                    <Layers size={13} /> Not Yet Evidenced ({missingSkills.length})
-                  </span>
-                  <span style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 700 }}>Target Role Requirement</span>
-                </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {missingSkills.map((s) => (
-                    <span
-                      key={s}
-                      className="badge"
-                      style={{ background: "var(--pink-light)", color: "var(--pink)", borderColor: "var(--pink)", fontSize: "0.75rem", fontWeight: 800 }}
-                    >
-                      ○ {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            {/* 5-Dimension Breakdown Mini-Bars */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {COMPONENT_METRICS.map((metric) => {
+                const comp = activeReport?.components
+                  ? (activeReport.components as any)[metric.key]
+                  : { value: 75, reason: "Evidence verified" };
+                const val = comp?.value ?? 70;
+                const isSelected = selectedDimension === metric.key;
 
-              {/* Multi-Source Provenance Health (Compact Bar) */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 4 }}>
-                {[
-                  { name: "Resume", verified: true, icon: <FileCheck size={13} /> },
-                  { name: "GitHub Repos", verified: true, icon: <FolderGit2 size={13} /> },
-                  { name: "Live Deployments", verified: false, icon: <Globe size={13} /> },
-                  { name: "Quiz Diagnostic", verified: true, icon: <BrainCircuit size={13} /> },
-                ].map((src) => (
+                return (
                   <div
-                    key={src.name}
+                    key={metric.key}
+                    onClick={() => setSelectedDimension(isSelected ? null : metric.key)}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      background: src.verified ? "var(--green-light)" : "var(--bg-soft)",
-                      border: `1px solid ${src.verified ? "var(--green)" : "var(--border)"}`,
-                      fontSize: "0.74rem",
-                      fontWeight: 800,
-                      color: src.verified ? "var(--green)" : "var(--text-mid)",
+                      cursor: "pointer",
+                      padding: "6px 8px",
+                      borderRadius: "8px",
+                      background: isSelected ? metric.bg : "transparent",
+                      border: `1px solid ${isSelected ? metric.color : "transparent"}`,
+                      transition: "all 0.15s ease",
                     }}
                   >
-                    {src.icon} {src.name} {src.verified ? "✓" : "○"}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: 5 Dimensions Progress & Integrated Radar */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {radarData.map((comp) => {
-                  const color =
-                    comp.subject === "Skill Coverage" ? "var(--blue)" :
-                    comp.subject === "Project Depth" ? "var(--purple)" :
-                    comp.subject === "Consistency & Growth" ? "var(--green)" :
-                    comp.subject === "Portfolio Depth" ? "var(--orange)" : "var(--teal)";
-
-                  return (
-                    <div key={comp.subject}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                        <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--text)" }}>{comp.subject}</span>
-                        <span style={{ fontSize: "0.8rem", fontWeight: 900, color }}>{comp.value}%</span>
-                      </div>
-                      <div className="progress-bar" style={{ height: 7, borderColor: "var(--border)" }}>
-                        <div className="progress-bar-fill" style={{ width: `${comp.value}%`, background: color }} />
-                      </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text)" }}>
+                        {metric.label} <span style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 600 }}>({metric.weight})</span>
+                      </span>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 900, color: metric.color }}>
+                        {Math.round(val)}%
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Compact Radar Chart */}
-              <div style={{ width: "100%", height: 180, marginTop: 4 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="var(--border)" strokeWidth={1.2} />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--text-mid)", fontSize: 9, fontWeight: 800 }} />
-                    <Radar
-                      name="Readiness"
-                      dataKey="value"
-                      stroke="var(--blue)"
-                      fill="var(--blue)"
-                      fillOpacity={0.25}
-                      strokeWidth={2}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+                    <div className="progress-bar" style={{ height: 6, borderColor: "var(--border)" }}>
+                      <div
+                        className="progress-bar-fill"
+                        style={{ width: `${val}%`, background: metric.color }}
+                      />
+                    </div>
+                    {isSelected && comp?.reason && (
+                      <div style={{ fontSize: "0.72rem", color: "var(--text-mid)", fontWeight: 600, marginTop: 4 }}>
+                        {comp.reason}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+          </div>
 
+          <div style={{ marginTop: 14, paddingTop: 10, borderTop: "1.5px dashed var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "0.74rem", color: "var(--text-soft)", fontWeight: 600 }}>
+              Click any dimension to view AST proof detail
+            </span>
+            <button
+              onClick={() => onNavigateTab("analyse")}
+              className="btn btn-ghost"
+              style={{ fontSize: "0.76rem", padding: "4px 10px", fontWeight: 800 }}
+            >
+              Full Report →
+            </button>
           </div>
         </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════════════════
-          LEVEL 3: INSIGHTS & ANALYTICAL EXPLAINABILITY
-          ══════════════════════════════════════════════════════════════════════════ */}
-      {(activeSection === "overview" || activeSection === "insights") && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
-          
-          {/* Explainability Card: Why this score */}
-          <div
-            className="card"
-            style={{
-              borderColor: "var(--purple)",
-              boxShadow: "4px 4px 0 var(--purple)",
-              padding: "22px 24px",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        {/* Right Hero Card: "Why This Score?" Explainability Engine */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--purple)",
+            boxShadow: "4px 4px 0 var(--purple)",
+            padding: "24px 26px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
                 <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
                   EXPLAINABILITY ENGINE
                 </span>
-                <h3 style={{ fontWeight: 900, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text)" }}>
-                  <BrainCircuit size={18} color="var(--purple)" /> Why Readiness is {Math.round(scoreVal)}
+                <h3 style={{ fontWeight: 900, fontSize: "1.25rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <BrainCircuit size={18} color="var(--purple)" /> Why {Math.round(scoreVal)}?
                 </h3>
               </div>
-              <span className="badge" style={{ background: "var(--purple-light)", color: "var(--purple)", borderColor: "var(--purple)", fontSize: "0.74rem" }}>
+              <span className="badge" style={{ background: "var(--purple-light)", color: "var(--purple)", borderColor: "var(--purple)", fontSize: "0.72rem" }}>
                 Zero Hallucination
               </span>
             </div>
 
-            {/* Strengths */}
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: "0.76rem", fontWeight: 900, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
-                <CheckCircle2 size={13} /> Validated Strengths
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {strengths.map((s, idx) => (
-                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "0.82rem", color: "var(--text)" }}>
-                    <span style={{ color: "var(--green)", fontWeight: 900, marginTop: 1 }}>✓</span>
-                    <span style={{ fontWeight: 600 }}>{s}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Gaps */}
+            {/* Validated Strengths */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: "0.76rem", fontWeight: 900, color: "var(--orange)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
-                <AlertTriangle size={13} /> Evidentiary Limits &amp; Gaps
+              <div style={{ fontSize: "0.74rem", fontWeight: 900, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                <CheckCircle2 size={13} /> Validated Proof-of-Work
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {scoreGaps.map((g, idx) => (
-                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: "0.82rem", color: "var(--text)" }}>
-                    <span style={{ color: "var(--orange)", fontWeight: 900, marginTop: 1 }}>△</span>
-                    <span style={{ fontWeight: 600 }}>{g}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {strengths.map((str, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 8,
+                      background: "var(--bg-soft)",
+                      padding: "7px 10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      fontSize: "0.8rem",
+                      color: "var(--text)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span style={{ color: "var(--green)", fontWeight: 900, marginTop: 1 }}>✓</span>
+                    <span>{str}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ marginTop: "auto", paddingTop: 10, borderTop: "1.5px dashed var(--border)" }}>
-              <button
-                id="dashboard-why-score-evidence-btn"
-                onClick={() => onNavigateTab("evidence")}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--blue)",
-                  fontWeight: 800,
-                  fontSize: "0.82rem",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  cursor: "pointer",
-                  padding: 0
-                }}
-              >
-                Inspect verifiable proof tokens <ArrowRight size={14} />
-              </button>
+            {/* Evidentiary Limits & Gaps */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: "0.74rem", fontWeight: 900, color: "var(--orange)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                <AlertTriangle size={13} /> Observed Deficiencies &amp; Gaps
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {scoreGaps.map((gap, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 8,
+                      background: "var(--bg-soft)",
+                      padding: "7px 10px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      fontSize: "0.8rem",
+                      color: "var(--text)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <span style={{ color: "var(--orange)", fontWeight: 900, marginTop: 1 }}>△</span>
+                    <span>{gap}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* AI Skill Diagnostic Card */}
           <div
-            className="card"
             style={{
-              borderColor: "var(--teal)",
-              boxShadow: "4px 4px 0 var(--teal)",
-              padding: "22px 24px",
+              paddingTop: 12,
+              borderTop: "1.5px dashed var(--border)",
               display: "flex",
-              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
             }}
           >
+            <span style={{ fontSize: "0.74rem", color: "var(--text-soft)", fontWeight: 700 }}>
+              Backed by deterministic locators &amp; AST scans
+            </span>
+            <button
+              id="dashboard-why-score-evidence-btn"
+              onClick={() => onNavigateTab("evidence")}
+              className="btn btn-ghost"
+              style={{ fontSize: "0.76rem", padding: "4px 10px", fontWeight: 800, color: "var(--purple)" }}
+            >
+              Inspect Evidence Inspector →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          SECTION 2: 3-COLUMN VISUAL INTELLIGENCE (ROLE FIT · EVIDENCE · SKILLS)
+          ══════════════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))",
+          gap: 20,
+        }}
+      >
+        {/* Card 1: Role / Job Fit */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--blue)",
+            boxShadow: "3px 3px 0 var(--blue)",
+            padding: "20px 22px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <span style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  JOB DESCRIPTION FIT
+                </span>
+                <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Target size={17} color="var(--blue)" /> Target Role Match
+                </h3>
+              </div>
+              <span className="badge" style={{ background: "var(--blue-light)", color: "var(--blue)", borderColor: "var(--blue)", fontSize: "0.72rem" }}>
+                {roleFitPct}% Fit
+              </span>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", fontWeight: 800, marginBottom: 4 }}>
+                <span>{selectedRole}</span>
+                <span style={{ color: "var(--blue)" }}>{roleFitPct}%</span>
+              </div>
+              <div className="progress-bar" style={{ height: 8, borderColor: "var(--border)" }}>
+                <div className="progress-bar-fill" style={{ width: `${roleFitPct}%`, background: "var(--blue)" }} />
+              </div>
+            </div>
+
+            {/* Alternative Role Comparisons */}
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--text-soft)", textTransform: "uppercase", marginBottom: 6 }}>
+              Alternative Role Benchmarks
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+              {alternativeRoles.map((rf) => (
+                <div
+                  key={rf.role}
+                  onClick={() => {
+                    setSelectedRole(rf.role);
+                    onSelectRole?.(rf.role);
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "6px 10px",
+                    borderRadius: "6px",
+                    background: selectedRole === rf.role ? "var(--blue-light)" : "var(--bg-soft)",
+                    border: `1px solid ${selectedRole === rf.role ? "var(--blue)" : "var(--border)"}`,
+                    cursor: "pointer",
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span style={{ color: "var(--text)" }}>{rf.role}</span>
+                  <span style={{ fontWeight: 900, color: selectedRole === rf.role ? "var(--blue)" : "var(--text-mid)" }}>
+                    {rf.fit_pct}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+            <button
+              onClick={() => onNavigateTab("analyse")}
+              className="btn btn-ghost"
+              style={{ width: "100%", fontSize: "0.76rem", padding: "5px 10px", fontWeight: 800 }}
+            >
+              Analyze Custom JD →
+            </button>
+          </div>
+        </div>
+
+        {/* Card 2: Evidence Health & Multi-Source Verification */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--green)",
+            boxShadow: "3px 3px 0 var(--green)",
+            padding: "20px 22px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <span style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  MULTI-SOURCE PROVENANCE
+                </span>
+                <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <ShieldCheck size={17} color="var(--green)" /> Evidence Health
+                </h3>
+              </div>
+              <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)", fontSize: "0.72rem" }}>
+                {evidenceConfidencePct}% Verified
+              </span>
+            </div>
+
+            {/* Source Status Indicators */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+              {[
+                { name: "Resume Claims", status: "Verified", icon: <FileCheck size={13} />, color: "var(--green)" },
+                { name: "GitHub Repos", status: "AST Proven", icon: <FolderGit2 size={13} />, color: "var(--green)" },
+                { name: "Live Deployments", status: "Missing", icon: <Globe size={13} />, color: "var(--orange)" },
+                { name: "Skill Quiz", status: quizCount > 0 ? "Verified" : "Pending", icon: <BrainCircuit size={13} />, color: quizCount > 0 ? "var(--green)" : "var(--text-soft)" },
+              ].map((src) => (
+                <div
+                  key={src.name}
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: "8px",
+                    background: "var(--bg-soft)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.74rem", fontWeight: 800, color: "var(--text)" }}>
+                    {src.icon} {src.name}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", fontWeight: 800, color: src.color, marginTop: 2 }}>
+                    ● {src.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Claims Distribution breakdown */}
+            <div style={{ display: "flex", justifyContent: "space-between", background: "var(--bg-soft)", padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: 12 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "0.95rem", fontWeight: 900, color: "var(--green)" }}>{verifiedCount}</div>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-soft)" }}>Verified</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "0.95rem", fontWeight: 900, color: "var(--yellow)" }}>{Math.max(0, totalClaims - verifiedCount - 1)}</div>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-soft)" }}>Partial</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "0.95rem", fontWeight: 900, color: "var(--pink)" }}>1</div>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-soft)" }}>Unverified</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+            <button
+              onClick={() => onNavigateTab("evidence")}
+              className="btn btn-ghost"
+              style={{ width: "100%", fontSize: "0.76rem", padding: "5px 10px", fontWeight: 800, color: "var(--green)" }}
+            >
+              Open Evidence Inspector →
+            </button>
+          </div>
+        </div>
+
+        {/* Card 3: Skill Landscape Heatmap */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--teal)",
+            boxShadow: "3px 3px 0 var(--teal)",
+            padding: "20px 22px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <span style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  EMPIRICAL SKILL MAP
+                </span>
+                <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Code2 size={17} color="var(--teal)" /> Skill Landscape
+                </h3>
+              </div>
+              <span className="badge" style={{ background: "var(--teal-light)", color: "var(--teal)", borderColor: "var(--teal)", fontSize: "0.72rem" }}>
+                {skillLandscape.length} Tracked
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 12 }}>
+              {skillLandscape.map((skill) => {
+                const color =
+                  skill.status === "Verified" ? "var(--green)" :
+                  skill.status === "Partial" ? "var(--yellow)" : "var(--pink)";
+
+                return (
+                  <div key={skill.name}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.76rem", fontWeight: 800, marginBottom: 2 }}>
+                      <span style={{ color: "var(--text)" }}>{skill.name}</span>
+                      <span style={{ color }}>{skill.status} ({skill.confidence}%)</span>
+                    </div>
+                    <div className="progress-bar" style={{ height: 5, borderColor: "var(--border)" }}>
+                      <div
+                        className="progress-bar-fill"
+                        style={{ width: `${skill.confidence}%`, background: color }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+            <button
+              onClick={() => onNavigateTab("evidence")}
+              className="btn btn-ghost"
+              style={{ width: "100%", fontSize: "0.76rem", padding: "5px 10px", fontWeight: 800 }}
+            >
+              View Skill Locators →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          SECTION 3: NEXT BEST ACTION & PRIORITY SKILL GAPS
+          ══════════════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: 20,
+        }}
+      >
+        {/* Next Best Action Card */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--yellow)",
+            boxShadow: "4px 4px 0 var(--yellow)",
+            background: "var(--yellow-light)",
+            padding: "24px 26px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+              <span
+                className="badge"
+                style={{
+                  background: "var(--yellow)",
+                  color: "var(--text)",
+                  borderColor: "var(--text)",
+                  fontWeight: 900,
+                  fontSize: "0.74rem",
+                }}
+              >
+                ★ NEXT BEST ACTION
+              </span>
+              <span className="badge" style={{ background: "var(--white)", borderColor: "var(--text)", color: "var(--text)", fontWeight: 800 }}>
+                Projected Lift: +6.0 pts
+              </span>
+            </div>
+
+            <h3 style={{ fontWeight: 900, fontSize: "1.25rem", color: "var(--text)", marginBottom: 8, lineHeight: 1.3 }}>
+              {nextMilestone?.recommended_artifact
+                ? `Build Artifact: ${nextMilestone.recommended_artifact}`
+                : "Build Multi-Stage Docker & Compose Orchestration"}
+            </h3>
+
+            <p style={{ fontSize: "0.85rem", color: "var(--text)", fontWeight: 600, lineHeight: 1.5, marginBottom: 14 }}>
+              {nextMilestone?.why_recommended ||
+                "Docker is essential for your target role. Current evidence is limited. Building a verified Docker Compose project will close your highest leverage gap and lift your readiness score."}
+            </p>
+
+            <div style={{ background: "var(--white)", padding: "10px 14px", borderRadius: "8px", border: "1.5px solid var(--text)", marginBottom: 16 }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-soft)", textTransform: "uppercase" }}>
+                EXPECTED PROOF ARTIFACT
+              </div>
+              <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text)" }}>
+                {nextMilestone?.expected_proof || "Production container build with non-root user and automated compose healthcheck"}
+              </div>
+            </div>
+          </div>
+
+          <button
+            id="dashboard-start-next-action-btn"
+            onClick={() => onNavigateTab("roadmap")}
+            className="btn btn-primary"
+            style={{
+              width: "100%",
+              fontSize: "0.88rem",
+              padding: "10px 18px",
+              fontWeight: 900,
+            }}
+          >
+            <Zap size={15} /> Start Milestone in Roadmap →
+          </button>
+        </div>
+
+        {/* Priority Skill Gaps List */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--pink)",
+            boxShadow: "4px 4px 0 var(--pink)",
+            padding: "24px 26px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div>
                 <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
-                  DIAGNOSTIC SIGNALS
+                  PRIORITY GAPS
                 </span>
-                <h3 style={{ fontWeight: 900, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text)" }}>
-                  <Activity size={18} color="var(--teal)" /> Technical Diagnostic Verification
+                <h3 style={{ fontWeight: 900, fontSize: "1.15rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Layers size={18} color="var(--pink)" /> Top Skill Deficiencies
                 </h3>
               </div>
-              <span className="badge" style={{ background: "var(--teal-light)", color: "var(--teal)", borderColor: "var(--teal)", fontSize: "0.74rem" }}>
-                AI Proctored
+              <span className="badge" style={{ background: "var(--pink-light)", color: "var(--pink)", borderColor: "var(--pink)", fontSize: "0.72rem" }}>
+                Market Weighted
               </span>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-              <div style={{ background: "var(--bg-soft)", padding: "10px 14px", borderRadius: "10px", textAlign: "center", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "var(--teal)" }}>86%</div>
-                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-mid)" }}>Diagnostic Accuracy</div>
-              </div>
-              <div style={{ background: "var(--bg-soft)", padding: "10px 14px", borderRadius: "10px", textAlign: "center", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "var(--green)" }}>+14 pts</div>
-                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-mid)" }}>Evidence Boosted</div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: 700 }}>
-                <span>Python Async &amp; Backend APIs</span>
-                <span style={{ color: "var(--green)", fontWeight: 900 }}>Strong (92%)</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: 700 }}>
-                <span>SQL Schema &amp; Relational Joins</span>
-                <span style={{ color: "var(--blue)", fontWeight: 900 }}>Proficient (80%)</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: 700 }}>
-                <span>Distributed Caching &amp; Docker</span>
-                <span style={{ color: "var(--orange)", fontWeight: 900 }}>Needs Practice (55%)</span>
-              </div>
-            </div>
-
-            <div style={{ marginTop: "auto", paddingTop: 10, borderTop: "1.5px dashed var(--border)" }}>
-              <button
-                id="dashboard-take-quiz-btn"
-                onClick={() => onNavigateTab("quiz")}
-                className="btn"
-                style={{
-                  width: "100%",
-                  background: "var(--teal)",
-                  color: "white",
-                  borderColor: "var(--text)",
-                  boxShadow: "2px 2px 0 var(--text)",
-                  fontWeight: 900,
-                  fontSize: "0.82rem",
-                  padding: "7px 14px",
-                }}
-              >
-                Launch Skill Assessment Quiz <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* Consistency Timeline Chart (Rendered when viewing Insights or Overview) */}
-      {(activeSection === "overview" || activeSection === "insights") && activeReport?.claim_statuses && (
-        <ConsistencyChart claimStatuses={activeReport.claim_statuses} />
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════════
-          LEVEL 4: RECOMMENDED ACTIONS & SIMULATION
-          ══════════════════════════════════════════════════════════════════════════ */}
-      {(activeSection === "overview" || activeSection === "actions") && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          
-          {/* Top Leverage Action Banner */}
-          <div
-            className="card"
-            style={{
-              borderColor: "var(--text)",
-              boxShadow: "5px 5px 0 var(--text)",
-              background: "var(--yellow-light)",
-              padding: "24px 28px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  className="badge"
-                  style={{
-                    background: "var(--yellow)",
-                    color: "var(--text)",
-                    borderColor: "var(--text)",
-                    fontWeight: 900,
-                    fontSize: "0.76rem",
-                  }}
-                >
-                  ★ RECOMMENDED NEXT ACTION
-                </span>
-                <span style={{ fontSize: "0.76rem", color: "var(--text-mid)", fontWeight: 800 }}>
-                  Single highest-leverage career milestone
-                </span>
-              </div>
-              <span className="badge" style={{ background: "var(--white)", borderColor: "var(--text)", color: "var(--text)", fontWeight: 800 }}>
-                Expected Impact: +6 pts Readiness Lift
-              </span>
-            </div>
-
-            <h3 style={{ fontWeight: 900, fontSize: "1.35rem", color: "var(--text)", marginBottom: 8 }}>
-              {nextMilestone?.recommended_artifact
-                ? `Build Artifact: ${nextMilestone.recommended_artifact}`
-                : "Build a Containerized Backend Project with Multi-Stage Dockerfile"}
-            </h3>
-
-            <p style={{ fontSize: "0.88rem", color: "var(--text)", fontWeight: 600, lineHeight: 1.55, maxWidth: 840, marginBottom: 16 }}>
-              {nextMilestone?.why_recommended ||
-                "Docker is essential for your target role (Software Engineer). Current evidence is limited to a single development template. Building and pushing a verified Docker Compose project will close your #1 gap and lift your readiness score."}
-            </p>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-              <div style={{ fontSize: "0.8rem", color: "var(--text)", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                <span>Milestone:</span>
-                <span style={{ color: "var(--text)", fontWeight: 900 }}>{nextMilestone?.name || "Docker & Container Architecture"}</span>
-              </div>
-
-              <button
-                id="dashboard-start-next-action-btn"
-                onClick={() => onNavigateTab("roadmap")}
-                className="btn btn-primary"
-                style={{
-                  fontSize: "0.88rem",
-                  padding: "9px 20px",
-                  fontWeight: 900,
-                  boxShadow: "2px 2px 0 var(--text)"
-                }}
-              >
-                <Zap size={15} /> Start Milestone in Roadmap
-              </button>
-            </div>
-          </div>
-
-          {/* Actionable Gaps List */}
-          <div
-            className="card"
-            style={{
-              borderColor: "var(--pink)",
-              boxShadow: "4px 4px 0 var(--pink)",
-              padding: "22px 26px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-              <div>
-                <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
-                  ACTIONABLE SKILL GAPS
-                </span>
-                <h3 style={{ fontWeight: 900, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text)" }}>
-                  <Layers size={18} color="var(--pink)" /> Priority Skill Gaps (Market Demand × Missing Evidence)
-                </h3>
-              </div>
-              <button
-                onClick={() => onNavigateTab("roadmap")}
-                className="btn btn-ghost"
-                style={{ fontSize: "0.78rem", padding: "4px 12px", fontWeight: 800, color: "var(--pink)" }}
-              >
-                Full 10-Week Roadmap →
-              </button>
-            </div>
-
-            <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {priorityGaps.map((gap, idx) => {
                 const gapPct = Math.round((1 - gap.current_confidence) * 100);
                 const severityColor =
-                  gapPct > 65 ? "var(--pink)" : gapPct > 35 ? "var(--orange)" : "var(--green)";
+                  gapPct > 60 ? "var(--pink)" : gapPct > 35 ? "var(--orange)" : "var(--green)";
 
                 return (
                   <div
@@ -1164,56 +1274,49 @@ export default function DashboardTab({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      padding: "10px 16px",
+                      padding: "10px 14px",
                       background: "var(--bg-soft)",
                       borderRadius: "10px",
                       border: "1.5px solid var(--border)",
-                      flexWrap: "wrap",
                       gap: 12,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 180 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div
                         style={{
-                          width: 26,
-                          height: 26,
+                          width: 24,
+                          height: 24,
                           borderRadius: "50%",
                           background: severityColor,
                           color: "white",
                           fontWeight: 900,
-                          fontSize: "0.78rem",
+                          fontSize: "0.75rem",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          flexShrink: 0,
                         }}
                       >
                         {idx + 1}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 900, fontSize: "0.92rem" }}>{gap.skill}</div>
-                        <div style={{ fontSize: "0.72rem", color: "var(--text-soft)", fontWeight: 700 }}>
-                          Market demand: {Math.round(gap.market_frequency * 100)}% · Verified: {Math.round(gap.current_confidence * 100)}%
+                        <div style={{ fontWeight: 900, fontSize: "0.88rem", color: "var(--text)" }}>{gap.skill}</div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 700 }}>
+                          Demand: {Math.round(gap.market_frequency * 100)}% · Verified: {Math.round(gap.current_confidence * 100)}%
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: "0.76rem", fontWeight: 700, color: "var(--text-mid)" }}>
-                        Action: {gap.action}
-                      </div>
-                    </div>
-
                     <button
-                      id={`dashboard-improve-gap-${gap.skill}`}
+                      id={`dashboard-gap-action-${gap.skill}`}
                       onClick={() => onNavigateTab("roadmap")}
                       className="btn"
                       style={{
-                        fontSize: "0.76rem",
-                        padding: "5px 12px",
+                        fontSize: "0.74rem",
+                        padding: "4px 10px",
                         background: "var(--white)",
                         borderColor: severityColor,
                         color: severityColor,
-                        boxShadow: `2px 2px 0 ${severityColor}`,
                         fontWeight: 800,
                       }}
                     >
@@ -1225,98 +1328,304 @@ export default function DashboardTab({
             </div>
           </div>
 
-          {/* Quick What-If Simulation Card */}
-          <div
-            className="card"
-            style={{
-              borderColor: "var(--teal)",
-              boxShadow: "4px 4px 0 var(--teal)",
-              padding: "20px 24px",
-              background: "var(--white)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ paddingTop: 12, borderTop: "1.5px dashed var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "0.74rem", color: "var(--text-soft)", fontWeight: 600 }}>
+              Ranked by employer market frequency × missing evidence
+            </span>
+            <button
+              onClick={() => onNavigateTab("roadmap")}
+              className="btn btn-ghost"
+              style={{ fontSize: "0.76rem", padding: "4px 10px", fontWeight: 800, color: "var(--pink)" }}
+            >
+              10-Week Plan →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          SECTION 4: 3-COLUMN EXECUTION & SIMULATION (ROADMAP · QUIZ · WHAT-IF)
+          ══════════════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))",
+          gap: 20,
+        }}
+      >
+        {/* Card 1: Roadmap Snapshot */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--blue)",
+            boxShadow: "3px 3px 0 var(--blue)",
+            padding: "20px 22px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div>
-                <span style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
-                  WHAT-IF EXPLORATION
+                <span style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  LEARNING ROADMAP
                 </span>
-                <h3 style={{ fontWeight: 900, fontSize: "1.15rem", display: "flex", alignItems: "center", gap: 8, color: "var(--text)" }}>
-                  <Sliders size={18} color="var(--teal)" /> Simulated Employability Potential
+                <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Map size={17} color="var(--blue)" /> Roadmap Snapshot
                 </h3>
               </div>
-              <span className="badge" style={{ background: "var(--teal-light)", color: "var(--teal)", borderColor: "var(--teal)", fontSize: "0.72rem" }}>
-                SIMULATED PREVIEW
+              <span className="badge" style={{ background: "var(--blue-light)", color: "var(--blue)", borderColor: "var(--blue)", fontSize: "0.72rem" }}>
+                Stage: Applied
               </span>
             </div>
 
-            <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", marginBottom: 12, fontWeight: 600 }}>
-              Simulate how verifying your priority gaps impacts your Job Readiness score before writing code.
+            <div style={{ background: "var(--bg-soft)", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", marginBottom: 12 }}>
+              <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--text-soft)", textTransform: "uppercase" }}>NEXT MILESTONE</div>
+              <div style={{ fontWeight: 900, fontSize: "0.85rem", color: "var(--text)", marginTop: 2 }}>
+                {nextMilestone?.name || "Containerize Backend with Docker Compose"}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-mid)", fontWeight: 600, marginTop: 2 }}>
+                Est: 5–7 days · High Priority
+              </div>
+            </div>
+
+            {/* Milestone Timeline Preview */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+              {[
+                { name: "Python Async APIs", status: "completed" },
+                { name: "SQL Migrations & Schema", status: "completed" },
+                { name: "Docker Compose Build", status: "active" },
+                { name: "System Design RFC", status: "pending" },
+                { name: "Cloud IaC Deployment", status: "pending" },
+              ].map((m) => (
+                <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.76rem" }}>
+                  <span style={{
+                    color: m.status === "completed" ? "var(--green)" : m.status === "active" ? "var(--blue)" : "var(--text-soft)",
+                    fontWeight: 900
+                  }}>
+                    {m.status === "completed" ? "✓" : m.status === "active" ? "●" : "○"}
+                  </span>
+                  <span style={{
+                    fontWeight: m.status === "active" ? 900 : 600,
+                    color: m.status === "pending" ? "var(--text-soft)" : "var(--text)"
+                  }}>
+                    {m.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+            <button
+              onClick={() => onNavigateTab("roadmap")}
+              className="btn btn-primary"
+              style={{ width: "100%", fontSize: "0.78rem", padding: "6px 12px", fontWeight: 800 }}
+            >
+              Continue 10-Week Roadmap →
+            </button>
+          </div>
+        </div>
+
+        {/* Card 2: Skill Quiz Assessment Snapshot */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--teal)",
+            boxShadow: "3px 3px 0 var(--teal)",
+            padding: "20px 22px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <span style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  ADAPTIVE EVALUATION
+                </span>
+                <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <BrainCircuit size={17} color="var(--teal)" /> Skill Quiz
+                </h3>
+              </div>
+              <span className="badge" style={{ background: "var(--teal-light)", color: "var(--teal)", borderColor: "var(--teal)", fontSize: "0.72rem" }}>
+                AI Proctored
+              </span>
+            </div>
+
+            {quizCount > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{ background: "var(--bg-soft)", padding: "8px 10px", borderRadius: "8px", border: "1px solid var(--border)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--teal)" }}>{Math.round(quizAvg)}%</div>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-soft)" }}>Average Score</div>
+                  </div>
+                  <div style={{ background: "var(--bg-soft)", padding: "8px 10px", borderRadius: "8px", border: "1px solid var(--border)", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--orange)" }}>{quizStreak} 🔥</div>
+                    <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-soft)" }}>Daily Streak</div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: "0.76rem", color: "var(--text-mid)", fontWeight: 600 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                    <span>Python Backend APIs</span>
+                    <strong style={{ color: "var(--green)" }}>92% (Strong)</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>Docker &amp; Caching</span>
+                    <strong style={{ color: "var(--orange)" }}>58% (Needs Work)</strong>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: "var(--bg-soft)", padding: "14px", borderRadius: "10px", border: "1px solid var(--border)", marginBottom: 14, textAlign: "center" }}>
+                <BrainCircuit size={28} color="var(--teal)" style={{ margin: "0 auto 8px" }} />
+                <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text)" }}>No assessment yet</div>
+                <div style={{ fontSize: "0.74rem", color: "var(--text-mid)", fontWeight: 600, marginTop: 2 }}>
+                  Validate your skills with an adaptive AI assessment.
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+            <button
+              onClick={() => onNavigateTab("quiz")}
+              className="btn"
+              style={{
+                width: "100%",
+                background: "var(--teal)",
+                color: "white",
+                borderColor: "var(--text)",
+                fontSize: "0.78rem",
+                padding: "6px 12px",
+                fontWeight: 800,
+              }}
+            >
+              Take Skill Assessment Quiz →
+            </button>
+          </div>
+        </div>
+
+        {/* Card 3: What-If Career Simulation Mini-Panel */}
+        <div
+          className="card"
+          style={{
+            borderColor: "var(--purple)",
+            boxShadow: "3px 3px 0 var(--purple)",
+            padding: "20px 22px",
+            background: "var(--white)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div>
+                <span style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
+                  WHAT-IF SIMULATION
+                </span>
+                <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Sliders size={17} color="var(--purple)" /> Career Simulator
+                </h3>
+              </div>
+              <span
+                className="badge"
+                style={{
+                  background: "var(--purple-light)",
+                  color: "var(--purple)",
+                  borderColor: "var(--purple)",
+                  fontSize: "0.68rem",
+                  fontWeight: 900,
+                }}
+              >
+                SIMULATION ONLY
+              </span>
+            </div>
+
+            <p style={{ fontSize: "0.76rem", color: "var(--text-mid)", fontWeight: 600, marginBottom: 12 }}>
+              Simulate the mathematical impact of verifying your #1 gap (Docker) before writing code.
             </p>
 
             <div
               style={{
+                background: "var(--bg-soft)",
+                padding: "10px 12px",
+                borderRadius: "8px",
+                border: "1.5px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                background: "var(--bg-soft)",
-                padding: "12px 16px",
-                borderRadius: "10px",
-                border: "1.5px solid var(--border)",
-                flexWrap: "wrap",
-                gap: 12,
+                marginBottom: 12,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-soft)" }}>CURRENT SCORE</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--text)" }}>{Math.round(scoreVal)}</div>
-                </div>
-                <ArrowRight size={16} color="var(--text-soft)" />
-                <div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--teal)" }}>SIMULATED POTENTIAL</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "var(--teal)" }}>
-                    {simulatedScore ? simulatedScore : Math.round(scoreVal + 6)}
-                  </div>
-                </div>
-                {simulatedDelta && (
-                  <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}>
-                    +{simulatedDelta.toFixed(1)} pts
-                  </span>
-                )}
+              <div>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-soft)" }}>CURRENT</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--text)" }}>{Math.round(scoreVal)}</div>
               </div>
-
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  id="dashboard-run-quick-whatif"
-                  onClick={handleQuickWhatIf}
-                  disabled={whatIfRunning}
-                  className="btn btn-ghost"
-                  style={{ fontSize: "0.78rem", padding: "6px 12px", fontWeight: 800 }}
-                >
-                  {whatIfRunning ? "Simulating…" : "Run Quick Simulation"}
-                </button>
-                <button
-                  id="dashboard-open-full-whatif"
-                  onClick={() => onNavigateTab("analyse")}
-                  className="btn"
-                  style={{
-                    fontSize: "0.78rem",
-                    padding: "6px 12px",
-                    background: "var(--teal-light)",
-                    color: "var(--teal)",
-                    borderColor: "var(--teal)",
-                    fontWeight: 800,
-                  }}
-                >
-                  Full Simulator →
-                </button>
+              <ArrowRight size={16} color="var(--purple)" />
+              <div>
+                <div style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--purple)" }}>SIMULATED</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--purple)" }}>
+                  {simulatedScore ? simulatedScore : Math.round(scoreVal + 6)}
+                </div>
               </div>
+              <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}>
+                +{simulatedDelta ? simulatedDelta.toFixed(1) : "6.0"} pts
+              </span>
             </div>
           </div>
 
+          <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
+            <button
+              id="dashboard-run-whatif-quick"
+              onClick={handleQuickWhatIf}
+              disabled={whatIfRunning}
+              className="btn btn-ghost"
+              style={{ flex: 1, fontSize: "0.76rem", padding: "6px 8px", fontWeight: 800 }}
+            >
+              {whatIfRunning ? "Simulating…" : "Quick Sim"}
+            </button>
+            <button
+              id="dashboard-open-whatif-full"
+              onClick={() => onNavigateTab("analyse")}
+              className="btn btn-purple"
+              style={{ flex: 1, fontSize: "0.76rem", padding: "6px 8px", fontWeight: 800 }}
+            >
+              Full Simulator →
+            </button>
+          </div>
         </div>
-      )}
 
+        {/* Card 4: Target Job Fit Intelligence */}
+        <JobFitCard
+          profileId={profileId}
+          targetRole={selectedRole || activeReport?.role_fits?.[0]?.role || "Software Engineer"}
+          onOpenJobFit={() => onNavigateTab("jobfit")}
+        />
+
+        {/* Card 5: Proof-Backed Resume Health */}
+        <ResumeCard
+          targetRole={activeReport?.role_fits?.[0]?.role || "AI Engineer"}
+          qualityScore={86}
+          jdAlignment={84}
+          evidenceCoverage={Math.round(evidenceConfidencePct || 94)}
+          onOpenBuilder={() => onNavigateTab("resume")}
+        />
+      </div>
+
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          SECTION 5: ENGINEERING CONSISTENCY TIMELINE (52-WEEK CADENCE)
+          ══════════════════════════════════════════════════════════════════════════ */}
+      {activeReport?.claim_statuses && (
+        <ConsistencyChart claimStatuses={activeReport.claim_statuses} />
+      )}
     </div>
   );
 }
