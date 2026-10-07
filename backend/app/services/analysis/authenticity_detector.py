@@ -61,7 +61,7 @@ class AuthenticityDetector:
             return []
 
         evidence: List[Evidence] = []
-        repos = [r for r in list(user.get_repos())[:20]]
+        repos = [r for r in list(user.get_repos(sort="updated")[:20])]
 
         for repo in repos:
             evidence.extend(self._analyse_repo(repo))

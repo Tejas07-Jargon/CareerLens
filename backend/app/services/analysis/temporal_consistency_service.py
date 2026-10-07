@@ -159,7 +159,7 @@ class TemporalConsistencyService:
         cutoff = now - timedelta(weeks=self.WEEKS)
         week_counts: Dict[int, int] = {}
 
-        for repo in list(user.get_repos())[:10]:
+        for repo in list(user.get_repos(sort="updated")[:10]):
             if repo.fork:
                 continue
             try:

@@ -98,6 +98,7 @@ async def create_profile(
         github_username=github_username,
         portfolio_url=portfolio_url,
         design_portfolio_url=design_portfolio_url,
+        design_portfolio_filename=design_filename,
         target_role=target_role,
         interests=interests,
         weekly_hours_available=weekly_hours_available,
@@ -128,19 +129,33 @@ async def create_profile(
 
     await session.commit()
 
-    # Trigger analysis (Celery worker with graceful background fallback)
-    # try:
-    #     from app.workers.analysis_tasks import run_fast_analysis
-    #     task = run_fast_analysis.delay(profile_id)
-    #     profile.celery_task_id = task.id
-    #     await session.commit()
-    # except Exception:
-    #     pass
-    
-    # Fallback to local async execution when Celery/Redis is unreachable
-    # from app.services.analysis_orchestrator import AnalysisOrchestrator
-    # orchestrator = AnalysisOrchestrator()
-    # asyncio.create_task(orchestrator.run_fast_analysis(profile_id))
+    # Trigger analysis — try Celery/Redis first, fall back instantly to local asyncio
+    _celery_dispatched = False
+    try:
+        # Quick Redis liveness check (0.5 s timeout) before handing off to Celery.
+        # Without this, Celery retries for 20+ seconds and the profile stays "pending".
+        import redis as _redis
+        from app.core.config import settings as _s
+        _r = _redis.from_url(_s.REDIS_URL, socket_connect_timeout=0.5, socket_timeout=0.5)
+        _r.ping()  # raises if Redis is down
+
+        from app.workers.analysis_tasks import run_fast_analysis
+        task = run_fast_analysis.delay(profile_id)
+        profile.celery_task_id = task.id
+        await session.commit()
+        _celery_dispatched = True
+    except Exception:
+        pass  # Redis not available — fall through to local execution
+
+    if not _celery_dispatched:
+        # Fallback: run analysis in-process as an asyncio background task
+        from app.services.analysis_orchestrator import AnalysisOrchestrator
+        async def run_full_fallback(pid: str):
+            orchestrator = AnalysisOrchestrator()
+            await orchestrator.run_fast_analysis(pid)
+            await orchestrator.run_deep_analysis(pid)
+            
+        asyncio.create_task(run_full_fallback(profile_id))
 
     return {"profile_id": profile_id, "status": "pending"}
 

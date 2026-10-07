@@ -31,8 +31,9 @@ class Profile(Base):
     resume_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     github_username: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     linkedin_pdf_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    design_portfolio_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     portfolio_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    design_portfolio_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Behance/Figma
+    design_portfolio_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Behance/Figma URL (optional)
 
     # ── Student preferences (used in roadmap personalisation) ─────────────────
     target_role: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)

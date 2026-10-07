@@ -91,13 +91,16 @@ class GitHubAdapter:
             return []
 
         evidence: List[Evidence] = []
-        repos = list(user.get_repos())[:settings.GITHUB_MAX_REPOS_FAST]
+        repos = list(user.get_repos(sort="updated")[:settings.GITHUB_MAX_REPOS_FAST])
 
         for repo in repos:
             # Skip forks for primary analysis (flag them as a signal)
             if repo.fork:
                 continue
-            evidence.extend(self._evidence_from_repo_meta(repo))
+            try:
+                evidence.extend(self._evidence_from_repo_meta(repo))
+            except Exception as exc:
+                log.warning("Skipping repo due to error", repo=getattr(repo, 'full_name', '?'), error=str(exc))
 
         evidence.extend(self._evidence_from_contribution_calendar(user))
         return evidence
@@ -109,7 +112,7 @@ class GitHubAdapter:
         pushed_at: datetime = repo.pushed_at or now
 
         for lang, bytes_count in (repo.get_languages() or {}).items():
-            depth = min(1.0, bytes_count / 50_000)  # saturates at 50 kB
+            depth = min(1.0, int(bytes_count) / 50_000)  # saturates at 50 kB; cast in case API returns str
             items.append(
                 Evidence(
                     profile_id=self.profile_id,
@@ -220,8 +223,9 @@ class GitHubAdapter:
             log.error("GitHub user not found in deep pass", error=str(exc))
             return []
 
+        recent_repos = list(user.get_repos(sort="updated")[:50])
         repos = sorted(
-            [r for r in user.get_repos() if not r.fork],
+            [r for r in recent_repos if not r.fork],
             key=lambda r: r.stargazers_count,
             reverse=True,
         )[:top_n]

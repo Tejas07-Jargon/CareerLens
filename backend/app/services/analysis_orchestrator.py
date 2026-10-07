@@ -2,7 +2,7 @@
 CareerLens Analysis Orchestrator.
 
 Coordinates the end-to-end evidence-based evaluation pipeline:
-1. Ingest input sources (Resume, GitHub, Live Probe, Design Portfolio)
+1. Ingest input sources (Resume, LinkedIn PDF, GitHub, Live Probe, Design Portfolio)
 2. Extract claims and proof-of-work evidence records
 3. Normalise skills via alias table / embeddings
 4. Build and link ClaimEvidence relationships
@@ -18,6 +18,7 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +33,7 @@ from app.models.score_run import ScoreRun
 from app.services.adapters.design_portfolio_adapter import DesignPortfolioAdapter
 from app.services.adapters.github_adapter import GitHubAdapter
 from app.services.adapters.live_probe_adapter import LiveProbeAdapter
+from app.services.adapters.linkedin_adapter import LinkedInAdapter
 from app.services.adapters.resume_adapter import ResumeAdapter
 from app.services.analysis.authenticity_detector import AuthenticityDetector
 from app.services.analysis.evidence_linker import EvidenceLinker
@@ -54,10 +56,13 @@ class AnalysisOrchestrator:
     Central pipeline orchestrator for fast and deep analysis.
     """
 
+    # ── Fast pass ─────────────────────────────────────────────────────────────
+
     async def run_fast_analysis(self, profile_id: str) -> Optional[ScoreRun]:
         """
-        Fast pass: resume extraction + GitHub metadata + live probe + initial deterministic scoring.
-        Completes in seconds.
+        Fast pass: resume + LinkedIn + GitHub metadata + live probe + initial scoring.
+        Completes in seconds. Sets profile.status = 'error' on any crash so the
+        SSE stream terminates cleanly instead of hanging.
         """
         async with AsyncSessionLocal() as session:
             profile = await session.get(Profile, profile_id)
@@ -68,163 +73,215 @@ class AnalysisOrchestrator:
             profile.status = "fast_pass"
             await session.commit()
 
-            evidence_items: List[Evidence] = []
-            security_flags: List[Dict[str, Any]] = []
-            supplied_sources: List[str] = []
-
-            # 1. Resume extraction & security scan
-            if profile.resume_filename:
-                resume_path = Path("uploads") / profile.resume_filename
-                if resume_path.exists():
-                    ra = ResumeAdapter(str(resume_path), profile_id)
-                    res_evidence, flags = ra.extract()
-                    evidence_items.extend(res_evidence)
-                    security_flags.extend(flags)
-                    supplied_sources.append("resume")
-
-            # 2. GitHub fast pass
-            if profile.github_username:
-                gh = GitHubAdapter(profile.github_username, profile_id)
-                gh_evidence = gh.fast_pass()
-                evidence_items.extend(gh_evidence)
-                supplied_sources.append("github_repo")
-                supplied_sources.append("github_calendar")
-
-            # 3. Live portfolio probe
-            if profile.portfolio_url:
-                lp = LiveProbeAdapter(profile.portfolio_url, profile_id)
-                probe_ev = lp.probe()
-                if probe_ev:
-                    evidence_items.append(probe_ev)
-                    supplied_sources.append("live_probe")
-
-            # 4. Design portfolio
-            if profile.design_portfolio_url:
-                dp = DesignPortfolioAdapter(profile.design_portfolio_url, profile_id)
-                dp_ev = dp.extract()
-                evidence_items.extend(dp_ev)
-                supplied_sources.append("design_portfolio")
-
-            # Save initial evidence
-            if evidence_items:
-                session.add_all(evidence_items)
-                await session.flush()
-
-            # 5. Normalise skills on evidence
-            normaliser = SkillNormaliser()
-            for ev in evidence_items:
-                ev.skill_hints = [normaliser.normalise(s) for s in ev.skill_hints]
-
-            # 6. Link claims & evidence edges
-            linker = EvidenceLinker()
-            edges = linker.link(evidence_items)
-            session.add_all(edges)
-            await session.flush()
-
-            # 7. Role weights & scoring
-            target_role = profile.target_role or "Software Engineer"
-            role_weights = await self.load_role_weights(session, target_role)
-
-            scorer_items = [
-                EvidenceItem(
-                    id=ev.id,
-                    skill_hints=ev.skill_hints,
-                    strength=ev.strength,
-                    source=ev.source,
-                    locator=ev.locator or {},
+            try:
+                return await self._fast_pass_body(profile_id, session, profile)
+            except Exception as exc:
+                log.error(
+                    "Fast analysis crashed — marking profile as error",
+                    profile_id=profile_id,
+                    error=str(exc),
                 )
-                for ev in evidence_items
-            ]
-            claim_skills = [
-                ev.skill_hints[0]
-                for ev in evidence_items
-                if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
-            ]
-
-            score_input = ScoreInput(
-                evidence_items=scorer_items,
-                claim_skills=list(set(claim_skills)),
-                role_weights=role_weights,
-                supplied_sources=list(set(supplied_sources)),
-            )
-            score_result = compute_score(score_input)
-
-            # Compute multi-role matches across all available role profiles
-            all_role_fits = await self.compute_all_role_fits(session, scorer_items, list(set(claim_skills)), supplied_sources)
-            if all_role_fits:
-                score_result.role_fits = all_role_fits
-
-            # 8. Explanations & roadmap
-            explainer = LLMExplainer()
-            own_repos = []
-            if profile.github_username:
                 try:
-                    from github import Auth, Github
-                    gh_client = Github(auth=Auth.Token(settings.GITHUB_TOKEN)) if settings.GITHUB_TOKEN else Github()
-                    own_repos = [r.name for r in list(gh_client.get_user(profile.github_username).get_repos())[:10]]
+                    profile.status = "error"
+                    profile.error_message = str(exc)[:500]
+                    await session.commit()
                 except Exception:
                     pass
+                return None
 
-            roadmap = explainer.generate_roadmap(
-                gaps=score_result.gaps,
-                interests=profile.interests or "",
-                weekly_hours=profile.weekly_hours_available or 5,
-                target_role=target_role,
-                own_repos=own_repos,
+    async def _fast_pass_body(
+        self, profile_id: str, session, profile
+    ) -> Optional[ScoreRun]:
+        """All the actual fast-pass work — called by run_fast_analysis inside a try/except."""
+        evidence_items: List[Evidence] = []
+        security_flags: List[Dict[str, Any]] = []
+        supplied_sources: List[str] = []
+
+        # 1. Resume extraction & security scan
+        if profile.resume_filename:
+            resume_path = Path("uploads") / profile.resume_filename
+            if resume_path.exists():
+                ra = ResumeAdapter(str(resume_path), profile_id)
+                res_evidence, flags = ra.extract()
+                evidence_items.extend(res_evidence)
+                security_flags.extend(flags)
+                supplied_sources.append("resume")
+
+        # 2. LinkedIn PDF extraction
+        if profile.linkedin_pdf_filename:
+            linkedin_path = Path("uploads") / profile.linkedin_pdf_filename
+            if linkedin_path.exists():
+                la = LinkedInAdapter(str(linkedin_path), profile_id)
+                li_evidence, li_flags = la.extract()
+                evidence_items.extend(li_evidence)
+                security_flags.extend(li_flags)
+                supplied_sources.append("linkedin_pdf")
+
+        # 3. GitHub fast pass
+        if profile.github_username:
+            gh = GitHubAdapter(profile.github_username, profile_id)
+            gh_evidence = gh.fast_pass()
+            evidence_items.extend(gh_evidence)
+            supplied_sources.append("github_repo")
+            supplied_sources.append("github_calendar")
+
+        # 4. Live portfolio probe
+        if profile.portfolio_url:
+            lp = LiveProbeAdapter(profile.portfolio_url, profile_id)
+            probe_ev = lp.probe()
+            if probe_ev:
+                evidence_items.append(probe_ev)
+                supplied_sources.append("live_probe")
+
+        # 5. Design portfolio (uploaded file takes priority over URL)
+        dp_file_path = None
+        if profile.design_portfolio_filename:
+            candidate = Path("uploads") / profile.design_portfolio_filename
+            if candidate.exists():
+                dp_file_path = str(candidate)
+        elif profile.design_portfolio_url:
+            log.info(
+                "Design portfolio URL provided but file upload required for analysis; skipping.",
+                url=profile.design_portfolio_url,
             )
 
-            # 9. Create ScoreRun
-            input_hash = hashlib.sha256(
-                json.dumps({
-                    "evidence_ids": sorted([e.id for e in evidence_items]),
-                    "weights_version": "v1",
-                    "pass": "fast",
-                }).encode()
-            ).hexdigest()
+        if dp_file_path:
+            dp = DesignPortfolioAdapter(dp_file_path, profile_id)
+            dp_ev, _ = dp.extract()
+            evidence_items.extend(dp_ev)
+            supplied_sources.append("design_portfolio")
 
-            score_run = ScoreRun(
-                profile_id=profile_id,
-                input_hash=input_hash,
-                weights_version="v1",
-                role=target_role,
-                score_mid=score_result.score_mid,
-                score_lo=score_result.score_lo,
-                score_hi=score_result.score_hi,
-                components={
-                    c.name: {
-                        "value": c.value,
-                        "weight": c.weight,
-                        "reason": c.reason,
-                        "evidence_ids": c.evidence_ids,
-                    }
-                    for c in score_result.components
-                },
-                credibility={
-                    **score_result.credibility,
-                    "flags": security_flags,
-                },
-                claim_statuses=[
-                    {
-                        "skill": cs.skill,
-                        "status": cs.status,
-                        "confidence": cs.confidence,
-                        "evidence_ids": cs.evidence_ids,
-                        "locators": cs.locators,
-                    }
-                    for cs in score_result.claim_statuses
-                ],
-                role_fits=score_result.role_fits,
-                gaps=score_result.gaps,
-                roadmap=roadmap,
+        # Save initial evidence to DB
+        if evidence_items:
+            session.add_all(evidence_items)
+            await session.flush()
+
+        # 6. Normalise skills
+        normaliser = SkillNormaliser()
+        for ev in evidence_items:
+            ev.skill_hints = [normaliser.normalise(s) for s in ev.skill_hints]
+
+        # 7. Link claims & evidence edges
+        linker = EvidenceLinker()
+        edges = linker.link(evidence_items)
+        session.add_all(edges)
+        await session.flush()
+
+        # 8. Role weights & scoring
+        target_role = profile.target_role or "Software Engineer"
+        role_weights = await self.load_role_weights(session, target_role)
+
+        scorer_items = [
+            EvidenceItem(
+                id=ev.id,
+                skill_hints=ev.skill_hints,
+                strength=ev.strength,
+                source=ev.source,
+                locator=ev.locator or {},
             )
-            session.add(score_run)
+            for ev in evidence_items
+        ]
+        claim_skills = [
+            ev.skill_hints[0]
+            for ev in evidence_items
+            if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
+        ]
 
-            profile.status = "fast_pass_complete"
-            profile.security_flags = security_flags
-            await session.commit()
+        score_input = ScoreInput(
+            evidence_items=scorer_items,
+            claim_skills=list(set(claim_skills)),
+            role_weights=role_weights,
+            supplied_sources=list(set(supplied_sources)),
+        )
+        score_result = compute_score(score_input)
 
-            log.info("Fast analysis complete", profile_id=profile_id, score_mid=score_result.score_mid)
-            return score_run
+        # Multi-role fit
+        all_role_fits = await self.compute_all_role_fits(
+            session, scorer_items, list(set(claim_skills)), supplied_sources
+        )
+        if all_role_fits:
+            score_result.role_fits = all_role_fits
+
+        # 9. Roadmap via LLM explainer
+        explainer = LLMExplainer()
+        own_repos: List[str] = []
+        if profile.github_username:
+            try:
+                from github import Auth, Github
+                gh_client = (
+                    Github(auth=Auth.Token(settings.GITHUB_TOKEN))
+                    if settings.GITHUB_TOKEN
+                    else Github()
+                )
+                own_repos = [
+                    r.name
+                    for r in list(gh_client.get_user(profile.github_username).get_repos(sort="updated")[:10])
+                ]
+            except Exception:
+                pass
+
+        roadmap = explainer.generate_roadmap(
+            gaps=score_result.gaps,
+            interests=profile.interests or "",
+            weekly_hours=profile.weekly_hours_available or 5,
+            target_role=target_role,
+            own_repos=own_repos,
+        )
+
+        # 10. Create ScoreRun
+        input_hash = hashlib.sha256(
+            json.dumps({
+                "evidence_ids": sorted([e.id for e in evidence_items]),
+                "weights_version": "v1",
+                "pass": "fast",
+            }).encode()
+        ).hexdigest()
+
+        score_run = ScoreRun(
+            profile_id=profile_id,
+            input_hash=input_hash,
+            weights_version="v1",
+            role=target_role,
+            score_mid=score_result.score_mid,
+            score_lo=score_result.score_lo,
+            score_hi=score_result.score_hi,
+            components={
+                c.name: {
+                    "value": c.value,
+                    "weight": c.weight,
+                    "reason": c.reason,
+                    "evidence_ids": c.evidence_ids,
+                }
+                for c in score_result.components
+            },
+            credibility={
+                **score_result.credibility,
+                "flags": security_flags,
+            },
+            claim_statuses=[
+                {
+                    "skill": cs.skill,
+                    "status": cs.status,
+                    "confidence": cs.confidence,
+                    "evidence_ids": cs.evidence_ids,
+                    "locators": cs.locators,
+                }
+                for cs in score_result.claim_statuses
+            ],
+            role_fits=score_result.role_fits,
+            gaps=score_result.gaps,
+            roadmap=roadmap,
+        )
+        session.add(score_run)
+
+        profile.status = "fast_pass_complete"
+        profile.security_flags = security_flags
+        await session.commit()
+
+        log.info("Fast analysis complete", profile_id=profile_id, score_mid=score_result.score_mid)
+        return score_run
+
+    # ── Deep pass ─────────────────────────────────────────────────────────────
 
     async def run_deep_analysis(self, profile_id: str) -> Optional[ScoreRun]:
         """
@@ -239,141 +296,172 @@ class AnalysisOrchestrator:
             profile.status = "deep_pass"
             await session.commit()
 
-            new_evidence: List[Evidence] = []
-            supplied_sources: List[str] = []
-
-            # 1. GitHub deep analysis
-            if profile.github_username:
-                gh = GitHubAdapter(profile.github_username, profile_id)
-                new_evidence.extend(gh.deep_pass())
-
-                auth_detector = AuthenticityDetector(profile.github_username, profile_id)
-                new_evidence.extend(auth_detector.analyse())
-
-                consistency_svc = TemporalConsistencyService(profile.github_username, profile_id)
-                new_evidence.extend(consistency_svc.analyse())
-
-                supplied_sources.extend(["github_repo", "github_calendar"])
-
-            if new_evidence:
-                session.add_all(new_evidence)
-                await session.flush()
-
-            # Normalise and link all evidence
-            all_ev_stmt = select(Evidence).where(Evidence.profile_id == profile_id)
-            all_ev_res = await session.execute(all_ev_stmt)
-            all_evidence = list(all_ev_res.scalars().all())
-
-            normaliser = SkillNormaliser()
-            for ev in all_evidence:
-                ev.skill_hints = [normaliser.normalise(s) for s in ev.skill_hints]
-
-            linker = EvidenceLinker()
-            edges = linker.link(all_evidence)
-            session.add_all(edges)
-            await session.flush()
-
-            # Re-score with complete evidence set
-            target_role = profile.target_role or "Software Engineer"
-            role_weights = await self.load_role_weights(session, target_role)
-
-            scorer_items = [
-                EvidenceItem(
-                    id=ev.id,
-                    skill_hints=ev.skill_hints,
-                    strength=ev.strength,
-                    source=ev.source,
-                    locator=ev.locator or {},
+            try:
+                return await self._deep_pass_body(profile_id, session, profile)
+            except Exception as exc:
+                log.error(
+                    "Deep analysis crashed — marking profile as error",
+                    profile_id=profile_id,
+                    error=str(exc),
                 )
-                for ev in all_evidence
-            ]
-            claim_skills = [
-                ev.skill_hints[0]
-                for ev in all_evidence
-                if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
-            ]
-
-            all_supplied = list(set([e.source for e in all_evidence] + supplied_sources))
-            score_input = ScoreInput(
-                evidence_items=scorer_items,
-                claim_skills=list(set(claim_skills)),
-                role_weights=role_weights,
-                supplied_sources=all_supplied,
-            )
-            score_result = compute_score(score_input)
-
-            all_role_fits = await self.compute_all_role_fits(session, scorer_items, list(set(claim_skills)), all_supplied)
-            if all_role_fits:
-                score_result.role_fits = all_role_fits
-
-            explainer = LLMExplainer()
-            own_repos = []
-            if profile.github_username:
                 try:
-                    from github import Auth, Github
-                    gh_client = Github(auth=Auth.Token(settings.GITHUB_TOKEN)) if settings.GITHUB_TOKEN else Github()
-                    own_repos = [r.name for r in list(gh_client.get_user(profile.github_username).get_repos())[:10]]
+                    profile.status = "error"
+                    profile.error_message = str(exc)[:500]
+                    await session.commit()
                 except Exception:
                     pass
+                return None
 
-            roadmap = explainer.generate_roadmap(
-                gaps=score_result.gaps,
-                interests=profile.interests or "",
-                weekly_hours=profile.weekly_hours_available or 5,
-                target_role=target_role,
-                own_repos=own_repos,
+    async def _deep_pass_body(
+        self, profile_id: str, session, profile
+    ) -> Optional[ScoreRun]:
+        """All the actual deep-pass work."""
+        new_evidence: List[Evidence] = []
+        supplied_sources: List[str] = []
+
+        # 1. GitHub deep analysis
+        if profile.github_username:
+            gh = GitHubAdapter(profile.github_username, profile_id)
+            new_evidence.extend(gh.deep_pass())
+
+            auth_detector = AuthenticityDetector(profile.github_username, profile_id)
+            new_evidence.extend(auth_detector.analyse())
+
+            consistency_svc = TemporalConsistencyService(profile.github_username, profile_id)
+            new_evidence.extend(consistency_svc.analyse())
+
+            supplied_sources.extend(["github_repo", "github_calendar"])
+
+        if new_evidence:
+            session.add_all(new_evidence)
+            await session.flush()
+
+        # Load and re-normalise all evidence
+        all_ev_stmt = select(Evidence).where(Evidence.profile_id == profile_id)
+        all_ev_res = await session.execute(all_ev_stmt)
+        all_evidence = list(all_ev_res.scalars().all())
+
+        normaliser = SkillNormaliser()
+        for ev in all_evidence:
+            ev.skill_hints = [normaliser.normalise(s) for s in ev.skill_hints]
+
+        linker = EvidenceLinker()
+        edges = linker.link(all_evidence)
+        session.add_all(edges)
+        await session.flush()
+
+        # Re-score with complete evidence set
+        target_role = profile.target_role or "Software Engineer"
+        role_weights = await self.load_role_weights(session, target_role)
+
+        scorer_items = [
+            EvidenceItem(
+                id=ev.id,
+                skill_hints=ev.skill_hints,
+                strength=ev.strength,
+                source=ev.source,
+                locator=ev.locator or {},
             )
+            for ev in all_evidence
+        ]
+        claim_skills = [
+            ev.skill_hints[0]
+            for ev in all_evidence
+            if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
+        ]
 
-            input_hash = hashlib.sha256(
-                json.dumps({
-                    "evidence_ids": sorted([e.id for e in all_evidence]),
-                    "weights_version": "v1",
-                    "pass": "deep",
-                }).encode()
-            ).hexdigest()
+        all_supplied = list(set([e.source for e in all_evidence] + supplied_sources))
+        score_input = ScoreInput(
+            evidence_items=scorer_items,
+            claim_skills=list(set(claim_skills)),
+            role_weights=role_weights,
+            supplied_sources=all_supplied,
+        )
+        score_result = compute_score(score_input)
 
-            score_run = ScoreRun(
-                profile_id=profile_id,
-                input_hash=input_hash,
-                weights_version="v1",
-                role=target_role,
-                score_mid=score_result.score_mid,
-                score_lo=score_result.score_lo,
-                score_hi=score_result.score_hi,
-                components={
-                    c.name: {
-                        "value": c.value,
-                        "weight": c.weight,
-                        "reason": c.reason,
-                        "evidence_ids": c.evidence_ids,
-                    }
-                    for c in score_result.components
-                },
-                credibility={
-                    **score_result.credibility,
-                    "flags": profile.security_flags or [],
-                },
-                claim_statuses=[
-                    {
-                        "skill": cs.skill,
-                        "status": cs.status,
-                        "confidence": cs.confidence,
-                        "evidence_ids": cs.evidence_ids,
-                        "locators": cs.locators,
-                    }
-                    for cs in score_result.claim_statuses
-                ],
-                role_fits=score_result.role_fits,
-                gaps=score_result.gaps,
-                roadmap=roadmap,
-            )
-            session.add(score_run)
+        all_role_fits = await self.compute_all_role_fits(
+            session, scorer_items, list(set(claim_skills)), all_supplied
+        )
+        if all_role_fits:
+            score_result.role_fits = all_role_fits
 
-            profile.status = "complete"
-            await session.commit()
+        explainer = LLMExplainer()
+        own_repos: List[str] = []
+        if profile.github_username:
+            try:
+                from github import Auth, Github
+                gh_client = (
+                    Github(auth=Auth.Token(settings.GITHUB_TOKEN))
+                    if settings.GITHUB_TOKEN
+                    else Github()
+                )
+                own_repos = [
+                    r.name
+                    for r in list(gh_client.get_user(profile.github_username).get_repos(sort="updated")[:10])
+                ]
+            except Exception:
+                pass
 
-            log.info("Deep analysis complete", profile_id=profile_id, score_mid=score_result.score_mid)
-            return score_run
+        roadmap = explainer.generate_roadmap(
+            gaps=score_result.gaps,
+            interests=profile.interests or "",
+            weekly_hours=profile.weekly_hours_available or 5,
+            target_role=target_role,
+            own_repos=own_repos,
+        )
+
+        input_hash = hashlib.sha256(
+            json.dumps({
+                "evidence_ids": sorted([e.id for e in all_evidence]),
+                "weights_version": "v1",
+                "pass": "deep",
+            }).encode()
+        ).hexdigest()
+
+        score_run = ScoreRun(
+            profile_id=profile_id,
+            input_hash=input_hash,
+            weights_version="v1",
+            role=target_role,
+            score_mid=score_result.score_mid,
+            score_lo=score_result.score_lo,
+            score_hi=score_result.score_hi,
+            components={
+                c.name: {
+                    "value": c.value,
+                    "weight": c.weight,
+                    "reason": c.reason,
+                    "evidence_ids": c.evidence_ids,
+                }
+                for c in score_result.components
+            },
+            credibility={
+                **score_result.credibility,
+                "flags": profile.security_flags or [],
+            },
+            claim_statuses=[
+                {
+                    "skill": cs.skill,
+                    "status": cs.status,
+                    "confidence": cs.confidence,
+                    "evidence_ids": cs.evidence_ids,
+                    "locators": cs.locators,
+                }
+                for cs in score_result.claim_statuses
+            ],
+            role_fits=score_result.role_fits,
+            gaps=score_result.gaps,
+            roadmap=roadmap,
+        )
+        session.add(score_run)
+
+        profile.status = "complete"
+        await session.commit()
+
+        log.info("Deep analysis complete", profile_id=profile_id, score_mid=score_result.score_mid)
+        return score_run
+
+    # ── Helpers ───────────────────────────────────────────────────────────────
 
     async def load_role_weights(self, session: AsyncSession, role_name: str) -> RoleWeights:
         """Load RoleWeights from DB, fall back to sensible defaults if unseeded."""
