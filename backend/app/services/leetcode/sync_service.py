@@ -183,17 +183,68 @@ class SyncService:
                         )
                         self.db.add(contest_record)
                         
-                # Sync Recent Submissions
-                # As we don't have canonical problem IDs without auth, we can just store the recent 
-                # submissions in the LeetCodeSubmission table with null question_id, or better yet,
-                # just pass them directly through a new API endpoint since they aren't fully canonical?
-                # Actually, wait, `LeetCodeSubmission` requires `question_id`.
-                # Since we don't have `question_id`, let's just save them into `lc_profile.aggregate_submissions["recent"] = recent_submissions`.
+                # Sync Recent Submissions into actual database models so analytics work
                 recent = prof_data.get("recent_submissions", [])
                 if isinstance(lc_profile.aggregate_submissions, dict):
                     lc_profile.aggregate_submissions["recent"] = recent
                 else:
                     lc_profile.aggregate_submissions = {"recent": recent}
+
+                for sub in recent:
+                    q_id_str = sub.get("titleSlug", "")
+                    if not q_id_str:
+                        continue
+                    
+                    q_id = sum(ord(c) * (i+1) * 31 for i, c in enumerate(q_id_str)) % 2147483647
+                    
+                    prob_res = await self.db.execute(select(LeetCodeProblem).where(LeetCodeProblem.question_id == q_id))
+                    prob_obj = prob_res.scalars().first()
+                    if not prob_obj:
+                        prob_obj = LeetCodeProblem(
+                            question_id=q_id,
+                            title=sub.get("title", q_id_str),
+                            title_slug=q_id_str,
+                            difficulty="Medium"
+                        )
+                        self.db.add(prob_obj)
+                        
+                    if sub.get("statusDisplay") == "Accepted":
+                        solved_res = await self.db.execute(
+                            select(LeetCodeSolvedProblem)
+                            .where(LeetCodeSolvedProblem.leetcode_profile_id == lc_profile.id)
+                            .where(LeetCodeSolvedProblem.question_id == q_id)
+                        )
+                        solved_obj = solved_res.scalars().first()
+                        sub_time = datetime.fromtimestamp(int(sub.get("timestamp", 0)))
+                        if not solved_obj:
+                            solved_obj = LeetCodeSolvedProblem(
+                                leetcode_profile_id=lc_profile.id,
+                                question_id=q_id,
+                                status="Accepted",
+                                recent_submission_time=sub_time
+                            )
+                            self.db.add(solved_obj)
+                        else:
+                            if sub_time > solved_obj.recent_submission_time:
+                                solved_obj.recent_submission_time = sub_time
+                                
+                    sub_time = datetime.fromtimestamp(int(sub.get("timestamp", 0)))
+                    sub_id = f"{q_id}_{int(sub.get('timestamp', 0))}"
+                    exist_sub = await self.db.execute(
+                        select(LeetCodeSubmission).where(LeetCodeSubmission.submission_id == sub_id)
+                    )
+                    if not exist_sub.scalars().first():
+                        sub_obj = LeetCodeSubmission(
+                            submission_id=sub_id,
+                            leetcode_profile_id=lc_profile.id,
+                            question_id=q_id,
+                            lang=sub.get("lang", ""),
+                            timestamp=sub_time,
+                            status_display=sub.get("statusDisplay", ""),
+                            runtime="0 ms",
+                            memory="0 MB"
+                        )
+                        self.db.add(sub_obj)
                         
             # Scraper currently doesn't fetch full canonical history without auth.
             

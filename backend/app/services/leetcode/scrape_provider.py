@@ -106,7 +106,7 @@ class ScrapeProvider(Provider):
               problemsSolved
             }
           }
-          recentSubmissionList(username: $username, limit: 20) {
+          recentSubmissionList(username: $username, limit: 50) {
             title
             titleSlug
             timestamp
