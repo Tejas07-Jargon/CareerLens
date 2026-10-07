@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { SkillEvidenceItem } from "@/types/evidence";
-import { Scale, BarChart2, FolderGit2, Check, AlertTriangle, Info, Lightbulb, X, Bot, CircleDot } from "lucide-react";
+import { Scale, BarChart2, FolderGit2, Check, AlertTriangle, Info, Lightbulb, X, Bot, CircleDot, ShieldCheck, Code2 } from "lucide-react";
 
 interface Props {
   skill: SkillEvidenceItem | null;
@@ -292,6 +292,49 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
             </div>
           </div>
         </div>
+
+        {/* ── Ownership Attribution Provenance (If Available) ──────── */}
+        {skill.ownership && skill.ownership.status !== "not_analysed" && (
+          <div
+            style={{
+              padding: "14px 16px",
+              background: "var(--blue-light)",
+              border: "2px solid var(--blue)",
+              borderRadius: "10px",
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <ShieldCheck size={18} color="var(--blue)" />
+              <div style={{ fontWeight: 900, fontSize: "0.92rem", color: "var(--text)" }}>
+                Repository Evidence Adjusted via Ownership Attribution
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: "0.8rem", color: "var(--text)", marginBottom: 8 }}>
+              <div>
+                <span style={{ color: "var(--text-mid)", fontWeight: 700 }}>Primary Repository: </span>
+                <strong>{skill.ownership.top_repo}</strong>
+              </div>
+              <div>
+                <span style={{ color: "var(--text-mid)", fontWeight: 700 }}>Candidate-Attributed Lines: </span>
+                <strong style={{ color: "var(--blue)" }}>{Math.round(skill.ownership.share * 100)}%</strong>
+              </div>
+              <div>
+                <span style={{ color: "var(--text-mid)", fontWeight: 700 }}>Ownership Factor: </span>
+                <strong>{skill.ownership.factor.toFixed(2)}x</strong>
+              </div>
+              <div>
+                <span style={{ color: "var(--text-mid)", fontWeight: 700 }}>Blame Coverage: </span>
+                <strong>{Math.round(skill.ownership.coverage * 100)}%</strong>
+              </div>
+            </div>
+
+            <div style={{ fontSize: "0.74rem", color: "var(--text-mid)", fontStyle: "italic", borderTop: "1px dashed var(--blue)", paddingTop: 6 }}>
+              ℹ️ Attribution based on surviving Git history and porcelain blame analysis. This measures code contribution provenance.
+            </div>
+          </div>
+        )}
 
         {/* ── Evidence Sources Checklist ──────────────────────────── */}
         <div style={{ marginBottom: 20 }}>

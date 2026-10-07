@@ -21,12 +21,14 @@ from typing import Any, Dict, List, Optional
 
 import structlog
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.models.audit_log import AuditLog
 from app.models.evidence import ClaimEvidence, Evidence
+from app.models.ownership import RepoAttribution
 from app.models.profile import Profile
 from app.models.role_profile import RoleProfile
 from app.models.score_run import ScoreRun
@@ -40,6 +42,7 @@ from app.services.analysis.evidence_linker import EvidenceLinker
 from app.services.analysis.skill_normaliser import SkillNormaliser
 from app.services.analysis.temporal_consistency_service import TemporalConsistencyService
 from app.services.explainer.llm_explainer import LLMExplainer
+from app.services.scoring.ownership_evidence_integrator import apply_ownership_to_evidence_items
 from app.services.scoring.scorer import (
     EvidenceItem,
     RoleWeights,
@@ -189,6 +192,17 @@ class AnalysisOrchestrator:
             if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
             for s in ev.skill_hints
         ]
+
+        # Fetch active repository attributions with skill breakdowns for ownership adjustments
+        attr_stmt = (
+            select(RepoAttribution)
+            .where(RepoAttribution.profile_id == profile.id)
+            .options(selectinload(RepoAttribution.skill_ownerships))
+        )
+        attr_res = await session.execute(attr_stmt)
+        attributions = attr_res.scalars().all()
+
+        scorer_items = apply_ownership_to_evidence_items(scorer_items, attributions)
 
         score_input = ScoreInput(
             evidence_items=scorer_items,
@@ -380,6 +394,17 @@ class AnalysisOrchestrator:
             if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
             for s in ev.skill_hints
         ]
+
+        # Fetch active repository attributions with skill breakdowns for ownership adjustments
+        attr_stmt = (
+            select(RepoAttribution)
+            .where(RepoAttribution.profile_id == profile.id)
+            .options(selectinload(RepoAttribution.skill_ownerships))
+        )
+        attr_res = await session.execute(attr_stmt)
+        attributions = attr_res.scalars().all()
+
+        scorer_items = apply_ownership_to_evidence_items(scorer_items, attributions)
 
         all_supplied = list(set([e.source for e in all_evidence] + supplied_sources))
         score_input = ScoreInput(

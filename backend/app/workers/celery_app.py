@@ -17,7 +17,10 @@ celery_app = Celery(
     "careerlens",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["app.workers.analysis_tasks"],
+    include=[
+        "app.workers.analysis_tasks",
+        "app.workers.ownership_tasks",
+    ],
 )
 
 celery_app.conf.update(

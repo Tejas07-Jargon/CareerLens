@@ -14,6 +14,17 @@ from .dynamic_profile import (
     Recommendation,
 )
 from .resume import ResumeVersion
+from .ownership import RepoAttribution, SkillOwnership, IdentityDeclaration
+from .leetcode import (
+    LeetCodeProfile,
+    LeetCodeProblem,
+    LeetCodeProblemTopic,
+    LeetCodeSolvedProblem,
+    LeetCodeSubmission,
+    LeetCodeContest,
+    LeetCodeSnapshot,
+    LeetCodeSyncRun,
+)
 
 __all__ = [
     "Profile",
@@ -30,4 +41,15 @@ __all__ = [
     "ProfileSnapshot",
     "Recommendation",
     "ResumeVersion",
+    "RepoAttribution",
+    "SkillOwnership",
+    "IdentityDeclaration",
+    "LeetCodeProfile",
+    "LeetCodeProblem",
+    "LeetCodeProblemTopic",
+    "LeetCodeSolvedProblem",
+    "LeetCodeSubmission",
+    "LeetCodeContest",
+    "LeetCodeSnapshot",
+    "LeetCodeSyncRun",
 ]

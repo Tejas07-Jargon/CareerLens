@@ -11,7 +11,7 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import profiles, roles, cohorts, health, quiz, evidence, resumes, job_fit
+from app.api.routes import profiles, roles, cohorts, health, quiz, evidence, resumes, job_fit, ownership, leetcode
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import configure_logging
@@ -50,6 +50,8 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(profiles.router, prefix="/profiles", tags=["Profiles"])
 app.include_router(resumes.router, prefix="/resumes", tags=["Resumes"])
 app.include_router(job_fit.router, prefix="/job-fit", tags=["Job Fit"])
+app.include_router(ownership.router, prefix="/profiles", tags=["Ownership"])
+app.include_router(leetcode.router, prefix="/profiles", tags=["LeetCode"])
 app.include_router(evidence.router, prefix="/evidence", tags=["Evidence"])
 app.include_router(roles.router, prefix="/roles", tags=["Roles"])
 app.include_router(cohorts.router, prefix="/cohorts", tags=["Cohorts"])

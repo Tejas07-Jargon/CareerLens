@@ -343,6 +343,65 @@ async def get_evidence_report(
         supplied_sources=supplied_sources,
     )
 
+    # Fetch attributions with skill ownerships
+    from sqlalchemy.orm import selectinload
+    from app.models.ownership import RepoAttribution, SkillOwnership
+
+    attr_stmt = (
+        select(RepoAttribution)
+        .where(RepoAttribution.profile_id == profile_id)
+        .options(selectinload(RepoAttribution.skill_ownerships))
+    )
+    attr_res = await session.execute(attr_stmt)
+    attributions = attr_res.scalars().all()
+
+    def _get_skill_ownership_info(skill_name: str) -> Optional[Dict[str, Any]]:
+        target = skill_name.strip().lower()
+        matching_skills = []
+        for attr in attributions:
+            for sk in (attr.skill_ownerships or []):
+                if sk.skill.strip().lower() == target:
+                    matching_skills.append((attr, sk))
+
+        if matching_skills:
+            total_st_lines = sum(sk.student_lines for _, sk in matching_skills)
+            total_all_lines = sum(sk.total_lines for _, sk in matching_skills)
+            share = (total_st_lines / total_all_lines) if total_all_lines > 0 else 0.0
+            avg_cov = sum(attr.coverage for attr, _ in matching_skills) / len(matching_skills)
+            top_attr, top_sk = matching_skills[0]
+            status = "verified_by_analysis" if top_attr.status == "complete" and not top_attr.incomplete else "partial"
+            return {
+                "status": status,
+                "share": round(share, 3),
+                "factor": round(top_sk.factor, 3),
+                "coverage": round(avg_cov, 3),
+                "repos_count": len(matching_skills),
+                "top_repo": top_attr.repo_full_name,
+            }
+        elif attributions:
+            # Check if repo-level attributions exist
+            valid_attrs = [a for a in attributions if a.status in ("complete", "partial", "incomplete")]
+            if valid_attrs:
+                avg_share = sum(a.student_share for a in valid_attrs) / len(valid_attrs)
+                avg_cov = sum(a.coverage for a in valid_attrs) / len(valid_attrs)
+                return {
+                    "status": "partial",
+                    "share": round(avg_share, 3),
+                    "factor": 1.0,
+                    "coverage": round(avg_cov, 3),
+                    "repos_count": len(valid_attrs),
+                    "top_repo": valid_attrs[0].repo_full_name,
+                }
+            return {
+                "status": "not_analysed",
+                "share": 0.0,
+                "factor": 1.0,
+                "coverage": 0.0,
+                "repos_count": len(attributions),
+                "top_repo": attributions[0].repo_full_name,
+            }
+        return None
+
     # Format into serializable dict
     return {
         "overall_score": report.overall_score,
@@ -373,6 +432,7 @@ async def get_evidence_report(
                 "claim_vs_evidence": s.claim_vs_evidence,
                 "mismatch": s.mismatch,
                 "ai_explanation": s.ai_explanation,
+                "ownership": _get_skill_ownership_info(s.skill),
             }
             for s in report.skills
         ],

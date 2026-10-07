@@ -76,8 +76,12 @@ interface DashboardTabProps {
   profileId: string | null;
   report: ProfileReport | null;
   persona: "student" | "placement";
+<<<<<<< HEAD
   userName?: string;
   onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "resume" | "jobfit") => void;
+=======
+  onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "ownership") => void;
+>>>>>>> 7b1189a (feat: complete real data integration for LeetCode analyzer and add Advanced Metrics)
   onSelectRole?: (role: string) => void;
   onReanalyze?: () => void;
   onLoadBenchmark?: () => void;
@@ -766,6 +770,7 @@ export default function DashboardTab({
                   <span style={{ fontSize: "0.7rem", color: "var(--text-soft)", fontWeight: 800, marginTop: 2 }}>
                     CI {Math.round(dynamicScoreLo)}–{Math.round(dynamicScoreHi)}
                   </span>
+
                 </div>
               </div>
 
@@ -773,6 +778,7 @@ export default function DashboardTab({
                 <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text)", marginBottom: 4 }}>
                   {selectedRole} Alignment
                 </div>
+
                 <p style={{ fontSize: "0.78rem", color: "var(--text-mid)", fontWeight: 600, lineHeight: 1.45, marginBottom: 10 }}>
                   Empirically synthesized from deterministic code scans, AST parsing, and verified GitHub commits.
                 </p>
@@ -797,9 +803,6 @@ export default function DashboardTab({
                   : { value: 75, reason: "Evidence verified" };
                 const val = comp?.value ?? 70;
                 const isSelected = selectedDimension === metric.key;
-
-                return (
-                  <div
                     key={metric.key}
                     onClick={() => setSelectedDimension(isSelected ? null : metric.key)}
                     style={{

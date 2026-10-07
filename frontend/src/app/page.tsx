@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getReport } from "@/lib/api";
 import CareerLensLoading from "@/components/loading/CareerLensLoading";
 import { SocialFlipButton } from "@/components/ui/social-flip-button";
 import LoginScreen from "@/components/ui/LoginScreen";
@@ -15,6 +17,8 @@ import BatchTab from "@/components/batch/BatchTab";
 import EvidenceDashboardWidget from "@/components/evidence/EvidenceDashboardWidget";
 import ResumeBuilderTab from "@/components/resume/ResumeBuilderTab";
 import JobFitTab from "@/components/job-fit/JobFitTab";
+import OwnershipPanel from "@/components/ownership/OwnershipPanel";
+import LeetCodeTab from "@/app/leetcode/page";
 import type { ProfileReport } from "@/types";
 import {
   Search,
@@ -28,17 +32,21 @@ import {
   Zap,
   ArrowRight,
   FileText,
-  Target
+  Target,
+  FolderGit2,
+  Code2
 } from "lucide-react";
 
-type Tab = "dashboard" | "resume" | "jobfit" | "analyse" | "roadmap" | "quiz" | "batch" | "evidence";
+type Tab = "dashboard" | "resume" | "jobfit" | "analyse" | "ownership" | "roadmap" | "leetcode" | "quiz" | "batch" | "evidence";
 
-const TABS: { id: Tab; icon: React.ReactNode; label: string; description: string }[] = [
+const TABS: { id: Tab; icon: React.ReactNode; label: string; description: string; href?: string }[] = [
   { id: "dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard",      description: "Command center · score, gaps, roadmap & next action" },
   { id: "jobfit",    icon: <Target size={18} />,          label: "Job Fit",        description: "Evidence-aware JD matching, gap breakdown & what-if" },
   { id: "resume",    icon: <FileText size={18} />,        label: "Resume Builder", description: "Build an ATS-ready resume from verified evidence" },
   { id: "analyse",   icon: <Search size={18} />,          label: "Analyse",        description: "Score your profile against real evidence" },
+  { id: "ownership", icon: <FolderGit2 size={18} />,      label: "Ownership Map", description: "Git blame code attribution & repository mapping" },
   { id: "roadmap",   icon: <Map size={18} />,             label: "Roadmap",        description: "Personalised 10-week skill-up plan" },
+  { id: "leetcode",  icon: <Code2 size={18} />,           label: "LeetCode",    description: "Evidence-backed LeetCode intelligence" },
   { id: "quiz",      icon: <BrainCircuit size={18} />,    label: "Quiz",           description: "Expert-level MCQs powered by Gemini AI" },
   { id: "batch",     icon: <Building2 size={18} />,       label: "Cohort Batch",   description: "Placement-cell cohort analytics" },
 ];
@@ -211,6 +219,7 @@ const SAMPLE_BENCHMARK_REPORT: ProfileReport = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -219,6 +228,28 @@ export default function HomePage() {
   const [persona, setPersona] = useState<"student" | "placement">("student");
   const [userName, setUserName] = useState<string>("");
   const [viewDetailedReport, setViewDetailedReport] = useState<boolean>(false);
+  const [navIntent, setNavIntent] = useState<{ source: string; returnTo?: "ownership"; reason?: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramId = urlParams.get("profileId");
+    const storedId = localStorage.getItem("careerlens_active_profile_id");
+    const activeId = paramId || storedId;
+
+    if (activeId && activeId !== "demo-candidate-82") {
+      setProfileId(activeId);
+      getReport(activeId)
+        .then((rep) => {
+          if (rep) {
+            setReport(rep);
+          }
+        })
+        .catch((err) => {
+          console.warn("Could not fetch active profile report:", err);
+        });
+    }
+  }, []);
 
   const visibleTabs = TABS.filter(tab => {
     if (persona === "placement") {
@@ -232,17 +263,40 @@ export default function HomePage() {
 
   function handleProfileCreated(id: string) {
     setProfileId(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("careerlens_active_profile_id", id);
+    }
   }
 
   function handleReportReady(r: ProfileReport) {
     setReport(r);
+    setProfileId(r.profile_id);
+    if (typeof window !== "undefined" && r.profile_id) {
+      localStorage.setItem("careerlens_active_profile_id", r.profile_id);
+    }
     setViewDetailedReport(false);
-    setActiveTab("dashboard");
+
+    // Contextual Return: If user entered Analyse from Ownership Map to add GitHub handle
+    if (navIntent?.returnTo === "ownership") {
+      setNavIntent(null);
+      setActiveTab("ownership");
+    } else {
+      setActiveTab("dashboard");
+    }
+  }
+
+  function handleAddGitHubForOwnership() {
+    setNavIntent({ source: "ownership", returnTo: "ownership", reason: "configure-github" });
+    setActiveTab("analyse");
   }
 
   function handleLoadBenchmark() {
     setReport(SAMPLE_BENCHMARK_REPORT);
     setProfileId("demo-candidate-82");
+    setNavIntent(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("careerlens_active_profile_id");
+    }
     setActiveTab("dashboard");
   }
 
@@ -401,7 +455,11 @@ export default function HomePage() {
                     key={tab.id}
                     id={`tab-${tab.id}`}
                     onClick={() => {
-                      setActiveTab(tab.id);
+                      if (tab.href) {
+                        router.push(tab.href);
+                      } else {
+                        setActiveTab(tab.id);
+                      }
                     }}
                     style={{
                       display: "flex",
@@ -581,7 +639,18 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* TAB 3: ROADMAP */}
+          {/* TAB 3: OWNERSHIP MAP */}
+          {activeTab === "ownership" && (
+            <div key="ownership-map-view" className="fade-in-up">
+              <OwnershipPanel
+                profileId={profileId}
+                onNavigateToAnalyse={() => setActiveTab("analyse")}
+                onAddGitHubUsername={handleAddGitHubForOwnership}
+              />
+            </div>
+          )}
+
+          {/* TAB 4: ROADMAP */}
           {activeTab === "roadmap" && (
             <div key="roadmap-view" className="fade-in-up">
               <RoadmapTab

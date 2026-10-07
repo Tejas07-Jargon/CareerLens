@@ -4,7 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import type { EvidenceReport, SkillEvidenceItem } from "@/types/evidence";
 import SkillDetailModal from "./SkillDetailModal";
-import { Search, Lightbulb, Target, CheckCircle, AlertTriangle, Scale, Folder, ArrowUpRight, HelpCircle } from "lucide-react";
+import OwnershipPanel from "@/components/ownership/OwnershipPanel";
+import {
+  Search,
+  Lightbulb,
+  Target,
+  CheckCircle,
+  AlertTriangle,
+  Scale,
+  Folder,
+  ArrowUpRight,
+  HelpCircle,
+  FolderGit2,
+  ShieldCheck,
+  Code2
+} from "lucide-react";
 
 interface Props {
   report: EvidenceReport;
@@ -21,6 +35,7 @@ const STATUS_FILTERS = [
 ] as const;
 
 export default function EvidenceVerificationView({ report, profileId }: Props) {
+  const [activeSubTab, setActiveSubTab] = useState<"skills" | "ownership">("skills");
   const [selectedSkill, setSelectedSkill] = useState<SkillEvidenceItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
@@ -51,7 +66,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
         className="card"
         style={{
           padding: "24px 28px",
-          marginBottom: 28,
+          marginBottom: 20,
           borderColor: "var(--blue)",
           boxShadow: "4px 4px 0 var(--blue)",
           background: "var(--white)",
@@ -69,7 +84,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
               Evidence <span className="gradient-text">Verification</span>
             </h1>
             <p style={{ color: "var(--text-mid)", fontSize: "0.95rem", fontWeight: 600, maxWidth: 640 }}>
-              See how strongly your claimed skills are supported by real proof of work.
+              See how strongly your claimed skills are supported by real proof of work and code ownership.
             </p>
           </div>
 
@@ -84,26 +99,54 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
           </div>
         </div>
 
-        {/* Guiding Principle Banner */}
-        <div
-          style={{
-            marginTop: 18,
-            padding: "12px 16px",
-            background: "var(--bg-soft)",
-            borderLeft: "4px solid var(--blue)",
-            borderRadius: "0 8px 8px 0",
-            fontSize: "0.84rem",
-            color: "var(--text-mid)",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <Lightbulb size={16} color="var(--blue)" style={{ flexShrink: 0 }} />
-          <span><strong>Core Principle:</strong> "Don't just tell us what skills the candidate claims. Show us what skills the candidate can actually prove."</span>
+        {/* Sub-view Navigation Tabs */}
+        <div style={{ display: "flex", gap: 10, marginTop: 20, borderTop: "1.5px solid var(--border)", paddingTop: 16 }}>
+          <button
+            id="subtab-skills"
+            onClick={() => setActiveSubTab("skills")}
+            className="btn"
+            style={{
+              fontSize: "0.84rem",
+              padding: "8px 18px",
+              background: activeSubTab === "skills" ? "var(--blue)" : "var(--white)",
+              color: activeSubTab === "skills" ? "white" : "var(--text)",
+              borderColor: activeSubTab === "skills" ? "var(--text)" : "var(--border)",
+              boxShadow: activeSubTab === "skills" ? "2px 2px 0 var(--text)" : "none",
+              fontWeight: 800,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <ShieldCheck size={16} /> Skill Evidence Breakdown ({report.skills?.length || 0})
+          </button>
+
+          <button
+            id="subtab-ownership"
+            onClick={() => setActiveSubTab("ownership")}
+            className="btn"
+            style={{
+              fontSize: "0.84rem",
+              padding: "8px 18px",
+              background: activeSubTab === "ownership" ? "var(--purple)" : "var(--white)",
+              color: activeSubTab === "ownership" ? "white" : "var(--text)",
+              borderColor: activeSubTab === "ownership" ? "var(--text)" : "var(--border)",
+              boxShadow: activeSubTab === "ownership" ? "2px 2px 0 var(--text)" : "none",
+              fontWeight: 800,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FolderGit2 size={16} /> Ownership Map (Git Blame Attribution)
+          </button>
         </div>
       </div>
+
+      {activeSubTab === "ownership" ? (
+        <OwnershipPanel profileId={profileId} />
+      ) : (
+        <>
 
       {/* ── Summary Cards ──────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 28 }}>
@@ -435,8 +478,27 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
                   >
                     {/* Skill */}
                     <td style={{ padding: "14px", fontWeight: 800, fontSize: "0.95rem", color: "var(--text)", borderLeft: `4px solid ${badge.border}`, borderRadius: "8px 0 0 8px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                         <span>{sk.skill}</span>
+                        {sk.ownership && sk.ownership.status !== "not_analysed" && (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 3,
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              fontSize: "0.72rem",
+                              fontWeight: 800,
+                              background: "var(--blue-light)",
+                              color: "var(--blue)",
+                              border: "1px solid var(--blue)",
+                            }}
+                            title={`Approx. ${Math.round(sk.ownership.share * 100)}% attributed code in ${sk.ownership.repos_count} repo(s)`}
+                          >
+                            <Code2 size={11} /> {Math.round(sk.ownership.share * 100)}% code
+                          </span>
+                        )}
                         {sk.mismatch && (
                           <span title="Potential claim mismatch" style={{ display: "inline-flex" }}>
                             <AlertTriangle size={14} color="var(--pink)" />
@@ -516,6 +578,8 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* ── Skill Detail Modal ─────────────────────────────────────── */}
       <SkillDetailModal

@@ -437,9 +437,11 @@ async def whatif(
     body: WhatIfRequest,
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy.orm import selectinload
+    from app.models.ownership import RepoAttribution
     from app.models.evidence import Evidence
     from app.services.scoring.scorer import (
-        ScoreInput, EvidenceItem, RoleWeights, compute_score
+        ScoreInput, EvidenceItem, RoleWeights, compute_score, apply_ownership_to_evidence_items
     )
     from app.services.scoring.whatif_simulator import WhatIfSimulator, WhatIfAction
 
@@ -464,6 +466,15 @@ async def whatif(
     ev_result = await session.execute(ev_stmt)
     db_evidence = ev_result.scalars().all()
 
+    # Load attributions
+    attr_stmt = (
+        select(RepoAttribution)
+        .where(RepoAttribution.profile_id == profile_id)
+        .options(selectinload(RepoAttribution.skill_ownerships))
+    )
+    attr_result = await session.execute(attr_stmt)
+    attributions = attr_result.scalars().all()
+
     ev_items = [
         EvidenceItem(
             id=ev.id,
@@ -474,6 +485,7 @@ async def whatif(
         )
         for ev in db_evidence
     ]
+    ev_items = apply_ownership_to_evidence_items(ev_items, attributions)
 
     role_weights = RoleWeights(
         role_name=score_run.role,

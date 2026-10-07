@@ -26,12 +26,47 @@ import math
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
+import httpx
 import structlog
 
 from app.core.config import settings
 from app.models.evidence import Evidence
 
 log = structlog.get_logger(__name__)
+
+def is_github_token_valid(token: Optional[str] = None) -> bool:
+    """Return True only when the configured token looks like a real token."""
+    t = (token or settings.GITHUB_TOKEN or "").strip()
+    if not t:
+        return False
+    if t.startswith("ghp_your_token") or "your_token" in t or "placeholder" in t.lower():
+        return False
+    return True
+
+def get_github_headers(token: Optional[str] = None) -> dict:
+    """Get HTTP headers for GitHub REST/GraphQL API requests."""
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "CareerLens-OwnershipEngine/1.0",
+    }
+    t = (token or settings.GITHUB_TOKEN or "").strip()
+    if is_github_token_valid(t):
+        headers["Authorization"] = f"Bearer {t}"
+    return headers
+
+async def get_github_rate_limit(token: Optional[str] = None) -> dict:
+    """Fetch current GitHub rate limit status from the /rate_limit endpoint."""
+    url = "https://api.github.com/rate_limit"
+    headers = get_github_headers(token)
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        try:
+            resp = await client.get(url, headers=headers)
+            if resp.status_code == 200:
+                return resp.json()
+        except Exception as exc:
+            log.warning("Failed to fetch GitHub rate limit", error=str(exc))
+    return {}
+
 
 # Reliability score for the GitHub source type
 GITHUB_SOURCE_RELIABILITY = 0.85
@@ -68,11 +103,11 @@ class GitHubAdapter:
     def _get_client(self):
         if self._gh is None:
             from github import Github, Auth
-            if settings.GITHUB_TOKEN:
-                auth = Auth.Token(settings.GITHUB_TOKEN)
+            if is_github_token_valid():
+                auth = Auth.Token(settings.GITHUB_TOKEN.strip())
                 self._gh = Github(auth=auth)
             else:
-                log.warning("No GITHUB_TOKEN set – rate-limited to 60 req/hr")
+                log.warning("No valid GITHUB_TOKEN set – rate-limited to 60 req/hr")
                 self._gh = Github()
         return self._gh
 

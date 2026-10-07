@@ -30,6 +30,7 @@ class Profile(Base):
     # ── Input sources ─────────────────────────────────────────────────────────
     resume_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     github_username: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    leetcode_username: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     linkedin_pdf_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     design_portfolio_filename: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     portfolio_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -86,3 +87,6 @@ class Profile(Base):
     recommendations = relationship("Recommendation", back_populates="profile", cascade="all, delete-orphan")
     snapshots = relationship("ProfileSnapshot", back_populates="profile", cascade="all, delete-orphan")
     resumes = relationship("ResumeVersion", back_populates="profile", cascade="all, delete-orphan")
+    repo_attributions = relationship("RepoAttribution", back_populates="profile", cascade="all, delete-orphan")
+    identity_declarations = relationship("IdentityDeclaration", back_populates="profile", cascade="all, delete-orphan")
+    leetcode_profile = relationship("LeetCodeProfile", back_populates="profile", uselist=False, cascade="all, delete-orphan")

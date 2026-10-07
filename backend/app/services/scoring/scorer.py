@@ -41,6 +41,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+from app.services.scoring.ownership_evidence_integrator import apply_ownership_to_evidence_items
+
 
 # ── Data classes (plain Python, no ORM) ──────────────────────────────────────
 
@@ -49,9 +51,11 @@ class EvidenceItem:
     """Lightweight snapshot of an Evidence record for scoring."""
     id: str
     skill_hints: List[str]
-    strength: float          # pre-computed: reliability × depth × recency × authenticity
+    strength: float          # pre-computed: reliability × depth × recency × authenticity (× ownership_factor where applicable)
     source: str
     locator: dict = field(default_factory=dict)
+    ownership_factor: float = 1.0
+    ownership_provenance: Optional[dict] = None
 
 
 @dataclass
@@ -80,6 +84,7 @@ class ClaimStatus:
     status: str           # Verified | Partial | Not yet evidenced
     evidence_ids: List[str] = field(default_factory=list)
     locators: List[dict] = field(default_factory=list)
+    ownership_provenance: Optional[dict] = None
 
 
 @dataclass
@@ -214,6 +219,14 @@ def compute_score(inp: ScoreInput) -> ScoreResult:
             status = "Partial"
         else:
             status = "Not yet evidenced"
+
+        # Extract ownership provenance if present on supporting items
+        ownership_info = None
+        for loc in locators:
+            if isinstance(loc, dict) and "ownership" in loc:
+                ownership_info = loc["ownership"]
+                break
+
         claim_statuses.append(
             ClaimStatus(
                 skill=skill,
@@ -221,6 +234,7 @@ def compute_score(inp: ScoreInput) -> ScoreResult:
                 status=status,
                 evidence_ids=ev_ids,
                 locators=locators,
+                ownership_provenance=ownership_info,
             )
         )
 

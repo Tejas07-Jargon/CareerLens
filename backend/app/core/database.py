@@ -45,6 +45,7 @@ async def init_db() -> None:
             consent,
             audit_log,
             dynamic_profile,
+            ownership,
         )
         await conn.run_sync(Base.metadata.create_all)
 

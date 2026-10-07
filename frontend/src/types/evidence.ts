@@ -53,6 +53,14 @@ export interface SkillEvidenceItem {
   claim_vs_evidence: ClaimVsEvidence;
   mismatch?: MismatchItem | null;
   ai_explanation: string;
+  ownership?: {
+    status: string;
+    share: number;
+    factor: number;
+    coverage: number;
+    repos_count: number;
+    top_repo: string;
+  } | null;
 }
 
 export interface EvidenceCategories {
