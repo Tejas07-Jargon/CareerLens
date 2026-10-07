@@ -9,6 +9,7 @@ import RoadmapList from "./RoadmapList";
 import SecurityFlagBanner from "./SecurityFlagBanner";
 import WhatIfPanel from "./WhatIfPanel";
 import ConsistencyChart from "../dashboard/ConsistencyChart";
+import { Sparkles, ArrowLeft } from "lucide-react";
 
 interface Props {
   report: ProfileReport;
@@ -33,16 +34,16 @@ export default function ReportView({ report, persona, onReset }: Props) {
         boxShadow: "4px 4px 0 var(--blue)",
       }}>
         <div>
-          <h1 style={{ fontWeight: 900, fontSize: "1.7rem", marginBottom: 6 }}>
-            🎉 Your <span className="gradient-text">Readiness Report</span>
+          <h1 style={{ fontWeight: 900, fontSize: "1.7rem", marginBottom: 6, display: "flex", alignItems: "center", gap: 10 }}>
+            <Sparkles size={24} color="var(--yellow)" /> Your <span className="gradient-text">Readiness Report</span>
           </h1>
           <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", fontWeight: 600 }}>
             Profile: <code>{report.profile_id}</code> ·{" "}
             Role: <strong style={{ color: "var(--blue)" }}>{report.role_fits?.[0]?.role ?? "—"}</strong>
           </p>
         </div>
-        <button id="reset-btn" onClick={onReset} className="btn btn-ghost" style={{ fontSize: "0.88rem" }}>
-          ← Analyse another
+        <button id="reset-btn" onClick={onReset} className="btn btn-ghost" style={{ fontSize: "0.88rem", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <ArrowLeft size={16} /> Analyse another
         </button>
       </div>
 

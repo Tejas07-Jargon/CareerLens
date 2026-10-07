@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { SkillEvidenceItem } from "@/types/evidence";
+import { Scale, BarChart2, FolderGit2, Check, AlertTriangle, Info, Lightbulb, X, Bot, CircleDot } from "lucide-react";
 
 interface Props {
   skill: SkillEvidenceItem | null;
@@ -54,11 +55,11 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="card fade-in-up"
+        className="card scale-in"
         style={{
           width: "100%",
           maxWidth: 680,
-          maxHeight: "90vh",
+          maxHeight: "90dvh",
           overflowY: "auto",
           background: "var(--white)",
           border: "3px solid var(--text)",
@@ -76,14 +77,17 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
             position: "absolute",
             top: 20,
             right: 20,
-            padding: "4px 10px",
-            fontSize: "1rem",
+            padding: "4px 8px",
+            fontSize: "0.9rem",
             background: "var(--bg-soft)",
             borderColor: "var(--text)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
           aria-label="Close modal"
         >
-          ✕
+          <X size={16} />
         </button>
 
         {/* ── Header ──────────────────────────────────────────────── */}
@@ -146,9 +150,11 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: "1.1rem" }}>
-                {skill.mismatch.severity === "warning" ? "⚠" : "ℹ"}
-              </span>
+              {skill.mismatch.severity === "warning" ? (
+                <AlertTriangle size={18} color="var(--pink)" />
+              ) : (
+                <Info size={18} color="var(--blue)" />
+              )}
               <strong style={{ fontSize: "0.9rem", color: "var(--text)" }}>
                 {skill.mismatch.title}
               </strong>
@@ -157,8 +163,9 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
               {skill.mismatch.message}
             </p>
             {skill.mismatch.recommendation && (
-              <p style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontStyle: "italic" }}>
-                💡 <strong>Recommendation:</strong> {skill.mismatch.recommendation}
+              <p style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontStyle: "italic", display: "flex", alignItems: "center", gap: 6 }}>
+                <Lightbulb size={14} color="var(--blue)" />
+                <span><strong>Recommendation:</strong> {skill.mismatch.recommendation}</span>
               </p>
             )}
           </div>
@@ -174,8 +181,8 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
             marginBottom: 20,
           }}
         >
-          <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text)", marginBottom: 12 }}>
-            ⚖️ Claim vs. Evidence Comparison
+          <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <Scale size={18} color="var(--text-mid)" /> Claim vs. Evidence Comparison
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -220,8 +227,8 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
         {/* ── Why This Score? Breakdown ───────────────────────────── */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text)" }}>
-              📊 Why this score? ({skill.score} / 100)
+            <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text)", display: "flex", alignItems: "center", gap: 8 }}>
+              <BarChart2 size={18} color="var(--blue)" /> Why this score? ({skill.score} / 100)
             </h3>
             <span style={{ fontSize: "0.75rem", color: "var(--text-soft)" }}>Deterministic contribution</span>
           </div>
@@ -288,8 +295,8 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
 
         {/* ── Evidence Sources Checklist ──────────────────────────── */}
         <div style={{ marginBottom: 20 }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text)", marginBottom: 10 }}>
-            🗂️ Verifiable Evidence Sources
+          <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "var(--text)", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            <FolderGit2 size={18} color="var(--purple)" /> Verifiable Evidence Sources
           </h3>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -315,9 +322,16 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
                         : src.status === "partial"
                         ? "var(--yellow)"
                         : "var(--text-soft)",
+                    marginTop: 2,
                   }}
                 >
-                  {src.status === "verified" ? "✓" : src.status === "unavailable" ? "○" : "⚠"}
+                  {src.status === "verified" ? (
+                    <Check size={16} strokeWidth={3} />
+                  ) : src.status === "unavailable" ? (
+                    <CircleDot size={16} />
+                  ) : (
+                    <AlertTriangle size={16} />
+                  )}
                 </span>
 
                 <div style={{ flex: 1 }}>
@@ -375,8 +389,8 @@ export default function SkillDetailModal({ skill, onClose }: Props) {
             boxShadow: "3px 3px 0 var(--purple)",
           }}
         >
-          <div style={{ fontWeight: 800, fontSize: "0.88rem", color: "var(--text)", marginBottom: 4 }}>
-            🤖 AI Explanation & Citation
+          <div style={{ fontWeight: 800, fontSize: "0.88rem", color: "var(--text)", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+            <Bot size={16} color="var(--purple)" /> AI Explanation & Citation
           </div>
           <p style={{ fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.6 }}>
             "{skill.ai_explanation}"

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEvidenceSummary } from "@/lib/evidenceApi";
 import type { EvidenceSummary } from "@/types/evidence";
+import { ShieldCheck, Check, AlertTriangle, ArrowRight } from "lucide-react";
 
 interface Props {
   profileId?: string;
@@ -43,7 +44,7 @@ export default function EvidenceDashboardWidget({ profileId }: Props) {
       <div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "1.2rem" }}>🔍</span>
+            <ShieldCheck size={20} color="var(--blue)" />
             <span style={{ fontWeight: 900, fontSize: "1.05rem", color: "var(--text)" }}>
               Evidence Confidence
             </span>
@@ -111,10 +112,10 @@ export default function EvidenceDashboardWidget({ profileId }: Props) {
             <div style={{ fontSize: "0.72rem", color: "var(--green)", fontWeight: 800, marginBottom: 4 }}>
               Top Verified Skills:
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {topVerified.map((sk) => (
-                <div key={sk} style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text)" }}>
-                  ✓ {sk}
+                <div key={sk} style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Check size={13} color="var(--green)" strokeWidth={3} /> {sk}
                 </div>
               ))}
             </div>
@@ -132,10 +133,10 @@ export default function EvidenceDashboardWidget({ profileId }: Props) {
             <div style={{ fontSize: "0.72rem", color: "var(--pink)", fontWeight: 800, marginBottom: 4 }}>
               Needs Evidence:
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {needsEvidence.map((sk) => (
-                <div key={sk} style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text)" }}>
-                  ⚠ {sk}
+                <div key={sk} style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <AlertTriangle size={13} color="var(--pink)" /> {sk}
                 </div>
               ))}
             </div>
@@ -150,7 +151,10 @@ export default function EvidenceDashboardWidget({ profileId }: Props) {
         style={{
           width: "100%",
           textAlign: "center",
-          display: "block",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
           fontSize: "0.85rem",
           fontWeight: 800,
           background: "var(--blue)",
@@ -161,7 +165,7 @@ export default function EvidenceDashboardWidget({ profileId }: Props) {
           textDecoration: "none",
         }}
       >
-        View Evidence Report →
+        View Evidence Report <ArrowRight size={15} />
       </Link>
     </div>
   );

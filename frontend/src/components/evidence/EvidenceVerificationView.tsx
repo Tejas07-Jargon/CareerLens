@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { EvidenceReport, SkillEvidenceItem } from "@/types/evidence";
 import SkillDetailModal from "./SkillDetailModal";
+import { Search, Lightbulb, Target, CheckCircle, AlertTriangle, Scale, Folder, ArrowUpRight, HelpCircle } from "lucide-react";
 
 interface Props {
   report: EvidenceReport;
@@ -59,7 +60,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 12px", background: "var(--blue-light)", border: "1.5px solid var(--blue)", borderRadius: "99px", marginBottom: 12 }}>
-              <span style={{ fontSize: "0.85rem" }}>🔍</span>
+              <Search size={14} color="var(--blue)" />
               <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--blue)" }}>
                 Proof-Backed Employability
               </span>
@@ -94,9 +95,13 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
             fontSize: "0.84rem",
             color: "var(--text-mid)",
             fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
-          💡 <strong>Core Principle:</strong> "Don't just tell us what skills the candidate claims. Show us what skills the candidate can actually prove."
+          <Lightbulb size={16} color="var(--blue)" style={{ flexShrink: 0 }} />
+          <span><strong>Core Principle:</strong> "Don't just tell us what skills the candidate claims. Show us what skills the candidate can actually prove."</span>
         </div>
       </div>
 
@@ -106,7 +111,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
         <div className="card" style={{ borderColor: "var(--blue)", boxShadow: "3px 3px 0 var(--blue)", padding: "18px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontWeight: 700 }}>Overall Evidence Confidence</span>
-            <span style={{ fontSize: "1.1rem" }}>🎯</span>
+            <Target size={18} color="var(--blue)" />
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 10 }}>
             <span style={{ fontSize: "2.3rem", fontWeight: 900, color: "var(--text)", lineHeight: 1 }}>
@@ -123,7 +128,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
         <div className="card" style={{ borderColor: "var(--green)", boxShadow: "3px 3px 0 var(--green)", padding: "18px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontWeight: 700 }}>Verified Skills (81–100)</span>
-            <span style={{ fontSize: "1.1rem" }}>✅</span>
+            <CheckCircle size={18} color="var(--green)" />
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 10 }}>
             <span style={{ fontSize: "2.3rem", fontWeight: 900, color: "var(--green)", lineHeight: 1 }}>
@@ -140,7 +145,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
         <div className="card" style={{ borderColor: "var(--yellow)", boxShadow: "3px 3px 0 var(--yellow)", padding: "18px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontWeight: 700 }}>Partially Verified (31–80)</span>
-            <span style={{ fontSize: "1.1rem" }}>◑</span>
+            <HelpCircle size={18} color="var(--yellow)" />
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 10 }}>
             <span style={{ fontSize: "2.3rem", fontWeight: 900, color: "var(--yellow)", lineHeight: 1 }}>
@@ -157,7 +162,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
         <div className="card" style={{ borderColor: "var(--pink)", boxShadow: "3px 3px 0 var(--pink)", padding: "18px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontWeight: 700 }}>Weak / Unverified (0–30)</span>
-            <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+            <AlertTriangle size={18} color="var(--pink)" />
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 10 }}>
             <span style={{ fontSize: "2.3rem", fontWeight: 900, color: "var(--pink)", lineHeight: 1 }}>
@@ -270,7 +275,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
             color: "var(--text-mid)",
           }}
         >
-          <span>⚖️</span>
+          <Scale size={16} color="var(--text-mid)" style={{ flexShrink: 0 }} />
           <span>
             <strong>Missing Data Fair Assessment:</strong> We clearly distinguish between{" "}
             <em>"No evidence found"</em> (checked but zero trace), <em>"Evidence unavailable"</em> (source not connected), and{" "}
@@ -292,7 +297,7 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: "1.3rem" }}>⚠</span>
+            <AlertTriangle size={20} color="var(--pink)" />
             <h2 style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--text)" }}>
               Potential Claim Mismatch (Actionable Review)
             </h2>
@@ -334,8 +339,9 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
                     <strong>Observed Evidence:</strong> {m.observed_evidence || m.message}
                   </div>
                   {m.recommendation && (
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontStyle: "italic" }}>
-                      💡 <strong>Recommendation:</strong> {m.recommendation}
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-mid)", fontStyle: "italic", display: "flex", alignItems: "center", gap: 6 }}>
+                      <Lightbulb size={14} color="var(--blue)" />
+                      <span><strong>Recommendation:</strong> {m.recommendation}</span>
                     </div>
                   )}
                 </div>
@@ -431,7 +437,11 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
                     <td style={{ padding: "14px", fontWeight: 800, fontSize: "0.95rem", color: "var(--text)", borderLeft: `4px solid ${badge.border}`, borderRadius: "8px 0 0 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span>{sk.skill}</span>
-                        {sk.mismatch && <span title="Potential claim mismatch" style={{ fontSize: "0.85rem" }}>⚠</span>}
+                        {sk.mismatch && (
+                          <span title="Potential claim mismatch" style={{ display: "inline-flex" }}>
+                            <AlertTriangle size={14} color="var(--pink)" />
+                          </span>
+                        )}
                       </div>
                     </td>
 
@@ -456,8 +466,8 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
 
                     {/* Sources count */}
                     <td style={{ padding: "14px", fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600 }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        <span>📁</span> {sk.sources_count} source{sk.sources_count !== 1 ? "s" : ""}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Folder size={14} color="var(--text-soft)" /> {sk.sources_count} source{sk.sources_count !== 1 ? "s" : ""}
                       </span>
                     </td>
 
@@ -487,9 +497,9 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
                           setSelectedSkill(sk);
                         }}
                         className="btn btn-ghost"
-                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                        style={{ padding: "4px 10px", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: 4 }}
                       >
-                        View Proof ↗
+                        View Proof <ArrowUpRight size={14} />
                       </button>
                     </td>
                   </tr>
@@ -501,8 +511,8 @@ export default function EvidenceVerificationView({ report, profileId }: Props) {
 
         {filteredSkills.length === 0 && (
           <div style={{ textAlign: "center", padding: "36px 0", color: "var(--text-mid)" }}>
-            <span style={{ fontSize: "2rem" }}>🔍</span>
-            <p style={{ fontWeight: 700, marginTop: 8 }}>No skills match the current search or filter.</p>
+            <Search size={32} color="var(--text-soft)" style={{ margin: "0 auto 8px" }} />
+            <p style={{ fontWeight: 700 }}>No skills match the current search or filter.</p>
           </div>
         )}
       </div>

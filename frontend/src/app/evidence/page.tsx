@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getEvidenceReport } from "@/lib/evidenceApi";
 import type { EvidenceReport } from "@/types/evidence";
 import EvidenceVerificationView from "@/components/evidence/EvidenceVerificationView";
+import { Search, Check, AlertTriangle } from "lucide-react";
 
 function EvidencePageContent() {
   const searchParams = useSearchParams();
@@ -36,7 +37,7 @@ function EvidencePageContent() {
   }, [profileId]);
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       {/* ── Nav ───────────────────────────────────────────────────────── */}
       <nav className="nav-bar">
         <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 24px" }}>
@@ -45,8 +46,10 @@ function EvidencePageContent() {
             <div style={{
               width: 38, height: 38, background: "var(--blue)", borderRadius: "10px 13px 9px 12px",
               border: "2.5px solid var(--text)", boxShadow: "2px 2px 0 var(--text)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem"
-            }}>🔍</div>
+              display: "flex", alignItems: "center", justifyContent: "center", color: "white"
+            }}>
+              <Search size={20} strokeWidth={2.5} />
+            </div>
             <span style={{ fontWeight: 900, fontSize: "1.25rem", letterSpacing: "-0.02em" }}>
               Career<span className="gradient-text">Lens</span>
             </span>
@@ -71,9 +74,12 @@ function EvidencePageContent() {
                 border: "2px solid var(--text)",
                 boxShadow: "2px 2px 0 var(--text)",
                 fontWeight: 800,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
               }}
             >
-              ✓ Evidence Mode
+              <Check size={14} strokeWidth={3} /> Evidence Mode
             </div>
           </div>
         </div>
@@ -95,7 +101,7 @@ function EvidencePageContent() {
           <EvidenceVerificationView report={report} profileId={profileId} />
         ) : (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <span style={{ fontSize: "2.5rem" }}>⚠️</span>
+            <AlertTriangle size={42} color="var(--yellow)" style={{ margin: "0 auto" }} />
             <h2 style={{ fontSize: "1.2rem", fontWeight: 800, marginTop: 10 }}>Unable to load evidence</h2>
             <Link href="/" className="btn btn-primary" style={{ marginTop: 16 }}>
               Return to Home

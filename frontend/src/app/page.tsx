@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import CareerLensLoading from "@/components/loading/CareerLensLoading";
 import SubmitForm from "@/components/ui/SubmitForm";
 import ReportView from "@/components/evidence/ReportView";
 import QuizTab from "@/components/quiz/QuizTab";
@@ -10,7 +11,7 @@ import DashboardTab from "@/components/dashboard/DashboardTab";
 import BatchTab from "@/components/batch/BatchTab";
 import EvidenceDashboardWidget from "@/components/evidence/EvidenceDashboardWidget";
 import type { ProfileReport } from "@/types";
-import { Search, BrainCircuit, Map, LayoutDashboard, Building2, GraduationCap } from "lucide-react";
+import { Search, BrainCircuit, Map, LayoutDashboard, Building2, GraduationCap, ShieldCheck } from "lucide-react";
 
 type Tab = "analyse" | "quiz" | "roadmap" | "dashboard" | "batch";
 
@@ -23,13 +24,16 @@ const TABS: { id: Tab; icon: React.ReactNode; label: string; description: string
 ];
 
 export default function HomePage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("analyse");
   const [report, setReport] = useState<ProfileReport | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [persona, setPersona] = useState<"student" | "placement">("student");
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <>
+      {isLoading && <CareerLensLoading onComplete={() => setIsLoading(false)} />}
+      <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <nav className="nav-bar">
         <div
@@ -63,11 +67,11 @@ export default function HomePage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "1.2rem",
+                color: "white",
                 transition: "transform var(--dur-fast) var(--ease-spring)",
               }}
             >
-              🔍
+              <Search size={20} strokeWidth={2.5} />
             </div>
             <span style={{ fontWeight: 900, fontSize: "1.25rem", letterSpacing: "-0.02em" }}>
               Career<span className="gradient-text">Lens</span>
@@ -93,7 +97,7 @@ export default function HomePage() {
                 gap: 6,
               }}
             >
-              🔍 Evidence Verification
+              <ShieldCheck size={16} /> Evidence Verification
             </Link>
 
             {(["student", "placement"] as const).map((p, i) => (
@@ -411,8 +415,8 @@ export default function HomePage() {
         {activeTab === "dashboard" && <div key="dashboard-view" className="fade-in-up"><DashboardTab profileId={profileId} /></div>}
         {activeTab === "batch" && <div key="batch-view" className="fade-in-up"><BatchTab /></div>}
       </div>
-
     </main>
+    </>
   );
 }
 
