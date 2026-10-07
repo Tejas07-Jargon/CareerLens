@@ -1,6 +1,6 @@
 /**
  * API client – typed wrappers around every backend endpoint.
- * Uses the Next.js API rewrite at /api/* → backend.
+ * Single source of truth for the backend base URL.
  */
 
 import type {
@@ -15,7 +15,9 @@ import type {
   PersonalizedRoadmapResponse,
 } from "@/types";
 
-const BASE = "http://localhost:8000";
+// ─── Single source of truth ───────────────────────────────────────────────────
+// All API files import BASE from here — no more scattered hardcoded URLs.
+export const BASE = "http://localhost:8000";
 
 // ── Profiles ──────────────────────────────────────────────────────────────────
 
@@ -54,12 +56,27 @@ export async function runWhatIf(
   return res.json();
 }
 
+export async function getDashboardData(profileId: string): Promise<{
+  student: { name: string; target_role: string };
+  readiness: { score: number; change: number; trend: string };
+  evidence_confidence: number;
+  quiz_stats: { total_quizzes: number; average_score: number; current_streak: number };
+  strongest_skills: { name: string; score: number; trend: string }[];
+  weakest_skills: { name: string; score: number; trend: string }[];
+  recommendations: { title: string; description: string; type: string }[];
+}> {
+  const res = await fetch(`${BASE}/profiles/${profileId}/dashboard`);
+  if (!res.ok) throw new Error("Dashboard data not available");
+  return res.json();
+}
+
 // ── SSE progress stream ───────────────────────────────────────────────────────
 
 /**
- * Opens an SSE stream and calls onProgress with each update.
- * Calls onDone when analysis is complete.
- * Returns a cleanup function.
+ * Opens an SSE stream for analysis progress.
+ * Resilient to temporary backend restarts — reconnects up to MAX_RETRIES
+ * times with exponential back-off before invoking onError.
+ * Returns a cleanup function to close the stream.
  */
 export function streamProgress(
   profileId: string,
@@ -67,28 +84,52 @@ export function streamProgress(
   onDone: () => void,
   onError?: (err: Error) => void
 ): () => void {
-  const es = new EventSource(`${BASE}/profiles/${profileId}/stream`);
+  let closed = false;
+  let retries = 0;
+  const MAX_RETRIES = 5;
+  let es: EventSource | null = null;
 
-  es.onmessage = (e) => {
-    try {
-      const data: ProgressEvent = JSON.parse(e.data);
-      onProgress(data);
-    } catch {
-      // ignore parse errors
-    }
+  function connect() {
+    if (closed) return;
+    es = new EventSource(`${BASE}/profiles/${profileId}/stream`);
+
+    es.onmessage = (e) => {
+      retries = 0; // reset on each successful message
+      try {
+        const data: ProgressEvent = JSON.parse(e.data);
+        onProgress(data);
+      } catch {
+        // ignore parse errors
+      }
+    };
+
+    es.addEventListener("done", () => {
+      es?.close();
+      closed = true;
+      onDone();
+    });
+
+    es.onerror = () => {
+      es?.close();
+      if (closed) return;
+      if (retries >= MAX_RETRIES) {
+        closed = true;
+        onError?.(
+          new Error("Stream disconnected. Analysis may still be running — please refresh to check.")
+        );
+        return;
+      }
+      const delay = Math.min(1000 * Math.pow(2, retries), 16000);
+      retries++;
+      setTimeout(connect, delay);
+    };
+  }
+
+  connect();
+  return () => {
+    closed = true;
+    es?.close();
   };
-
-  es.addEventListener("done", () => {
-    es.close();
-    onDone();
-  });
-
-  es.onerror = (e) => {
-    es.close();
-    onError?.(new Error("Stream error"));
-  };
-
-  return () => es.close();
 }
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
@@ -138,6 +179,36 @@ export async function generateQuiz(req: QuizRequest): Promise<QuizResponse> {
   return res.json();
 }
 
+/**
+ * Submit quiz attempt results to the backend.
+ * Saves to the profile's quiz history and updates mastery scores.
+ * quizId is a slug like "software-engineer-quiz-1".
+ */
+export async function submitQuizAttempt(
+  quizId: string,
+  profileId: string,
+  answers: object[],
+  timeTaken: number
+): Promise<void> {
+  try {
+    const res = await fetch(`${BASE}/quiz/${encodeURIComponent(quizId)}/attempts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profile_id: profileId,
+        answers,
+        time_taken: timeTaken,
+      }),
+    });
+    if (!res.ok) {
+      console.warn("Quiz attempt submission failed:", res.status, res.statusText);
+    }
+  } catch (err) {
+    // Non-fatal — quiz still shows results even if submission fails
+    console.warn("Failed to submit quiz attempt:", err);
+  }
+}
+
 // ── Personalized Roadmap ──────────────────────────────────────────────────────
 
 export async function getPersonalizedRoadmap(
@@ -146,8 +217,12 @@ export async function getPersonalizedRoadmap(
 ): Promise<PersonalizedRoadmapResponse> {
   const query = targetRole ? `?target_role=${encodeURIComponent(targetRole)}` : "";
   if (profileId) {
-    const res = await fetch(`${BASE}/profiles/${profileId}/roadmap${query}`);
-    if (res.ok) return res.json();
+    try {
+      const res = await fetch(`${BASE}/profiles/${profileId}/roadmap${query}`);
+      if (res.ok) return res.json();
+    } catch {
+      // fall through to sample roadmap
+    }
   }
   const role = targetRole || "Software Engineer";
   const res = await fetch(`${BASE}/profiles/sample-roadmap/${encodeURIComponent(role)}`);
@@ -157,5 +232,3 @@ export async function getPersonalizedRoadmap(
   }
   return res.json();
 }
-
-

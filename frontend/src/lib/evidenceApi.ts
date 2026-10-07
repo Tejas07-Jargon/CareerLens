@@ -1,14 +1,13 @@
 /**
  * Evidence API Client.
- * Connects to the backend `/api/evidence` endpoints with a robust demo/fallback data layer
- * for seamless development and offline demonstration.
+ * Connects to the backend `/evidence` endpoints.
+ * Falls back to rich demo data for offline/development use.
  */
 
+import { BASE } from "@/lib/api";
 import type { EvidenceReport, EvidenceSummary, SkillEvidenceItem } from "@/types/evidence";
 
-const BASE = "/api";
-
-// ── DEMO / FALLBACK DATA LAYER (For local testing & offline graceful fallback) ──
+// ── DEMO / FALLBACK DATA LAYER ────────────────────────────────────────────────
 export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
   overall_score: 78,
   verified_count: 8,
@@ -53,12 +52,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       ],
       claim_vs_evidence: {
         resume_claim: "Advanced Java developer",
-        observed_evidence: [
-          "4 Java repositories",
-          "127 Java commits",
-          "3 relevant projects",
-          "Strong code evidence",
-        ],
+        observed_evidence: ["4 Java repositories", "127 Java commits", "3 relevant projects", "Strong code evidence"],
         assessment: "Strongly Supported",
         confidence_score: 91,
       },
@@ -89,12 +83,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       ],
       claim_vs_evidence: {
         resume_claim: "React — Frontend",
-        observed_evidence: [
-          "3 React repositories",
-          "84 React commits",
-          "Next.js App router implementation",
-          "Interactive UI components verified",
-        ],
+        observed_evidence: ["3 React repositories", "84 React commits", "Next.js App router implementation", "Interactive UI components verified"],
         assessment: "Strongly Supported",
         confidence_score: 84,
       },
@@ -124,11 +113,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       ],
       claim_vs_evidence: {
         resume_claim: "Experienced with SQL & PostgreSQL",
-        observed_evidence: [
-          "2 database projects",
-          "Schema migration files detected",
-          "Multi-table joins and indexing",
-        ],
+        observed_evidence: ["2 database projects", "Schema migration files detected", "Multi-table joins and indexing"],
         assessment: "Moderately Supported",
         confidence_score: 78,
       },
@@ -158,11 +143,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       ],
       claim_vs_evidence: {
         resume_claim: "Python Developer",
-        observed_evidence: [
-          "2 Python repositories",
-          "32 commits",
-          "Basic test coverage absent",
-        ],
+        observed_evidence: ["2 Python repositories", "32 commits", "Basic test coverage absent"],
         assessment: "Moderately Supported",
         confidence_score: 67,
       },
@@ -193,11 +174,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       ],
       claim_vs_evidence: {
         resume_claim: "Expert in AWS",
-        observed_evidence: [
-          "No AWS projects detected",
-          "No AWS repository activity detected",
-          "No deployment evidence detected",
-        ],
+        observed_evidence: ["No AWS projects detected", "No AWS repository activity detected", "No deployment evidence detected"],
         assessment: "Claim not sufficiently supported",
         confidence_score: 18,
       },
@@ -236,11 +213,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       ],
       claim_vs_evidence: {
         resume_claim: "Containerization with Docker",
-        observed_evidence: [
-          "1 Dockerfile found",
-          "Single-stage build only",
-          "No docker-compose orchestration",
-        ],
+        observed_evidence: ["1 Dockerfile found", "Single-stage build only", "No docker-compose orchestration"],
         assessment: "Limited Support",
         confidence_score: 38,
       },
@@ -266,24 +239,28 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
 // ── API Functions ─────────────────────────────────────────────────────────────
 
 export async function getEvidenceReport(profileId?: string): Promise<EvidenceReport> {
-  const url = profileId ? `${BASE}/evidence?profile_id=${encodeURIComponent(profileId)}` : `${BASE}/evidence`;
+  const url = profileId
+    ? `${BASE}/evidence/?profile_id=${encodeURIComponent(profileId)}`
+    : `${BASE}/evidence/`;
   try {
     const res = await fetch(url);
     if (!res.ok) {
-      // Fallback to demo data if backend returns error
+      console.warn(`Evidence API returned ${res.status} — using demo data`);
       return DEMO_EVIDENCE_REPORT;
     }
     const data = await res.json();
+    // If backend returns demo/empty, it may still return valid JSON with demo skills
     return data;
   } catch (err) {
-    // Graceful offline fallback
     console.warn("Evidence API unavailable, using offline demo report.", err);
     return DEMO_EVIDENCE_REPORT;
   }
 }
 
 export async function getEvidenceSummary(profileId?: string): Promise<EvidenceSummary> {
-  const url = profileId ? `${BASE}/evidence/summary?profile_id=${encodeURIComponent(profileId)}` : `${BASE}/evidence/summary`;
+  const url = profileId
+    ? `${BASE}/evidence/summary?profile_id=${encodeURIComponent(profileId)}`
+    : `${BASE}/evidence/summary`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error("Summary not ready");
@@ -316,5 +293,19 @@ export async function getSkillEvidence(skillName: string, profileId?: string): P
     );
     if (match) return match;
     throw new Error(`Skill ${skillName} not found`);
+  }
+}
+
+export async function analyzeEvidence(profileId: string): Promise<EvidenceReport> {
+  try {
+    const res = await fetch(`${BASE}/evidence/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile_id: profileId }),
+    });
+    if (!res.ok) return DEMO_EVIDENCE_REPORT;
+    return res.json();
+  } catch {
+    return DEMO_EVIDENCE_REPORT;
   }
 }

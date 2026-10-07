@@ -480,7 +480,7 @@ export default function HomePage() {
           {/* TAB 4: QUIZ */}
           {activeTab === "quiz" && (
             <div key="quiz-view" className="fade-in-up">
-              <QuizTab profileId={profileId} />
+              <QuizTab profileId={profileId} report={report} />
             </div>
           )}
 

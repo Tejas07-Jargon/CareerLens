@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { generateQuiz } from "@/lib/api";
-import type { QuizQuestion, QuizResponse } from "@/types";
+import { useState, useEffect } from "react";
+import { generateQuiz, submitQuizAttempt } from "@/lib/api";
+import type { QuizQuestion, QuizResponse, ProfileReport } from "@/types";
 import { BrainCircuit, AlertTriangle, FlaskConical, BarChart as BarChartIcon, Target, Rocket, CheckCircle, TrendingUp, Zap, BookOpen, PartyPopper, XCircle, RotateCcw, Pin, Trophy, Activity, Dumbbell, Lightbulb, Beaker, Clock } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -663,7 +663,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
 // ─────────────────────────────────────────────────────────────────────────────
 type Phase = "config" | "loading" | "quiz" | "result";
 
-export default function QuizTab({ profileId }: { profileId: string | null }) {
+export default function QuizTab({ profileId, report }: { profileId: string | null; report?: ProfileReport | null }) {
   const [phase, setPhase] = useState<Phase>("config");
   const [error, setError] = useState<string | null>(null);
 
@@ -680,6 +680,28 @@ export default function QuizTab({ profileId }: { profileId: string | null }) {
   const [timePerQ, setTimePerQ] = useState<number[]>([]);
   const [qStartTime, setQStartTime] = useState(Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pre-populate quiz config from profile report when available
+  useEffect(() => {
+    if (!report) return;
+    // Set target role from the top role fit
+    if (report.role_fits?.[0]?.role) {
+      setRole(report.role_fits[0].role);
+    }
+    // Pre-fill skills with the verified & partial ones from the report
+    const claimSkills = (report.claim_statuses ?? [])
+      .filter((c) => c.status !== "Not yet evidenced")
+      .map((c) => c.skill)
+      .slice(0, 6);
+    if (claimSkills.length > 0) {
+      setSkills(claimSkills.join(", "));
+    }
+    // Derive interests from gaps
+    const gapSkills = (report.gaps ?? []).map((g) => g.skill).slice(0, 3);
+    if (gapSkills.length > 0) {
+      setInterests(gapSkills.join(", "));
+    }
+  }, [report]);
 
   async function handleStart() {
     setError(null);
@@ -715,34 +737,30 @@ export default function QuizTab({ profileId }: { profileId: string | null }) {
 
   async function handleNext() {
     if (currentQ + 1 >= questions.length) {
+      // Build quiz ID from role for the backend endpoint
+      const quizId = `${role.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-quiz`;
       if (profileId && !isSubmitting) {
         setIsSubmitting(true);
         try {
-          const payload = {
-            profile_id: profileId,
-            time_taken: timePerQ.reduce((a, b) => a + b, 0),
-            answers: questions.map((q, i) => ({
-              question_id: q.id,
-              skill: role, // Default to role for skill if none
-              topic: q.topic,
-              difficulty: q.difficulty,
-              is_correct: answers[q.id] === q.correct,
-              selected_answer: answers[q.id],
-              time_taken: timePerQ[i] || 0
-            }))
-          };
-          await fetch(`http://127.0.0.1:8000/quiz/dynamic-quiz/attempts`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+          const attemptAnswers = questions.map((q, i) => ({
+            question_id: q.id,
+            skill: q.topic || role,
+            topic: q.topic,
+            difficulty: q.difficulty,
+            is_correct: answers[q.id] === q.correct,
+            selected_answer: answers[q.id],
+            time_taken: timePerQ[i] || 0,
+          }));
+          const totalTime = timePerQ.reduce((a, b) => a + b, 0);
+          // Use the unified submitQuizAttempt from api.ts (correct endpoint)
+          await submitQuizAttempt(quizId, profileId, attemptAnswers, totalTime);
         } catch (err) {
-          console.error("Failed to post quiz attempt:", err);
+          console.warn("Failed to post quiz attempt:", err);
         } finally {
           setIsSubmitting(false);
           setPhase("result");
         }
-      } else if (!profileId) {
+      } else {
         setPhase("result");
       }
     } else {
