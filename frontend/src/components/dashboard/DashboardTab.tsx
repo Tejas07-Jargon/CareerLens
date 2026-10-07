@@ -53,7 +53,7 @@ import type {
   NextMilestoneInfo,
   WhatIfResultItem
 } from "@/types";
-import { getPersonalizedRoadmap, runWhatIf } from "@/lib/api";
+import { getPersonalizedRoadmap, runWhatIf, getDashboardData } from "@/lib/api";
 import { getEvidenceReport, DEMO_EVIDENCE_REPORT } from "@/lib/evidenceApi";
 import type { EvidenceReport } from "@/types/evidence";
 import GapChart from "./GapChart";
@@ -105,6 +105,7 @@ export default function DashboardTab({
   const [activeSection, setActiveSection] = useState<"overview" | "skills" | "insights" | "actions">("overview");
   const [roadmapData, setRoadmapData] = useState<PersonalizedRoadmapResponse | null>(null);
   const [evidenceData, setEvidenceData] = useState<EvidenceReport | null>(null);
+  const [dashboardData, setDashboardData] = useState<any | null>(null);
   const [loadingRoadmap, setLoadingRoadmap] = useState<boolean>(false);
   const [loadingEvidence, setLoadingEvidence] = useState<boolean>(false);
 
@@ -157,11 +158,27 @@ export default function DashboardTab({
     return () => { isMounted = false; };
   }, [profileId]);
 
+  // Fetch interconnected dashboard data (Quiz stats, etc)
+  useEffect(() => {
+    let isMounted = true;
+    async function loadDashboard() {
+      if (!profileId || profileId === "demo-candidate-82") return;
+      try {
+        const data = await getDashboardData(profileId);
+        if (isMounted) setDashboardData(data);
+      } catch (err) {
+        console.warn("Could not fetch dashboard data:", err);
+      }
+    }
+    loadDashboard();
+    return () => { isMounted = false; };
+  }, [profileId]);
+
   // ── Derived Data ────────────────────────────────────────────────────────────
   const activeReport = report;
 
   // Job readiness score & interval
-  const scoreVal = activeReport?.score?.mid ?? (profileId ? 0 : 82);
+  const scoreVal = dashboardData?.readiness?.score ?? activeReport?.score?.mid ?? (profileId ? 0 : 82);
   const scoreLo = activeReport?.score?.lo ?? (profileId ? 0 : 76);
   const scoreHi = activeReport?.score?.hi ?? (profileId ? 0 : 88);
 
@@ -246,6 +263,13 @@ export default function DashboardTab({
 
   // Skill categorisation
   const { strongSkills, moderateSkills, missingSkills } = useMemo(() => {
+    if (dashboardData?.strongest_skills?.length > 0) {
+      return {
+        strongSkills: dashboardData.strongest_skills.map((s: any) => s.name),
+        moderateSkills: [],
+        missingSkills: dashboardData.weakest_skills?.map((s: any) => s.name) || [],
+      };
+    }
     if (activeReport?.claim_statuses && activeReport.claim_statuses.length > 0) {
       const strong = activeReport.claim_statuses
         .filter((c) => c.status === "Verified" || c.confidence >= 0.75)
@@ -263,10 +287,20 @@ export default function DashboardTab({
       moderateSkills: ["Docker", "System Design", "Redis Caching"],
       missingSkills: ["AWS / Cloud Infra", "Kubernetes"],
     };
-  }, [activeReport]);
+  }, [activeReport, dashboardData]);
 
   // Priority gaps
   const priorityGaps: Gap[] = useMemo(() => {
+    if (dashboardData?.recommendations?.length > 0) {
+      return dashboardData.recommendations.map((r: any) => ({
+        skill: r.title,
+        action: r.description,
+        importance: 0.9,
+        market_frequency: 0.8,
+        current_confidence: 0.3,
+        priority_score: 0.85,
+      }));
+    }
     if (activeReport?.gaps && activeReport.gaps.length > 0) {
       return activeReport.gaps.slice(0, 4);
     }
@@ -296,7 +330,7 @@ export default function DashboardTab({
         action: "Deploy an IaC Terraform or CDK template with live S3/Lambda stack",
       },
     ];
-  }, [activeReport]);
+  }, [activeReport, dashboardData]);
 
   // Next milestone from roadmap
   const nextMilestone: NextMilestoneInfo | null = useMemo(() => {
@@ -609,7 +643,7 @@ export default function DashboardTab({
             </div>
           </div>
 
-          {/* KPI 5: Highest Leverage Gap */}
+          {/* KPI 5: Quiz Performance (Interconnected) */}
           <div
             style={{
               padding: "16px",
@@ -619,16 +653,16 @@ export default function DashboardTab({
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <AlertTriangle size={16} color="var(--orange)" />
+              <BrainCircuit size={16} color="var(--purple)" />
               <span style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: "var(--text-soft)", letterSpacing: "0.04em" }}>
-                BIGGEST GAP
+                QUIZ MASTERY
               </span>
             </div>
             <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {topGapSkill}
+              {dashboardData?.quiz_stats?.average_score ? `${dashboardData.quiz_stats.average_score}% Avg` : "No Attempts"}
             </div>
-            <div style={{ fontSize: "0.74rem", color: "var(--orange)", fontWeight: 800 }}>
-              △ Highest market demand
+            <div style={{ fontSize: "0.74rem", color: "var(--purple)", fontWeight: 800 }}>
+              {dashboardData?.quiz_stats?.total_quizzes || 0} Quizzes Completed
             </div>
           </div>
         </div>
