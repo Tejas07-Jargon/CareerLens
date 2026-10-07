@@ -388,8 +388,7 @@ export default function HomePage() {
                       whiteSpace: "nowrap",
                       borderRadius: "10px 12px 8px 11px",
                       boxShadow: isActive ? "2px 2px 0 var(--text)" : "none",
-                      transform: isActive ? "translateY(-1px)" : "none",
-                      transition: "all var(--dur-fast) var(--ease-out)",
+                      transition: "background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)",
                     }}
                   >
                     <span style={{ fontSize: "1.05rem", display: "flex" }}>{tab.icon}</span>
