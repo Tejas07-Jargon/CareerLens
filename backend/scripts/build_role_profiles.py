@@ -56,7 +56,7 @@ async def build_profiles():
         for role_dir in sorted(JD_CORPUS_PATH.iterdir()):
             if not role_dir.is_dir():
                 continue
-            role_name = role_dir.name.replace("_", " ")
+            role_name = "UI/UX Designer" if role_dir.name == "UI_UX_Designer" else role_dir.name.replace("_", " ")
             jd_files = list(role_dir.glob("*.json"))
 
             if not jd_files:
@@ -68,7 +68,7 @@ async def build_profiles():
 
             for jd_file in jd_files:
                 try:
-                    jd = json.loads(jd_file.read_text(encoding="utf-8"))
+                    jd = json.loads(jd_file.read_text(encoding="utf-8-sig"))
                     for skill in jd.get("skills", []):
                         skill_counter[skill] += 1
                     if "title" in jd:

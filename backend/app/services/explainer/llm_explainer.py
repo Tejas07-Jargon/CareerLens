@@ -53,15 +53,17 @@ class LLMExplainer:
     """
 
     def __init__(self):
-        if settings.GEMINI_API_KEY:
-            import google.generativeai as genai
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            self._model = __import__("google.generativeai", fromlist=["GenerativeModel"]).GenerativeModel(
-                settings.LLM_STRONG_MODEL
-            )
+        if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY not in {"your_gemini_key_here", ""}:
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=settings.GEMINI_API_KEY)
+                self._model = genai.GenerativeModel(settings.LLM_STRONG_MODEL)
+            except Exception as exc:
+                self._model = None
+                log.warning("Could not initialize Gemini model", error=str(exc))
         else:
             self._model = None
-            log.warning("No GEMINI_API_KEY — explainer will return stubs")
+            log.info("No valid GEMINI_API_KEY — using deterministic templates for explanations and roadmap")
 
     # ── Score narrative ───────────────────────────────────────────────────────
 

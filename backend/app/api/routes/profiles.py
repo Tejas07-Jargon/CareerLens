@@ -127,13 +127,17 @@ async def create_profile(
 
     await session.commit()
 
-    # Trigger analysis
-    from app.workers.analysis_tasks import run_fast_analysis
-    task = run_fast_analysis.delay(profile_id)
-
-    # Store task ID
-    profile.celery_task_id = task.id
-    await session.commit()
+    # Trigger analysis (Celery worker with graceful background fallback)
+    try:
+        from app.workers.analysis_tasks import run_fast_analysis
+        task = run_fast_analysis.delay(profile_id)
+        profile.celery_task_id = task.id
+        await session.commit()
+    except Exception:
+        # Fallback to local async execution when Celery/Redis is unreachable
+        from app.services.analysis_orchestrator import AnalysisOrchestrator
+        orchestrator = AnalysisOrchestrator()
+        asyncio.create_task(orchestrator.run_fast_analysis(profile_id))
 
     return {"profile_id": profile_id, "status": "pending"}
 

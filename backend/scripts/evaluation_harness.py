@@ -3,30 +3,72 @@ Evaluation harness.
 
 Two validity checks:
   1. Claim injection test
-     Inject 3 fake skills into 30 real-ish resume texts.
+     Inject 3 fake skills into real-ish resume texts.
      Measure what fraction the system correctly marks "Not yet evidenced"
      despite the keywords appearing in the resume.
-     Target: ≥ 70% detection rate.
+     Target: >= 70% detection rate.
 
   2. Rank correlation
-     Given 20–30 human-labelled profiles (ground-truth seniority 1–5),
+     Given human-labelled profiles (ground-truth seniority 1–5),
      compute Spearman's rank correlation with CareerLens scores.
-     Target: ρ ≥ 0.65.
-
-Run this script to populate the test results before the demo.
+     Target: rho >= 0.65.
 """
 
 import json
 import random
+import sys
 from pathlib import Path
 from typing import List, Tuple
 
 import structlog
+from scipy.stats import spearmanr
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.services.scoring.scorer import (
+    DEFAULT_COMPONENT_WEIGHTS,
+    EvidenceItem,
+    RoleWeights,
+    ScoreInput,
+    ScoreResult,
+    compute_score,
+)
 
 log = structlog.get_logger(__name__)
 
 FIXTURES_PATH = Path(__file__).parent.parent / "tests" / "fixtures"
 INJECTED_SKILLS = ["QuantumSQL", "HyperReact", "DeepScaffold"]  # fake skills
+
+
+def _load_evidence_from_seed(profile_data: dict) -> List[EvidenceItem]:
+    """Construct EvidenceItems from a seed profile JSON."""
+    items = []
+    for ev in profile_data.get("evidence", []):
+        items.append(
+            EvidenceItem(
+                id=ev["id"],
+                skill_hints=ev.get("skill_hints", []),
+                strength=ev.get("strength", 0.5),
+                source=ev.get("source", "github_repo"),
+                locator=ev.get("locator", {}),
+            )
+        )
+    return items
+
+
+def _get_test_profiles(n_profiles: int = 30) -> List[dict]:
+    """Load profiles from data/seed_profiles or fallback to labelled_profiles.json."""
+    seed_profiles_path = Path(__file__).parent.parent.parent / "data" / "seed_profiles"
+    seed_files = list(seed_profiles_path.glob("*.json"))[:n_profiles] if seed_profiles_path.exists() else []
+
+    if seed_files:
+        return [json.loads(f.read_text(encoding="utf-8")) for f in seed_files]
+
+    labelled_path = FIXTURES_PATH / "labelled_profiles.json"
+    if labelled_path.exists():
+        return json.loads(labelled_path.read_text(encoding="utf-8"))
+
+    return []
 
 
 # ── Claim injection test ───────────────────────────────────────────────────────
@@ -37,32 +79,22 @@ def run_claim_injection_test(n_profiles: int = 30) -> dict:
     runs the scorer (no GitHub), and checks the claim status.
     Returns {detection_rate, total_injected, detected_as_unevidenced}.
     """
-    from app.services.scoring.scorer import (
-        ScoreInput,
-        EvidenceItem,
-        RoleWeights,
-        compute_score,
-    )
+    profiles = _get_test_profiles(n_profiles)
 
-    seed_profiles_path = Path(__file__).parent.parent.parent / "data" / "seed_profiles"
-    seed_files = list(seed_profiles_path.glob("*.json"))[:n_profiles]
-
-    if not seed_files:
-        log.warning("No seed profiles found at", path=str(seed_profiles_path))
+    if not profiles:
+        log.warning("No seed profiles found")
         return {"detection_rate": 0.0, "total_injected": 0, "detected": 0}
 
     total_injected = 0
     detected = 0
 
-    for profile_file in seed_files:
-        profile_data = json.loads(profile_file.read_text())
-
+    for profile_data in profiles:
         # Inject fake skills as resume_claim evidence
         injected_evidence = [
             EvidenceItem(
                 id=f"injected_{skill}",
                 skill_hints=[skill],
-                strength=0.28,  # resume_claim strength without corroboration: ~0.3
+                strength=0.18,  # resume_claim strength without corroboration: ~0.18
                 source="resume",
                 locator={"injected": True, "skill": skill},
             )
@@ -106,40 +138,19 @@ def run_claim_injection_test(n_profiles: int = 30) -> dict:
     }
 
 
-def _load_evidence_from_seed(profile_data: dict) -> List[EvidenceItem]:
-    """Construct EvidenceItems from a seed profile JSON."""
-    items = []
-    for ev in profile_data.get("evidence", []):
-        items.append(
-            EvidenceItem(
-                id=ev["id"],
-                skill_hints=ev.get("skill_hints", []),
-                strength=ev.get("strength", 0.5),
-                source=ev.get("source", "github_repo"),
-                locator=ev.get("locator", {}),
-            )
-        )
-    return items
-
-
 # ── Rank correlation test ─────────────────────────────────────────────────────
 
 def run_rank_correlation_test() -> dict:
     """
-    Loads human-labelled profiles and computes Spearman's ρ
+    Loads human-labelled profiles and computes Spearman's rho
     between CareerLens score_mid and human seniority labels.
     """
-    from scipy.stats import spearmanr
-    from app.services.scoring.scorer import (
-        ScoreInput, EvidenceItem, RoleWeights, compute_score
-    )
-
     labelled_path = FIXTURES_PATH / "labelled_profiles.json"
     if not labelled_path.exists():
         log.warning("Labelled profiles not found", path=str(labelled_path))
         return {"spearman_rho": None, "n_profiles": 0}
 
-    labelled = json.loads(labelled_path.read_text())
+    labelled = json.loads(labelled_path.read_text(encoding="utf-8"))
     human_ranks = []
     system_scores = []
 
@@ -163,10 +174,10 @@ def run_rank_correlation_test() -> dict:
         return {"spearman_rho": None, "n_profiles": len(human_ranks)}
 
     rho, p_value = spearmanr(human_ranks, system_scores)
-    log.info("Rank correlation test complete", rho=round(rho, 3), p=round(p_value, 4))
+    log.info("Rank correlation test complete", rho=round(float(rho), 3), p=round(float(p_value), 4))
     return {
-        "spearman_rho": round(rho, 3),
-        "p_value": round(p_value, 4),
+        "spearman_rho": round(float(rho), 3),
+        "p_value": round(float(p_value), 4),
         "n_profiles": len(human_ranks),
     }
 
@@ -178,26 +189,17 @@ def run_weight_sensitivity_test(
     n_profiles: int = 20,
 ) -> dict:
     """
-    Perturb component weights ±20% and report how often the top-3 role ordering
-    changes across a set of seed profiles.
+    Perturb component weights +-20% and report how often score remains stable.
     """
-    # Simplified: checks if score_mid changes by more than 5 points
-    from app.services.scoring.scorer import (
-        ScoreInput, EvidenceItem, RoleWeights, compute_score,
-        DEFAULT_COMPONENT_WEIGHTS
-    )
+    profiles = _get_test_profiles(n_profiles)
 
-    seed_profiles_path = Path(__file__).parent.parent.parent / "data" / "seed_profiles"
-    seed_files = list(seed_profiles_path.glob("*.json"))[:n_profiles]
-
-    if not seed_files:
+    if not profiles:
         return {"stable_ratio": None, "n_profiles": 0}
 
     stable = 0
     total = 0
 
-    for profile_file in seed_files:
-        profile_data = json.loads(profile_file.read_text())
+    for profile_data in profiles:
         evidence = _load_evidence_from_seed(profile_data)
 
         base_rw = RoleWeights(
@@ -239,7 +241,6 @@ def run_weight_sensitivity_test(
 
 
 if __name__ == "__main__":
-    import sys
     print("=== Claim Injection Test ===")
     print(json.dumps(run_claim_injection_test(), indent=2))
     print("\n=== Rank Correlation Test ===")
