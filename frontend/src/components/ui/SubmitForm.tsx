@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createProfile, streamProgress, getReport } from "@/lib/api";
 import type { ProfileReport, ProgressEvent } from "@/types";
+import FileInput from "./FileInput";
 
 import { Search, Link as LinkIcon, FileText, Briefcase, Palette, Target, Clock, CheckCircle, AlertTriangle, Rocket, Hourglass, Activity, PartyPopper, XCircle } from "lucide-react";
 
@@ -99,17 +100,17 @@ export default function SubmitForm({ onProfileCreated, onReportReady }: Props) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
               <div>
                 <label className="input-label" htmlFor="resume_file"><FileText size={16} className="inline mr-1 align-text-bottom" /> Resume (PDF)</label>
-                <input id="resume_file" name="resume_file" type="file" accept=".pdf" className="input" style={{ paddingTop: 10, cursor: "pointer" }} />
+                <FileInput id="resume_file" name="resume_file" accept=".pdf" label="Choose file" />
               </div>
               <div>
                 <label className="input-label" htmlFor="linkedin_pdf"><Briefcase size={16} className="inline mr-1 align-text-bottom" /> LinkedIn PDF</label>
-                <input id="linkedin_pdf" name="linkedin_pdf" type="file" accept=".pdf" className="input" style={{ paddingTop: 10, cursor: "pointer" }} />
+                <FileInput id="linkedin_pdf" name="linkedin_pdf" accept=".pdf" label="Choose file" />
               </div>
             </div>
 
             <div>
               <label className="input-label" htmlFor="design_portfolio_file"><Palette size={16} className="inline mr-1 align-text-bottom" /> Design Portfolio (PDF / Image)</label>
-              <input id="design_portfolio_file" name="design_portfolio_file" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" className="input" style={{ paddingTop: 10, cursor: "pointer" }} />
+              <FileInput id="design_portfolio_file" name="design_portfolio_file" accept=".pdf,.png,.jpg,.jpeg,.webp" label="Choose file" />
             </div>
           </div>
         </div>

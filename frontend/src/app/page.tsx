@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import CareerLensLoading from "@/components/loading/CareerLensLoading";
+import { SocialFlipButton } from "@/components/ui/social-flip-button";
 import SubmitForm from "@/components/ui/SubmitForm";
 import ReportView from "@/components/evidence/ReportView";
 import QuizTab from "@/components/quiz/QuizTab";
@@ -491,6 +492,47 @@ export default function HomePage() {
           )}
 
         </div>
+
+        {/* ── Footer ──────────────────────────────────────────────────────────── */}
+        <footer
+          style={{
+            marginTop: "auto",
+            borderTop: "1.5px solid var(--border)",
+            background: "rgba(244, 240, 232, 0.45)",
+            padding: "16px 24px",
+          }}
+        >
+          <div
+            className="container"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.82rem",
+                color: "var(--text-muted, #596575)",
+                fontWeight: 600,
+                letterSpacing: "-0.01em",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <span style={{ fontWeight: 800, color: "var(--text)" }}>CareerLens</span>
+              <span>·</span>
+              <span>Evidence-based employability &amp; skill verification</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <SocialFlipButton />
+            </div>
+          </div>
+        </footer>
       </main>
     </>
   );
