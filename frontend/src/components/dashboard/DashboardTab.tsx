@@ -76,12 +76,8 @@ interface DashboardTabProps {
   profileId: string | null;
   report: ProfileReport | null;
   persona: "student" | "placement";
-<<<<<<< HEAD
   userName?: string;
-  onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "resume" | "jobfit") => void;
-=======
-  onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "ownership") => void;
->>>>>>> 7b1189a (feat: complete real data integration for LeetCode analyzer and add Advanced Metrics)
+  onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "resume" | "jobfit" | "ownership" | "leetcode") => void;
   onSelectRole?: (role: string) => void;
   onReanalyze?: () => void;
   onLoadBenchmark?: () => void;
