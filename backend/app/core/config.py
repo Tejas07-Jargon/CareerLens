@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     ELEVENLABS_API_KEY: str = ""
 
     # ── CORS ─────────────────────────────────────────────────────────────────
-    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000"]
+    CORS_ORIGINS: Union[List[str], str] = ["*"]
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -71,6 +71,13 @@ class Settings(BaseSettings):
                     pass
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
+        
+    def get_gemini_api_key(self) -> str:
+        if not self.GEMINI_API_KEY:
+            return ""
+        import random
+        keys = [k.strip() for k in self.GEMINI_API_KEY.split(",") if k.strip()]
+        return random.choice(keys) if keys else ""
 
 
 @lru_cache

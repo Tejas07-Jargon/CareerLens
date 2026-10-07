@@ -93,7 +93,7 @@ class DesignPortfolioAdapter:
             log.warning("No images or API key — returning zero rubric scores")
             return {k: 0.0 for k in RUBRIC_ITEMS}
 
-        genai.configure(api_key=settings.GEMINI_API_KEY)
+        genai.configure(api_key=settings.get_gemini_api_key())
         model = genai.GenerativeModel(settings.LLM_STRONG_MODEL)
 
         # Build content parts

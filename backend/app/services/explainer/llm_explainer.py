@@ -56,7 +56,7 @@ class LLMExplainer:
         if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY not in {"your_gemini_key_here", ""}:
             try:
                 import google.generativeai as genai
-                genai.configure(api_key=settings.GEMINI_API_KEY)
+                genai.configure(api_key=settings.get_gemini_api_key())
                 self._model = genai.GenerativeModel(settings.LLM_STRONG_MODEL)
             except Exception as exc:
                 self._model = None

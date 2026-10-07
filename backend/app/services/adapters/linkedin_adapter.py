@@ -80,7 +80,8 @@ WHITE_TEXT_BRIGHTNESS_THRESHOLD = 240
 
 
 def _is_near_white(r: int, g: int, b: int) -> bool:
-    return (r + g + b) >= WHITE_TEXT_BRIGHTNESS_THRESHOLD
+    # Disabled: Flawed logic flags legitimate white text on dark backgrounds (e.g., sidebars)
+    return False
 
 
 def _scan_for_injections(text: str) -> List[Dict[str, str]]:
@@ -314,7 +315,7 @@ LinkedIn profile content:
 
         try:
             import google.generativeai as genai
-            genai.configure(api_key=settings.GEMINI_API_KEY)
+            genai.configure(api_key=settings.get_gemini_api_key())
             model = genai.GenerativeModel(settings.LLM_FAST_MODEL)
             response = model.generate_content(
                 prompt,

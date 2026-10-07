@@ -97,12 +97,14 @@ class AnalysisOrchestrator:
         security_flags: List[Dict[str, Any]] = []
         supplied_sources: List[str] = []
 
+        import asyncio
+        
         # 1. Resume extraction & security scan
         if profile.resume_filename:
             resume_path = Path("uploads") / profile.resume_filename
             if resume_path.exists():
                 ra = ResumeAdapter(str(resume_path), profile_id)
-                res_evidence, flags = ra.extract()
+                res_evidence, flags = await asyncio.to_thread(ra.extract)
                 evidence_items.extend(res_evidence)
                 security_flags.extend(flags)
                 supplied_sources.append("resume")
@@ -112,7 +114,7 @@ class AnalysisOrchestrator:
             linkedin_path = Path("uploads") / profile.linkedin_pdf_filename
             if linkedin_path.exists():
                 la = LinkedInAdapter(str(linkedin_path), profile_id)
-                li_evidence, li_flags = la.extract()
+                li_evidence, li_flags = await asyncio.to_thread(la.extract)
                 evidence_items.extend(li_evidence)
                 security_flags.extend(li_flags)
                 supplied_sources.append("linkedin_pdf")
@@ -120,7 +122,7 @@ class AnalysisOrchestrator:
         # 3. GitHub fast pass
         if profile.github_username:
             gh = GitHubAdapter(profile.github_username, profile_id)
-            gh_evidence = gh.fast_pass()
+            gh_evidence = await asyncio.to_thread(gh.fast_pass)
             evidence_items.extend(gh_evidence)
             supplied_sources.append("github_repo")
             supplied_sources.append("github_calendar")
@@ -128,9 +130,9 @@ class AnalysisOrchestrator:
         # 4. Live portfolio probe
         if profile.portfolio_url:
             lp = LiveProbeAdapter(profile.portfolio_url, profile_id)
-            probe_ev = lp.probe()
-            if probe_ev:
-                evidence_items.append(probe_ev)
+            probe_evs = await asyncio.to_thread(lp.probe)
+            if probe_evs:
+                evidence_items.extend(probe_evs)
                 supplied_sources.append("live_probe")
 
         # 5. Design portfolio (uploaded file takes priority over URL)
@@ -147,7 +149,7 @@ class AnalysisOrchestrator:
 
         if dp_file_path:
             dp = DesignPortfolioAdapter(dp_file_path, profile_id)
-            dp_ev, _ = dp.extract()
+            dp_ev, _ = await asyncio.to_thread(dp.extract)
             evidence_items.extend(dp_ev)
             supplied_sources.append("design_portfolio")
 
@@ -208,20 +210,22 @@ class AnalysisOrchestrator:
         own_repos: List[str] = []
         if profile.github_username:
             try:
-                from github import Auth, Github
-                gh_client = (
-                    Github(auth=Auth.Token(settings.GITHUB_TOKEN))
-                    if settings.GITHUB_TOKEN
-                    else Github()
-                )
-                own_repos = [
-                    r.name
-                    for r in list(gh_client.get_user(profile.github_username).get_repos(sort="updated")[:10])
-                ]
+                def get_gh_repos():
+                    gh_client = (
+                        Github(auth=Auth.Token(settings.GITHUB_TOKEN))
+                        if settings.GITHUB_TOKEN
+                        else Github()
+                    )
+                    return [
+                        r.name
+                        for r in list(gh_client.get_user(profile.github_username).get_repos(sort="updated")[:10])
+                    ]
+                own_repos = await asyncio.to_thread(get_gh_repos)
             except Exception:
                 pass
 
-        roadmap = explainer.generate_roadmap(
+        roadmap = await asyncio.to_thread(
+            explainer.generate_roadmap,
             gaps=score_result.gaps,
             interests=profile.interests or "",
             weekly_hours=profile.weekly_hours_available or 5,
@@ -320,16 +324,21 @@ class AnalysisOrchestrator:
         new_evidence: List[Evidence] = []
         supplied_sources: List[str] = []
 
+        import asyncio
+        
         # 1. GitHub deep analysis
         if profile.github_username:
             gh = GitHubAdapter(profile.github_username, profile_id)
-            new_evidence.extend(gh.deep_pass())
+            gh_ev = await asyncio.to_thread(gh.deep_pass)
+            new_evidence.extend(gh_ev)
 
             auth_detector = AuthenticityDetector(profile.github_username, profile_id)
-            new_evidence.extend(auth_detector.analyse())
+            auth_ev = await asyncio.to_thread(auth_detector.analyse)
+            new_evidence.extend(auth_ev)
 
             consistency_svc = TemporalConsistencyService(profile.github_username, profile_id)
-            new_evidence.extend(consistency_svc.analyse())
+            cons_ev = await asyncio.to_thread(consistency_svc.analyse)
+            new_evidence.extend(cons_ev)
 
             supplied_sources.extend(["github_repo", "github_calendar"])
 
@@ -391,20 +400,22 @@ class AnalysisOrchestrator:
         own_repos: List[str] = []
         if profile.github_username:
             try:
-                from github import Auth, Github
-                gh_client = (
-                    Github(auth=Auth.Token(settings.GITHUB_TOKEN))
-                    if settings.GITHUB_TOKEN
-                    else Github()
-                )
-                own_repos = [
-                    r.name
-                    for r in list(gh_client.get_user(profile.github_username).get_repos(sort="updated")[:10])
-                ]
+                def get_gh_repos():
+                    gh_client = (
+                        Github(auth=Auth.Token(settings.GITHUB_TOKEN))
+                        if settings.GITHUB_TOKEN
+                        else Github()
+                    )
+                    return [
+                        r.name
+                        for r in list(gh_client.get_user(profile.github_username).get_repos(sort="updated")[:10])
+                    ]
+                own_repos = await asyncio.to_thread(get_gh_repos)
             except Exception:
                 pass
 
-        roadmap = explainer.generate_roadmap(
+        roadmap = await asyncio.to_thread(
+            explainer.generate_roadmap,
             gaps=score_result.gaps,
             interests=profile.interests or "",
             weekly_hours=profile.weekly_hours_available or 5,
