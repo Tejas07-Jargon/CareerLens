@@ -2,6 +2,7 @@
 
 import type { ProfileReport } from "@/types";
 import ScorePanel from "./ScorePanel";
+import EvidenceDashboardWidget from "./EvidenceDashboardWidget";
 import ClaimList from "./ClaimList";
 import GapChart from "../dashboard/GapChart";
 import RoadmapList from "./RoadmapList";
@@ -59,6 +60,11 @@ export default function ReportView({ report, persona, onReset }: Props) {
         credibility={report.credibility}
         roleFits={report.role_fits}
       />
+
+      {/* ── Evidence Confidence Dashboard Widget ──────────────────── */}
+      <div style={{ marginTop: 24 }}>
+        <EvidenceDashboardWidget profileId={report.profile_id} />
+      </div>
 
       {/* ── Claims ────────────────────────────────────────────────── */}
       <div style={{ marginTop: 24 }}>

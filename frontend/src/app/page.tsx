@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import SubmitForm from "@/components/ui/SubmitForm";
 import ReportView from "@/components/evidence/ReportView";
 import QuizTab from "@/components/quiz/QuizTab";
 import RoadmapTab from "@/components/roadmap/RoadmapTab";
 import DashboardTab from "@/components/dashboard/DashboardTab";
 import BatchTab from "@/components/batch/BatchTab";
+import EvidenceDashboardWidget from "@/components/evidence/EvidenceDashboardWidget";
 import type { ProfileReport } from "@/types";
 
 type Tab = "analyse" | "quiz" | "roadmap" | "dashboard" | "batch";
@@ -61,8 +63,28 @@ export default function HomePage() {
             </span>
           </div>
 
-          {/* Persona switcher */}
-          <div style={{ display: "flex", gap: 8 }}>
+          {/* Nav links & Persona switcher */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <Link
+              href="/evidence"
+              className="btn"
+              style={{
+                padding: "7px 16px",
+                fontSize: "0.82rem",
+                background: "var(--blue-light)",
+                color: "var(--blue)",
+                borderColor: "var(--blue)",
+                boxShadow: "2px 2px 0 var(--blue)",
+                fontWeight: 800,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              🔍 Evidence Verification
+            </Link>
+
             {(["student", "placement"] as const).map((p, i) => (
               <button
                 key={p}
@@ -337,10 +359,15 @@ export default function HomePage() {
         {activeTab === "analyse" && (
           <>
             {!report ? (
-              <SubmitForm
-                onProfileCreated={(id) => setProfileId(id)}
-                onReportReady={(r) => setReport(r)}
-              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                <div style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
+                  <EvidenceDashboardWidget />
+                </div>
+                <SubmitForm
+                  onProfileCreated={(id) => setProfileId(id)}
+                  onReportReady={(r) => setReport(r)}
+                />
+              </div>
             ) : (
               <ReportView
                 report={report}

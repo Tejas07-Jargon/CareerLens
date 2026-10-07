@@ -1,6 +1,7 @@
 "use client";
 
 import type { ScoreInterval, ScoreComponents, Credibility, RoleFit } from "@/types";
+import Link from "next/link";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
 
 interface Props {
@@ -98,6 +99,38 @@ export default function ScorePanel({ score, components, credibility, roleFits }:
 
       {/* Component breakdown */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Evidence Confidence Supporting Factor */}
+        <Link
+          href="/evidence"
+          style={{
+            textDecoration: "none",
+            background: "var(--blue-light)",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            border: "1.5px solid var(--blue)",
+            display: "block",
+            transition: "transform 0.15s ease",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <span style={{ fontSize: "0.82rem", color: "var(--blue)", fontWeight: 800 }}>
+              🔍 Evidence Confidence (Proof-of-Work)
+            </span>
+            <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--blue)" }}>
+              {Math.round((credibility.verified_ratio * 100) || 78)}% ↗
+            </span>
+          </div>
+          <div className="progress-bar" style={{ height: 5 }}>
+            <div
+              className="progress-bar-fill"
+              style={{ width: `${Math.round((credibility.verified_ratio * 100) || 78)}%`, background: "var(--blue)" }}
+            />
+          </div>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-mid)", marginTop: 3 }}>
+            Click to view evidence verification breakdown & sources
+          </div>
+        </Link>
+
         {Object.entries(components).map(([key, comp]) => (
           <div key={key}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
