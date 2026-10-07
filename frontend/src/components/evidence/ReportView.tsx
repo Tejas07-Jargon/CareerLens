@@ -19,32 +19,40 @@ export default function ReportView({ report, persona, onReset }: Props) {
   const hasFlags = report.security_flags?.length > 0;
 
   return (
-    <div className="fade-in-up" style={{ maxWidth: 960, margin: "0 auto" }}>
+    <div className="fade-in-up" style={{ maxWidth: 980, margin: "0 auto" }}>
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
+      {/* ── Header ────────────────────────────────────────────────── */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 32, flexWrap: "wrap", gap: 12,
+        padding: "20px 24px",
+        background: "var(--white)",
+        border: "2.5px solid var(--text)",
+        borderRadius: "14px 17px 13px 16px",
+        boxShadow: "4px 4px 0 var(--blue)",
+      }}>
         <div>
-          <h1 style={{ fontWeight: 800, fontSize: "1.6rem", marginBottom: 4 }}>
-            Your <span className="gradient-text">Readiness Report</span>
+          <h1 style={{ fontWeight: 900, fontSize: "1.7rem", marginBottom: 6 }}>
+            🎉 Your <span className="gradient-text">Readiness Report</span>
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>
-            Profile ID: <code>{report.profile_id}</code> ·{" "}
-            Role: <strong style={{ color: "var(--text-primary)" }}>{report.role_fits?.[0]?.role ?? "—"}</strong>
+          <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", fontWeight: 600 }}>
+            Profile: <code>{report.profile_id}</code> ·{" "}
+            Role: <strong style={{ color: "var(--blue)" }}>{report.role_fits?.[0]?.role ?? "—"}</strong>
           </p>
         </div>
-        <button id="reset-btn" onClick={onReset} className="btn btn-ghost" style={{ fontSize: "0.85rem" }}>
-          ← Analyse another profile
+        <button id="reset-btn" onClick={onReset} className="btn btn-ghost" style={{ fontSize: "0.88rem" }}>
+          ← Analyse another
         </button>
       </div>
 
-      {/* ── Security flags (shown first) ───────────────────────────────── */}
+      {/* ── Security flags ────────────────────────────────────────── */}
       {hasFlags && (
         <div style={{ marginBottom: 24 }}>
           <SecurityFlagBanner flags={report.security_flags} />
         </div>
       )}
 
-      {/* ── Score + credibility ────────────────────────────────────────── */}
+      {/* ── Score ─────────────────────────────────────────────────── */}
       <ScorePanel
         score={report.score}
         components={report.components}
@@ -52,28 +60,28 @@ export default function ReportView({ report, persona, onReset }: Props) {
         roleFits={report.role_fits}
       />
 
-      {/* ── Claim evidence list ────────────────────────────────────────── */}
-      <div style={{ marginTop: 28 }}>
+      {/* ── Claims ────────────────────────────────────────────────── */}
+      <div style={{ marginTop: 24 }}>
         <ClaimList claimStatuses={report.claim_statuses} />
       </div>
 
-      {/* ── Gap chart ─────────────────────────────────────────────────── */}
-      <div style={{ marginTop: 28 }}>
+      {/* ── Gap chart ─────────────────────────────────────────────── */}
+      <div style={{ marginTop: 24 }}>
         <GapChart gaps={report.gaps} />
       </div>
 
-      {/* ── Consistency timeline ───────────────────────────────────────── */}
-      <div style={{ marginTop: 28 }}>
+      {/* ── Consistency ───────────────────────────────────────────── */}
+      <div style={{ marginTop: 24 }}>
         <ConsistencyChart claimStatuses={report.claim_statuses} />
       </div>
 
-      {/* ── What-if simulator ─────────────────────────────────────────── */}
-      <div style={{ marginTop: 28 }}>
+      {/* ── What-if ───────────────────────────────────────────────── */}
+      <div style={{ marginTop: 24 }}>
         <WhatIfPanel profileId={report.profile_id} currentScore={report.score} />
       </div>
 
-      {/* ── Roadmap ───────────────────────────────────────────────────── */}
-      <div style={{ marginTop: 28, marginBottom: 48 }}>
+      {/* ── Roadmap ───────────────────────────────────────────────── */}
+      <div style={{ marginTop: 24, marginBottom: 48 }}>
         <RoadmapList milestones={report.roadmap} />
       </div>
     </div>

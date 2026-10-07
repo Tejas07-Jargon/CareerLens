@@ -1,59 +1,61 @@
+# Core requirements to RUN the server (no torch/ML stack)
+# sentence-transformers (and torch) are loaded lazily on first use
+
 # ── Web framework ────────────────────────────────────────────────────────────
-fastapi==0.111.0
-uvicorn[standard]==0.29.0
-python-multipart==0.0.9          # file uploads
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
 
 # ── Task queue ───────────────────────────────────────────────────────────────
-celery==5.4.0
-redis==5.0.4
-flower==2.0.1                    # Celery monitoring UI (optional)
+celery>=5.4.0
+redis>=5.0.4
 
 # ── Database ──────────────────────────────────────────────────────────────────
-sqlalchemy==2.0.30
-alembic==1.13.1
-asyncpg==0.29.0
-pgvector==0.2.5
-pytest==8.2.0
-pytest-asyncio==0.23.6
+sqlalchemy>=2.0.30
+alembic>=1.13.1
+asyncpg>=0.29.0
+aiosqlite>=0.20.0
+pgvector>=0.2.5
+pytest>=8.2.0
+pytest-asyncio>=0.23.6
 
 # ── PDF / document parsing ────────────────────────────────────────────────────
-pymupdf==1.24.3                  # hidden-text detection (font colour/size)
-pdfplumber==0.11.0               # table extraction fallback
+pymupdf>=1.24.7
+pdfplumber>=0.11.0
 
 # ── GitHub adapter ────────────────────────────────────────────────────────────
-PyGithub==2.3.0
-gitpython==3.1.43                # shallow clone for deep pass
+PyGithub>=2.3.0
+gitpython>=3.1.43
 
-# ── NLP / embedding ───────────────────────────────────────────────────────────
-sentence-transformers==3.0.1     # skill normalisation embeddings
-rapidfuzz==3.9.1                 # alias matching before embedding
+# ── NLP (lightweight — no torch) ──────────────────────────────────────────────
+rapidfuzz>=3.9.1
 
 # ── Static analysis ───────────────────────────────────────────────────────────
-tree-sitter==0.22.3
-radon==6.0.1                     # cyclomatic complexity (optional)
+tree-sitter>=0.22.3
+radon>=6.0.1
 
 # ── LLM ───────────────────────────────────────────────────────────────────────
-google-generativeai==0.7.2       # Gemini fast tier (extraction) + strong tier (roadmap)
-openai==1.30.1                   # fallback / vision for portfolio rubric
+google-generativeai>=0.7.2
+openai>=1.30.1
 
 # ── HTTP / scraping ───────────────────────────────────────────────────────────
-httpx==0.27.0
-tenacity==8.3.0                  # retry with back-off
+httpx>=0.27.0
+tenacity>=8.3.0
 
-# ── Data / ML ────────────────────────────────────────────────────────────────
-numpy==1.26.4
-scipy==1.13.0
-pandas==2.2.2
+# ── Data / ML (lightweight) ──────────────────────────────────────────────────
+numpy>=2.0.0
+scipy>=1.14.0
+pandas>=2.2.3
 
 # ── Validation / schema ──────────────────────────────────────────────────────
-pydantic==2.7.1
-pydantic-settings==2.2.1
+pydantic>=2.9.0
+pydantic-settings>=2.4.0
 
 # ── Security ─────────────────────────────────────────────────────────────────
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
 
 # ── Utilities ────────────────────────────────────────────────────────────────
-python-dotenv==1.0.1
-structlog==24.2.0
-rich==13.7.1
+python-dotenv>=1.0.1
+structlog>=24.2.0
+rich>=13.7.1
