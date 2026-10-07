@@ -1,18 +1,28 @@
 """
-Quiz generation endpoint.
+Quiz generation endpoint - uses Gemini REST API directly via httpx.
+No SDK dependency, automatic model fallback, robust JSON parsing.
 
-POST /quiz/generate  — Gemini generates hard role-specific MCQs
-Uses the new google-genai SDK (google.genai package).
+POST /quiz/generate
 """
 
 import json
 import re
 from typing import List
 
+import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter()
+
+# Working models confirmed via live test (others are overloaded / return empty content)
+MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
+]
+
+GEMINI_REST = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -25,7 +35,7 @@ class QuizRequest(BaseModel):
 
 
 class QuizOption(BaseModel):
-    label: str   # A | B | C | D
+    label: str
     text: str
 
 
@@ -33,7 +43,7 @@ class QuizQuestion(BaseModel):
     id: int
     question: str
     options: List[QuizOption]
-    correct: str   # A | B | C | D
+    correct: str
     explanation: str
     topic: str
     difficulty: str = "expert"
@@ -44,116 +54,186 @@ class QuizResponse(BaseModel):
     questions: List[QuizQuestion]
 
 
-# ── helper: strip markdown fences ────────────────────────────────────────────
+# ── helpers ───────────────────────────────────────────────────────────────────
 
-def _extract_json(raw: str) -> str:
-    """Remove ```json ... ``` fences and leading/trailing whitespace."""
+def _strip_fences(raw: str) -> str:
     raw = raw.strip()
-    # Remove fenced code blocks
     raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE)
-    raw = re.sub(r"\s*```$", "", raw)
+    raw = re.sub(r"\s*```\s*$", "", raw)
     return raw.strip()
+
+
+def _parse_json_array(raw: str) -> list:
+    """
+    Parse a JSON array from LLM output.
+    LLMs often produce trailing commas, comments, etc.
+    Tries: standard json → json5 → regex-strip trailing commas → extract first [...] block.
+    """
+    # 1. Standard JSON
+    try:
+        result = json.loads(raw)
+        if isinstance(result, list):
+            return result
+    except json.JSONDecodeError:
+        pass
+
+    # 2. json5 (handles trailing commas, comments)
+    try:
+        import json5
+        result = json5.loads(raw)
+        if isinstance(result, list):
+            return result
+    except Exception:
+        pass
+
+    # 3. Regex: strip trailing commas before ] or }
+    cleaned = re.sub(r",\s*([\]}])", r"\1", raw)
+    try:
+        result = json.loads(cleaned)
+        if isinstance(result, list):
+            return result
+    except json.JSONDecodeError:
+        pass
+
+    # 4. Extract first [...] block and retry
+    match = re.search(r"\[\s*\{[\s\S]*?\}\s*\]", raw)
+    if match:
+        block = re.sub(r",\s*([\]}])", r"\1", match.group())
+        try:
+            return json.loads(block)
+        except json.JSONDecodeError:
+            pass
+
+    raise ValueError(f"Could not parse JSON array. Preview: {raw[:300]}")
+
+
+
+async def _call_gemini(api_key: str, prompt: str) -> str:
+    """
+    Try each model in the fallback chain. Returns the raw text response.
+    Raises HTTPException if all models fail.
+    """
+    last_error = "No models tried"
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        for model in MODELS:
+            url = GEMINI_REST.format(model=model)
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "maxOutputTokens": 8192,
+                },
+            }
+            try:
+                resp = await client.post(
+                    url,
+                    params={"key": api_key},
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                )
+
+                if resp.status_code == 200:
+                    data = resp.json()
+                    # Extract text from candidates[0].content.parts[0].text
+                    text = (
+                        data
+                        .get("candidates", [{}])[0]
+                        .get("content", {})
+                        .get("parts", [{}])[0]
+                        .get("text", "")
+                    )
+                    if text:
+                        return text
+                    last_error = f"Model {model}: empty text in response"
+
+                elif resp.status_code in (429, 503):
+                    # Overloaded or rate-limited — try next model
+                    err = resp.json().get("error", {}).get("message", resp.text)
+                    last_error = f"Model {model} unavailable: {err}"
+                    continue
+
+                else:
+                    err = resp.json().get("error", {}).get("message", resp.text)
+                    last_error = f"Model {model} error {resp.status_code}: {err}"
+                    continue
+
+            except httpx.TimeoutException:
+                last_error = f"Model {model}: request timed out"
+                continue
+            except Exception as e:
+                last_error = f"Model {model}: {e}"
+                continue
+
+    raise HTTPException(
+        status_code=502,
+        detail=f"All Gemini models failed. Last error: {last_error}"
+    )
 
 
 # ── POST /quiz/generate ───────────────────────────────────────────────────────
 
 @router.post("/generate", response_model=QuizResponse)
 async def generate_quiz(req: QuizRequest):
-    """
-    Use Gemini 2.5 Flash to generate extremely hard, expert-level MCQs
-    tailored to the requested role and skill set.
-    """
     from app.core.config import settings
 
     api_key = settings.GEMINI_API_KEY
     if not api_key:
-        raise HTTPException(status_code=503, detail="Gemini API key not configured.")
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY not set in .env")
 
-    try:
-        from google import genai
-        from google.genai import types as gtypes
-        client = genai.Client(api_key=api_key)
-    except ImportError:
-        raise HTTPException(
-            status_code=503,
-            detail="google-genai package not installed. Run: pip install google-genai"
-        )
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Could not initialise Gemini client: {e}")
-
-    skills_str = (", ".join(req.skills) if req.skills else "general software engineering")
-    n = min(max(req.num_questions, 3), 15)   # clamp 3–15
+    skills_str = ", ".join(req.skills) if req.skills else "general software engineering"
+    n = min(max(req.num_questions, 3), 15)
 
     prompt = f"""You are a senior FAANG principal engineer creating an extremely hard technical interview quiz.
 
 Role: {req.role}
-Key skills / topics: {skills_str}
-Candidate interests: {req.interests or "general"}
+Skills / topics: {skills_str}
+Domain interests: {req.interests or "general"}
 
-Generate exactly {n} EXPERT-LEVEL multiple-choice questions.
+Generate EXACTLY {n} expert-level multiple-choice questions.
 
 Rules:
-• Every question must be genuinely hard — suitable for a senior/staff engineer interview.
-• Questions should probe deep understanding: edge cases, internals, trade-offs, obscure but important behaviour.
-• Each question has EXACTLY 4 options (A, B, C, D). Only ONE is correct.
-• Wrong options must be plausible — not obviously wrong.
-• Cover a variety of topics from: algorithms & complexity, system design, language internals, concurrency, databases, distributed systems, design patterns, security, networking.
-• Write a detailed, educational explanation (3-5 sentences) for the correct answer.
-• Vary difficulty slightly but keep all questions hard.
+- Questions must be hard: edge cases, internals, trade-offs, concurrency, complexity.
+- Each question has EXACTLY 4 options (A, B, C, D). Only ONE correct.
+- Wrong options must be plausible.
+- Cover variety: algorithms, system design, language internals, databases, networking, security.
+- Write a 3-5 sentence explanation for the correct answer.
 
-Return ONLY a valid JSON array (no markdown fences, no prose) of exactly {n} objects:
+IMPORTANT: Return ONLY a raw JSON array — no markdown, no code fences, no extra text:
 [
   {{
     "id": 1,
-    "question": "<full question text>",
+    "question": "...",
     "options": [
-      {{"label": "A", "text": "<option A>"}},
-      {{"label": "B", "text": "<option B>"}},
-      {{"label": "C", "text": "<option C>"}},
-      {{"label": "D", "text": "<option D>"}}
+      {{"label": "A", "text": "..."}},
+      {{"label": "B", "text": "..."}},
+      {{"label": "C", "text": "..."}},
+      {{"label": "D", "text": "..."}}
     ],
-    "correct": "<A|B|C|D>",
-    "explanation": "<detailed explanation>",
-    "topic": "<short topic name>",
+    "correct": "A",
+    "explanation": "...",
+    "topic": "System Design",
     "difficulty": "expert"
-  }},
-  ...
+  }}
 ]"""
 
+    # Call Gemini with model fallback
+    raw = await _call_gemini(api_key, prompt)
+    raw = _strip_fences(raw)
+
+    # Parse JSON
     try:
-        response = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents=prompt,
-            config=gtypes.GenerateContentConfig(
-                temperature=0.7,
-                max_output_tokens=8192,
-            ),
-        )
-        raw = response.text or ""
+        data = _parse_json_array(raw)
+    except (ValueError, json.JSONDecodeError) as e:
+        raise HTTPException(status_code=502, detail=f"JSON parse failed: {e}")
+
+    if not data:
+        raise HTTPException(status_code=502, detail="Gemini returned zero questions.")
+
+    # Build validated questions
+    try:
+        questions = [QuizQuestion(**q) for q in data[:n]]
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Gemini call failed: {e}")
-
-    raw = _extract_json(raw)
-
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        # Try to find a JSON array in the response as fallback
-        match = re.search(r"\[.*\]", raw, re.DOTALL)
-        if match:
-            try:
-                data = json.loads(match.group())
-            except json.JSONDecodeError as e:
-                raise HTTPException(status_code=502, detail=f"Gemini returned invalid JSON: {e}")
-        else:
-            raise HTTPException(status_code=502, detail="Gemini did not return a JSON array.")
-
-    if not isinstance(data, list) or len(data) == 0:
-        raise HTTPException(status_code=502, detail="Gemini returned an empty question list.")
-
-    try:
-        questions = [QuizQuestion(**q) for q in data]
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Question schema mismatch: {e}")
+        raise HTTPException(status_code=422, detail=f"Question schema error: {e}")
 
     return QuizResponse(role=req.role, questions=questions)
