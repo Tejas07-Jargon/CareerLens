@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getReport } from "@/lib/api";
+
 import CareerLensLoading from "@/components/loading/CareerLensLoading";
 import { SocialFlipButton } from "@/components/ui/social-flip-button";
 import LoginScreen from "@/components/ui/LoginScreen";
@@ -18,7 +18,7 @@ import EvidenceDashboardWidget from "@/components/evidence/EvidenceDashboardWidg
 import ResumeBuilderTab from "@/components/resume/ResumeBuilderTab";
 import JobFitTab from "@/components/job-fit/JobFitTab";
 import OwnershipPanel from "@/components/ownership/OwnershipPanel";
-import LeetCodeTab from "@/app/leetcode/page";
+import LeetCodeAnalyzer from "@/components/leetcode/LeetCodeAnalyzer";
 import type { ProfileReport } from "@/types";
 import {
   Search,
@@ -257,7 +257,7 @@ export default function HomePage() {
       return ["dashboard", "batch"].includes(tab.id);
     } else {
       // Applicant Tabs
-      return ["dashboard", "jobfit", "resume", "analyse", "roadmap", "quiz"].includes(tab.id);
+      return ["dashboard", "jobfit", "resume", "analyse", "ownership", "roadmap", "leetcode", "quiz"].includes(tab.id);
     }
   });
 
@@ -683,6 +683,13 @@ export default function HomePage() {
                   setActiveTab("dashboard");
                 }}
               />
+            </div>
+          )}
+
+          {/* TAB 6: LEETCODE */}
+          {activeTab === "leetcode" && (
+            <div key="leetcode-view" className="fade-in-up">
+              <LeetCodeAnalyzer profileId={profileId} />
             </div>
           )}
 
