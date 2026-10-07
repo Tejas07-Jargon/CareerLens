@@ -15,9 +15,10 @@ interface Props {
   report: ProfileReport;
   persona: "student" | "placement";
   onReset: () => void;
+  onOpenDashboard?: () => void;
 }
 
-export default function ReportView({ report, persona, onReset }: Props) {
+export default function ReportView({ report, persona, onReset, onOpenDashboard }: Props) {
   const hasFlags = report.security_flags?.length > 0;
 
   return (
@@ -42,9 +43,21 @@ export default function ReportView({ report, persona, onReset }: Props) {
             Role: <strong style={{ color: "var(--blue)" }}>{report.role_fits?.[0]?.role ?? "—"}</strong>
           </p>
         </div>
-        <button id="reset-btn" onClick={onReset} className="btn btn-ghost" style={{ fontSize: "0.88rem", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <ArrowLeft size={16} /> Analyse another
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {onOpenDashboard && (
+            <button
+              id="report-back-to-dashboard-btn"
+              onClick={onOpenDashboard}
+              className="btn btn-ghost"
+              style={{ fontSize: "0.88rem", fontWeight: 800 }}
+            >
+              ← Command Center
+            </button>
+          )}
+          <button id="reset-btn" onClick={onReset} className="btn" style={{ fontSize: "0.88rem", display: "inline-flex", alignItems: "center", gap: 6, background: "var(--bg-soft)", borderColor: "var(--border)" }}>
+            <ArrowLeft size={16} /> Analyse another
+          </button>
+        </div>
       </div>
 
       {/* ── Security flags ────────────────────────────────────────── */}

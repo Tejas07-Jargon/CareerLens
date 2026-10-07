@@ -36,7 +36,6 @@ class Base(DeclarativeBase):
 async def init_db() -> None:
     """Create all tables on startup (development convenience)."""
     async with engine.begin() as conn:
-        # Import all models so Base knows about them before create_all
         from app.models import (  # noqa: F401
             profile,
             evidence,
@@ -45,6 +44,7 @@ async def init_db() -> None:
             cohort,
             consent,
             audit_log,
+            dynamic_profile,
         )
         await conn.run_sync(Base.metadata.create_all)
 

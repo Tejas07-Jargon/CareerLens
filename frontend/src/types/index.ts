@@ -29,6 +29,7 @@ export interface Locator {
   detail?: string;
   label?: string;            // "signal for review" for authenticity signals
   injected?: boolean;
+  weekly_series?: number[];
 }
 
 // ── Score ─────────────────────────────────────────────────────────────────────
