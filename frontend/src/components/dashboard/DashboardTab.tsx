@@ -38,7 +38,8 @@ import {
   Compass,
   CheckCircle,
   HelpCircle as QuestionIcon,
-  FileText
+  FileText,
+  PartyPopper
 } from "lucide-react";
 import ResumeCard from "@/components/resume/ResumeCard";
 import JobFitCard from "@/components/job-fit/JobFitCard";
@@ -799,6 +800,8 @@ export default function DashboardTab({
                   : { value: 75, reason: "Evidence verified" };
                 const val = comp?.value ?? 70;
                 const isSelected = selectedDimension === metric.key;
+                return (
+                  <div
                     key={metric.key}
                     onClick={() => setSelectedDimension(isSelected ? null : metric.key)}
                     style={{

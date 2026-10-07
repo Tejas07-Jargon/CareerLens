@@ -689,7 +689,7 @@ export default function HomePage() {
           {/* TAB 6: LEETCODE */}
           {activeTab === "leetcode" && (
             <div key="leetcode-view" className="fade-in-up">
-              <LeetCodeAnalyzer profileId={profileId} />
+              <LeetCodeAnalyzer profileId={profileId || ""} />
             </div>
           )}
 

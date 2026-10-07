@@ -184,7 +184,7 @@ export default function BatchTab({ onSelectCandidate }: BatchTabProps) {
                 </span>
                 {s.gaps.length > 0 && (
                   <div style={{ display: "flex", gap: 5, flexWrap: "wrap", maxWidth: 200 }}>
-                    {s.gaps.slice(0, 2).map((g) => (
+                    {s.gaps.slice(0, 2).map((g: string) => (
                       <span key={g} className="badge" style={{ fontSize: "0.62rem", background: "var(--bg-soft)", color: "var(--text-mid)", borderColor: "var(--border)" }}>
                         {g}
                       </span>
