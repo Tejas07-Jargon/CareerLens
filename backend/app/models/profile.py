@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text, Float, Integer
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -59,6 +59,13 @@ class Profile(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
+    # ── Dynamic Profile & Quiz Tracking ───────────────────────────────────────
+    overall_readiness_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    quiz_average: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    total_quizzes: Mapped[int] = mapped_column(Integer, default=0)
+    quiz_streak: Mapped[int] = mapped_column(Integer, default=0)
+    last_quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
     # ── Relationships ─────────────────────────────────────────────────────────
     evidence_items = relationship(
         "Evidence", back_populates="profile", cascade="all, delete-orphan"
@@ -68,3 +75,8 @@ class Profile(Base):
     )
     consent = relationship("Consent", back_populates="profile", uselist=False)
     cohort = relationship("Cohort", back_populates="profiles")
+    
+    skill_profiles = relationship("SkillProfile", back_populates="profile", cascade="all, delete-orphan")
+    quiz_attempts = relationship("QuizAttempt", back_populates="profile", cascade="all, delete-orphan")
+    recommendations = relationship("Recommendation", back_populates="profile", cascade="all, delete-orphan")
+    snapshots = relationship("ProfileSnapshot", back_populates="profile", cascade="all, delete-orphan")

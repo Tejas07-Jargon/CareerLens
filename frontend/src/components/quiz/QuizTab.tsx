@@ -663,7 +663,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
 // ─────────────────────────────────────────────────────────────────────────────
 type Phase = "config" | "loading" | "quiz" | "result";
 
-export default function QuizTab() {
+export default function QuizTab({ profileId }: { profileId: string | null }) {
   const [phase, setPhase] = useState<Phase>("config");
   const [error, setError] = useState<string | null>(null);
 
@@ -679,6 +679,7 @@ export default function QuizTab() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [timePerQ, setTimePerQ] = useState<number[]>([]);
   const [qStartTime, setQStartTime] = useState(Date.now());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleStart() {
     setError(null);
@@ -712,9 +713,38 @@ export default function QuizTab() {
     setShowExplanation(true);
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (currentQ + 1 >= questions.length) {
-      setPhase("result");
+      if (profileId && !isSubmitting) {
+        setIsSubmitting(true);
+        try {
+          const payload = {
+            profile_id: profileId,
+            time_taken: timePerQ.reduce((a, b) => a + b, 0),
+            answers: questions.map((q, i) => ({
+              question_id: q.id,
+              skill: role, // Default to role for skill if none
+              topic: q.topic,
+              difficulty: q.difficulty,
+              is_correct: answers[q.id] === q.correct,
+              selected_answer: answers[q.id],
+              time_taken: timePerQ[i] || 0
+            }))
+          };
+          await fetch(`http://127.0.0.1:8000/quiz/dynamic-quiz/attempts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+        } catch (err) {
+          console.error("Failed to post quiz attempt:", err);
+        } finally {
+          setIsSubmitting(false);
+          setPhase("result");
+        }
+      } else if (!profileId) {
+        setPhase("result");
+      }
     } else {
       setCurrentQ((c) => c + 1);
       setShowExplanation(false);

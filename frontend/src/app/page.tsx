@@ -406,9 +406,9 @@ export default function HomePage() {
           </div>
         )}
 
-        {activeTab === "quiz" && <div key="quiz-view" className="fade-in-up"><QuizTab /></div>}
+        {activeTab === "quiz" && <div key="quiz-view" className="fade-in-up"><QuizTab profileId={profileId} /></div>}
         {activeTab === "roadmap" && <div key="roadmap-view" className="fade-in-up"><RoadmapTab /></div>}
-        {activeTab === "dashboard" && <div key="dashboard-view" className="fade-in-up"><DashboardTab /></div>}
+        {activeTab === "dashboard" && <div key="dashboard-view" className="fade-in-up"><DashboardTab profileId={profileId} /></div>}
         {activeTab === "batch" && <div key="batch-view" className="fade-in-up"><BatchTab /></div>}
       </div>
 

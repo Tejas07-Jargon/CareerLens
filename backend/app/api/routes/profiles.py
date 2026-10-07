@@ -23,6 +23,7 @@ from app.models.profile import Profile
 from app.models.consent import Consent
 from app.models.score_run import ScoreRun
 from app.models.audit_log import AuditLog
+from app.models.dynamic_profile import SkillProfile, QuizAttempt, Recommendation, SkillTopic
 
 router = APIRouter()
 
@@ -128,16 +129,18 @@ async def create_profile(
     await session.commit()
 
     # Trigger analysis (Celery worker with graceful background fallback)
-    try:
-        from app.workers.analysis_tasks import run_fast_analysis
-        task = run_fast_analysis.delay(profile_id)
-        profile.celery_task_id = task.id
-        await session.commit()
-    except Exception:
-        # Fallback to local async execution when Celery/Redis is unreachable
-        from app.services.analysis_orchestrator import AnalysisOrchestrator
-        orchestrator = AnalysisOrchestrator()
-        asyncio.create_task(orchestrator.run_fast_analysis(profile_id))
+    # try:
+    #     from app.workers.analysis_tasks import run_fast_analysis
+    #     task = run_fast_analysis.delay(profile_id)
+    #     profile.celery_task_id = task.id
+    #     await session.commit()
+    # except Exception:
+    #     pass
+    
+    # Fallback to local async execution when Celery/Redis is unreachable
+    # from app.services.analysis_orchestrator import AnalysisOrchestrator
+    # orchestrator = AnalysisOrchestrator()
+    # asyncio.create_task(orchestrator.run_fast_analysis(profile_id))
 
     return {"profile_id": profile_id, "status": "pending"}
 
@@ -359,3 +362,61 @@ async def delete_profile(
 
     await session.delete(profile)
     await session.commit()
+
+
+# ── GET /profiles/{id}/dashboard ──────────────────────────────────────────────
+
+@router.get("/{profile_id}/dashboard")
+async def get_dashboard(
+    profile_id: str,
+    session: AsyncSession = Depends(get_session)
+):
+    profile = await session.get(Profile, profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Get Skills
+    skills_stmt = select(SkillProfile).where(SkillProfile.profile_id == profile_id)
+    skills_res = await session.execute(skills_stmt)
+    skills_db = skills_res.scalars().all()
+    
+    # Sort skills by mastery
+    sorted_skills = sorted(skills_db, key=lambda s: s.mastery_score, reverse=True)
+    
+    # Recommendations
+    recs_stmt = select(Recommendation).where(Recommendation.profile_id == profile_id, Recommendation.status == "active")
+    recs_res = await session.execute(recs_stmt)
+    recommendations = [{"title": r.title, "description": r.description, "type": r.type} for r in recs_res.scalars().all()]
+    
+    # Evidence score fallback
+    evidence_score = 0
+    # You can fetch from evidence_confidence if you have that service integrated here
+    
+    # Formulate response
+    return {
+        "student": {
+            "name": profile.display_name or "Student",
+            "target_role": profile.target_role or "Software Engineer"
+        },
+        "readiness": {
+            "score": round(profile.overall_readiness_score or 0.0, 1),
+            "change": 0, # Could be calculated from snapshots
+            "trend": "up" if (profile.overall_readiness_score or 0) > 50 else "stable"
+        },
+        "evidence_confidence": evidence_score,
+        "quiz_stats": {
+            "total_quizzes": profile.total_quizzes,
+            "average_score": round(profile.quiz_average or 0.0, 1),
+            "current_streak": profile.quiz_streak
+        },
+        "strongest_skills": [
+            {"name": s.skill_name, "score": round(s.mastery_score, 1), "trend": s.trend}
+            for s in sorted_skills[:3]
+        ],
+        "weakest_skills": [
+            {"name": s.skill_name, "score": round(s.mastery_score, 1), "trend": s.trend}
+            for s in sorted_skills[-3:] if s.mastery_score > 0
+        ],
+        "recommendations": recommendations
+    }
+

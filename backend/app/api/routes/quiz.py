@@ -10,8 +10,11 @@ import re
 from typing import List
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_session
+from app.services.scoring.quiz_engine import process_quiz_submission
 
 router = APIRouter()
 
@@ -244,3 +247,30 @@ IMPORTANT: Return ONLY a raw JSON array — no markdown, no code fences, no extr
         raise HTTPException(status_code=422, detail=f"Question schema error: {e}")
 
     return QuizResponse(role=req.role, questions=questions)
+
+
+# ── POST /quiz/{quiz_id}/attempts ───────────────────────────────────────────────
+
+class QuizAttemptRequest(BaseModel):
+    profile_id: str
+    answers: List[dict]
+    time_taken: int = 0
+
+@router.post("/{quiz_id}/attempts")
+async def submit_quiz_attempt(
+    quiz_id: str,
+    req: QuizAttemptRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    try:
+        result = await process_quiz_submission(
+            db=session,
+            profile_id=req.profile_id,
+            quiz_id=quiz_id,
+            answers=req.answers,
+            time_taken=req.time_taken
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

@@ -1,31 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BarChart, Target, TrendingUp, Clock, Lightbulb } from "lucide-react";
 
 const SAMPLE_SKILLS = [
-  { skill: "React / Next.js", importance: 92, marketFreq: 88, confidence: 75, priority: 80 },
-  { skill: "System Design", importance: 95, marketFreq: 90, confidence: 40, priority: 95 },
-  { skill: "TypeScript", importance: 85, marketFreq: 82, confidence: 80, priority: 60 },
-  { skill: "SQL & Databases", importance: 88, marketFreq: 86, confidence: 55, priority: 85 },
-  { skill: "Docker / K8s", importance: 80, marketFreq: 75, confidence: 30, priority: 90 },
-  { skill: "DSA", importance: 90, marketFreq: 85, confidence: 60, priority: 78 },
-  { skill: "REST APIs", importance: 82, marketFreq: 90, confidence: 88, priority: 30 },
-  { skill: "Git / CI-CD", importance: 78, marketFreq: 80, confidence: 85, priority: 28 },
+  { skill: "React / Next.js", importance: 92, marketFreq: 88, confidence: 75, priority: 80, trend: "up" },
+  { skill: "System Design", importance: 95, marketFreq: 90, confidence: 40, priority: 95, trend: "stable" },
+  { skill: "TypeScript", importance: 85, marketFreq: 82, confidence: 80, priority: 60, trend: "up" },
+  { skill: "SQL & Databases", importance: 88, marketFreq: 86, confidence: 55, priority: 85, trend: "down" },
+  { skill: "Docker / K8s", importance: 80, marketFreq: 75, confidence: 30, priority: 90, trend: "stable" },
 ];
 
 const MARKET_ROLES = [
   { role: "Software Engineer", openings: 4200, avgCTC: "18 LPA", demand: 95, growth: "+12%", color: "var(--blue)" },
   { role: "Data Scientist", openings: 2800, avgCTC: "22 LPA", demand: 88, growth: "+18%", color: "var(--purple)" },
   { role: "DevOps Engineer", openings: 1900, avgCTC: "20 LPA", demand: 82, growth: "+22%", color: "var(--green)" },
-  { role: "ML Engineer", openings: 1600, avgCTC: "25 LPA", demand: 78, growth: "+35%", color: "var(--orange)" },
-  { role: "Frontend Developer", openings: 3100, avgCTC: "16 LPA", demand: 86, growth: "+9%", color: "var(--pink)" },
 ];
 
 type DashView = "gap" | "market" | "timeline";
 
-export default function DashboardTab() {
+export default function DashboardTab({ profileId }: { profileId: string | null }) {
   const [view, setView] = useState<DashView>("gap");
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (profileId) {
+      setLoading(true);
+      fetch(`http://127.0.0.1:8000/profiles/${profileId}/dashboard`)
+        .then(res => res.json())
+        .then(d => {
+          if (!d.detail) setData(d);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
+    } else {
+      setData(null);
+    }
+  }, [profileId]);
+
+  const skillsToRender = data && data.strongest_skills 
+    ? [...data.strongest_skills, ...data.weakest_skills].map((s: any) => ({
+        skill: s.name,
+        importance: 85,
+        marketFreq: 80,
+        confidence: s.score,
+        priority: 100 - s.score,
+        trend: s.trend
+      }))
+    : SAMPLE_SKILLS;
+
+  const isReal = !!data;
 
   return (
     <div style={{ maxWidth: 980, margin: "0 auto" }}>
@@ -68,23 +96,43 @@ export default function DashboardTab() {
         </div>
       </div>
 
+      {/* Stats row if real data */}
+      {isReal && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+          <div className="card" style={{ padding: "16px", borderColor: "var(--green)", boxShadow: "3px 3px 0 var(--green)" }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-mid)" }}>Overall Readiness</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--green)" }}>{data.readiness.score}%</div>
+          </div>
+          <div className="card" style={{ padding: "16px", borderColor: "var(--purple)", boxShadow: "3px 3px 0 var(--purple)" }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-mid)" }}>Quiz Average</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--purple)" }}>{data.quiz_stats.average_score}%</div>
+          </div>
+          <div className="card" style={{ padding: "16px", borderColor: "var(--blue)", boxShadow: "3px 3px 0 var(--blue)" }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-mid)" }}>Total Quizzes</div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--blue)" }}>{data.quiz_stats.total_quizzes}</div>
+          </div>
+        </div>
+      )}
+
       {/* Note */}
-      <div className="card fade-in-up" style={{
-        borderColor: "var(--blue)", boxShadow: "3px 3px 0 var(--blue)",
-        background: "var(--blue-light)", marginBottom: 24, padding: "12px 16px",
-        display: "flex", gap: 10, alignItems: "center",
-      }}>
-        <span><Lightbulb size={24} /></span>
-        <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600, margin: 0 }}>
-          This is sample data. Analyse your profile to see your real skill gaps, consistency, and role-fit scores.
-        </p>
-      </div>
+      {!isReal && (
+        <div className="card fade-in-up" style={{
+          borderColor: "var(--blue)", boxShadow: "3px 3px 0 var(--blue)",
+          background: "var(--blue-light)", marginBottom: 24, padding: "12px 16px",
+          display: "flex", gap: 10, alignItems: "center",
+        }}>
+          <span><Lightbulb size={24} /></span>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600, margin: 0 }}>
+            This is sample data. Take a quiz or analyse your profile to see real gaps.
+          </p>
+        </div>
+      )}
 
       {/* ── Skill Gap View ─────────────────────────────────────────────────────── */}
       {view === "gap" && (
         <div className="fade-in-up">
           <div style={{ display: "grid", gap: 14 }}>
-            {SAMPLE_SKILLS.sort((a, b) => b.priority - a.priority).map((s, i) => {
+            {skillsToRender.sort((a, b) => b.priority - a.priority).map((s, i) => {
               const gapColor = s.confidence < 50 ? "var(--pink)" : s.confidence < 70 ? "var(--orange)" : "var(--green)";
               const gapLabel = s.confidence < 50 ? "Critical Gap" : s.confidence < 70 ? "Partial" : "Covered";
               return (
@@ -104,9 +152,9 @@ export default function DashboardTab() {
                       {i + 1}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 900, fontSize: "0.95rem" }}>{s.skill}</div>
+                      <div style={{ fontWeight: 900, fontSize: "0.95rem" }}>{s.skill} {s.trend === "up" ? "📈" : s.trend === "down" ? "📉" : ""}</div>
                       <div style={{ fontSize: "0.75rem", color: "var(--text-soft)", fontWeight: 700 }}>
-                        Market demand: {s.marketFreq}% · Importance: {s.importance}%
+                        {isReal ? "Based on Quiz Performance" : `Market demand: ${s.marketFreq}% · Importance: ${s.importance}%`}
                       </div>
                     </div>
                     <span className="badge" style={{
@@ -118,7 +166,7 @@ export default function DashboardTab() {
                   </div>
                   {/* Confidence bar */}
                   <div style={{ fontSize: "0.75rem", color: "var(--text-mid)", marginBottom: 4, fontWeight: 700 }}>
-                    Your confidence: {s.confidence}%
+                    Mastery Level: {Math.round(s.confidence)}%
                   </div>
                   <div className="progress-bar">
                     <div className="progress-bar-fill" style={{ width: `${s.confidence}%`, background: gapColor }} />

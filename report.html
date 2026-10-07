@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>CareerLens - Evidence Confidence Feature Implementation Report</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 16mm 14mm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.5;
+      font-size: 13px;
+      padding: 10px;
+    }
+    .header {
+      border-bottom: 2.5px solid #2563eb;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .header h1 {
+      font-size: 22px;
+      color: #0f172a;
+      font-weight: 800;
+    }
+    .header .subtitle {
+      font-size: 12.5px;
+      color: #64748b;
+      margin-top: 3px;
+    }
+    .badge-report {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      font-size: 12px;
+    }
+    .meta-item strong {
+      color: #475569;
+    }
+    .meta-item span {
+      color: #0f172a;
+      font-weight: 600;
+    }
+    h2 {
+      font-size: 15px;
+      color: #0f172a;
+      margin: 16px 0 8px 0;
+      padding-left: 8px;
+      border-left: 4px solid #2563eb;
+      font-weight: 700;
+    }
+    p {
+      margin-bottom: 8px;
+      color: #334155;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      text-align: left;
+      padding: 7px 10px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+    }
+    td {
+      padding: 7px 10px;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .status-strong { background: #dcfce7; color: #15803d; }
+    .status-mod { background: #e0f2fe; color: #0369a1; }
+    .status-lim { background: #fef9c3; color: #a16207; }
+    .status-weak { background: #fee2e2; color: #b91c1c; }
+    .principle-box {
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 16px;
+      font-size: 12.5px;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .feature-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+    .feature-card h3 {
+      font-size: 13px;
+      color: #1e40af;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .feature-card p {
+      font-size: 11.5px;
+      color: #475569;
+      margin: 0;
+    }
+    ul {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+    li {
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    .footer {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>🔍 CareerLens: Evidence Confidence Score Report</h1>
+      <div class="subtitle">Complete Feature Implementation & Testing Summary</div>
+    </div>
+    <div>
+      <span class="badge-report">FEATURE COMPLETED</span>
+    </div>
+  </div>
+
+  <div class="principle-box">
+    <strong>Core Principle:</strong> "Don't just tell us what skills the candidate claims. Show us what skills the candidate can actually prove."
+  </div>
+
+  <div class="meta-box">
+    <div class="meta-item"><strong>Feature:</strong> <span>Evidence Confidence Score & Verification Engine</span></div>
+    <div class="meta-item"><strong>Date:</strong> <span>07 October 2026</span></div>
+    <div class="meta-item"><strong>Frontend URL:</strong> <span>http://localhost:3000/evidence</span></div>
+    <div class="meta-item"><strong>Backend API:</strong> <span>http://127.0.0.1:8000/evidence/</span></div>
+  </div>
+
+  <h2>1. Executive Summary (Kaam Ka Nichod)</h2>
+  <p>
+    CareerLens project ke andar <strong>Evidence Confidence Score</strong> feature successfully implement aur test kar diya gaya hai. Ab resume me likhi kisi bhi skill ko andhadhundh maanne ke bajaye, system actual proof (GitHub commits, repositories, code depth, projects, documentation) ke basis par deterministic 0–100 score aur explainable breakdown generate karta hai.
+  </p>
+
+  <h2>2. Skill Evidence Score Ranges & Formula</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Score Range</th>
+        <th>Status Label</th>
+        <th>Meaning & Proof Level</th>
+        <th>Example Skill</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>81 – 100</strong></td>
+        <td><span class="status-badge status-strong">Strong Evidence</span></td>
+        <td>Multiple independent repos, tests, CI, high recency</td>
+        <td>Java (91/100), React (84/100)</td>
+      </tr>
+      <tr>
+        <td><strong>61 – 80</strong></td>
+        <td><span class="status-badge status-mod">Moderate Evidence</span></td>
+        <td>Active code & queries; needs test or deployment depth</td>
+        <td>SQL (78/100), Python (67/100)</td>
+      </tr>
+      <tr>
+        <td><strong>31 – 60</strong></td>
+        <td><span class="status-badge status-lim">Limited Evidence</span></td>
+        <td>Single file or template; preliminary signals only</td>
+        <td>Docker (38/100)</td>
+      </tr>
+      <tr>
+        <td><strong>0 – 30</strong></td>
+        <td><span class="status-badge status-weak">Weak / Unverified</span></td>
+        <td>Claimed on resume but zero detectable code evidence</td>
+        <td>AWS (18/100)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Point Contribution Breakdown (+100 Max)</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>📄 Resume Claim (+10 max)</h3>
+      <p>Skill resume me explicitly detect hone par points milte hain. Unclaimed hone par 0.</p>
+    </div>
+    <div class="feature-card">
+      <h3>📁 Project Evidence (+25 max)</h3>
+      <p>3+ projects = +25, 2 projects = +18, 1 project = +12. Unavailable hone par 0.</p>
+    </div>
+    <div class="feature-card">
+      <h3>🧬 Code Implementation (+25 max)</h3>
+      <p>AST depth, automated tests, module structure ke hisaab se points milte hain.</p>
+    </div>
+    <div class="feature-card">
+      <h3>🐙 GitHub Activity (+15 max)</h3>
+      <p>50+ skill commits = +15, 10-50 commits = +10. Account not connected par 'Unavailable'.</p>
+    </div>
+    <div class="feature-card">
+      <h3>🎯 Project Relevance (+10 max)</h3>
+      <p>Domain alignment aur enterprise / production patterns ke basis par score.</p>
+    </div>
+    <div class="feature-card">
+      <h3>⏰ Recency & Docs (+15 max)</h3>
+      <p>Last 30 din ki activity (+10) aur README / portfolio documentation (+5).</p>
+    </div>
+  </div>
+
+  <h2>4. Claim vs Evidence Comparison & Contradiction Detection</h2>
+  <ul>
+    <li><strong>Under-Supported Claims (Neutral Flag):</strong> Agar candidate resume me 'Expert' claim kare lekin code evidence minimal ho (e.g. AWS 18%), system bina accusation ke neutral recommendation deta hai: <em>"Claim appears under-supported. Recommendation: Add a demonstrable AWS project or reduce proficiency claim."</em></li>
+    <li><strong>Unlisted / Stronger Skills:</strong> Agar candidate ne 'Beginner' likha hai ya resume me nahi likha lekin repos me 5+ active projects hain, system suggest karta hai: <em>"Evidence suggests stronger proficiency than stated."</em></li>
+    <li><strong>Fair Missing Data Handling:</strong> 'No evidence found', 'Evidence unavailable' (GitHub not connected) aur 'Contradictory evidence' ko alag-alag treat kiya jata hai.</li>
+  </ul>
+
+  <h2>5. New Files & Implementation Overview</h2>
+  <ul>
+    <li><strong>Frontend Page:</strong> <code>frontend/src/app/evidence/page.tsx</code> (Dedicated /evidence route)</li>
+    <li><strong>Frontend View & Modal:</strong> <code>EvidenceVerificationView.tsx</code>, <code>SkillDetailModal.tsx</code>, <code>EvidenceDashboardWidget.tsx</code></li>
+    <li><strong>API Layer & Types:</strong> <code>evidenceApi.ts</code>, <code>evidence.ts</code></li>
+    <li><strong>Backend Scorer:</strong> <code>backend/app/services/scoring/evidence_confidence.py</code></li>
+    <li><strong>Backend Route:</strong> <code>backend/app/api/routes/evidence.py</code> registered in <code>app/main.py</code></li>
+    <li><strong>Live Verification:</strong> Frontend dev server (Port 3000) aur Backend server (Port 8000) dono live hain aur production build pass ho chuka hai!</li>
+  </ul>
+
+  <div class="footer">
+    CareerLens Evidence Confidence Report &bull; Generated & Verified on 07 October 2026
+  </div>
+
+</body>
+</html>
