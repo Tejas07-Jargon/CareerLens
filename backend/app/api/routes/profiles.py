@@ -176,6 +176,9 @@ async def stream_progress(
             if profile is None:
                 yield f"data: {json.dumps({'error': 'Profile not found'})}\n\n"
                 return
+            
+            # Refresh to ensure we get the latest status updated by background tasks
+            await session.refresh(profile)
 
             if profile.status != last_status:
                 last_status = profile.status
