@@ -40,6 +40,45 @@ async def list_cohorts(session: AsyncSession = Depends(get_session)):
     return [{"id": c.id, "name": c.name, "created_at": c.created_at} for c in cohorts]
 
 
+@router.get("/global/insights")
+async def global_insights(
+    session: AsyncSession = Depends(get_session),
+):
+    # Load ALL profiles
+    profile_result = await session.execute(select(Profile))
+    profiles = profile_result.scalars().all()
+    profile_ids = [p.id for p in profiles]
+
+    if not profile_ids:
+        return {"heatmap": {}, "top_gaps": [], "cohort_size": 0}
+
+    # Load latest ScoreRun for each profile
+    score_runs_raw = []
+    for pid in profile_ids:
+        sr_result = await session.execute(
+            select(ScoreRun)
+            .where(ScoreRun.profile_id == pid)
+            .order_by(ScoreRun.created_at.desc())
+            .limit(1)
+        )
+        sr = sr_result.scalar_one_or_none()
+        if sr:
+            score_runs_raw.append({"claim_statuses": sr.claim_statuses})
+
+    from app.services.batch.batch_analytics_service import BatchAnalyticsService
+    svc = BatchAnalyticsService(score_runs=score_runs_raw, cohort_size=len(profiles))
+
+    heatmap = svc.skill_heatmap()
+    top_gaps = svc.top_skill_gaps(n=15)
+
+    return {
+        "cohort_id": "global",
+        "cohort_name": "All Candidates",
+        "cohort_size": len(profiles),
+        "heatmap": heatmap,
+        "top_gaps": top_gaps,
+    }
+
 @router.get("/{cohort_id}/insights")
 async def cohort_insights(
     cohort_id: str,

@@ -45,7 +45,8 @@ RESUME_SOURCE_RELIABILITY = 0.55  # resumes are self-reported
 
 
 def _is_near_white(r: int, g: int, b: int) -> bool:
-    return (r + g + b) >= (WHITE_TEXT_BRIGHTNESS_THRESHOLD * 3)
+    # Disabled: Flawed logic flags legitimate white text on dark backgrounds
+    return False
 
 
 

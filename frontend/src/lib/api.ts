@@ -43,6 +43,30 @@ export async function deleteProfile(profileId: string): Promise<void> {
   await fetch(`${BASE}/profiles/${profileId}`, { method: "DELETE" });
 }
 
+export async function searchProfile(username: string): Promise<{ profile_id: string }> {
+  const res = await fetch(`${BASE}/profiles/search?username=${encodeURIComponent(username)}`);
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error("Candidate doesn't exist");
+    }
+    throw new Error("Failed to search candidate");
+  }
+  return res.json();
+}
+
+export async function offerJob(profileId: string, companyName: string): Promise<{ status: string, message: string }> {
+  const res = await fetch(`${BASE}/profiles/${profileId}/offer`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ company_name: companyName })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Failed to offer job");
+  }
+  return res.json();
+}
+
 export async function runWhatIf(
   profileId: string,
   actions: WhatIfActionInput[]
@@ -58,6 +82,7 @@ export async function runWhatIf(
 
 export async function getDashboardData(profileId: string): Promise<{
   student: { name: string; target_role: string };
+  job_offer?: { company: string | null; offered_at: string | null };
   readiness: { score: number; change: number; trend: string };
   evidence_confidence: number;
   quiz_stats: { total_quizzes: number; average_score: number; current_streak: number };
@@ -150,6 +175,12 @@ export async function getCohortInsights(cohortId: string): Promise<CohortInsight
   return res.json();
 }
 
+export async function getGlobalInsights(): Promise<CohortInsights> {
+  const res = await fetch(`${BASE}/cohorts/global/insights`);
+  if (!res.ok) throw new Error("Failed to load global cohort insights");
+  return res.json();
+}
+
 export async function optimiseWorkshops(
   cohortId: string,
   candidateWorkshops: Array<{ name: string; skills_covered: string[] }>,
@@ -229,6 +260,17 @@ export async function getPersonalizedRoadmap(
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(err.detail ?? "Failed to load roadmap");
+  }
+  return res.json();
+}
+
+// ── Cohort Data ──────────────────────────────────────────────────────────────
+
+export async function getCohortData(): Promise<any[]> {
+  const res = await fetch(`${BASE}/profiles`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Failed to fetch cohort data");
   }
   return res.json();
 }

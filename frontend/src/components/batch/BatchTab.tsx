@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building2, Users, Target, Calendar, CheckCircle, BarChart, AlertTriangle } from "lucide-react";
+import { getCohortData } from "@/lib/api";
 
 const SAMPLE_STUDENTS = [
   { name: "Arjun Sharma", role: "Software Engineer", score: 82, status: "Ready", gaps: ["System Design", "K8s"], color: "var(--green)" },
@@ -29,12 +30,30 @@ const WORKSHOPS = [
   { name: "DSA Sprint", skillsCovered: ["DSA", "Algorithms"], reach: 3, duration: "1 day" },
 ];
 
-export default function BatchTab() {
+interface BatchTabProps {
+  onSelectCandidate?: (profileId: string) => void;
+}
+
+export default function BatchTab({ onSelectCandidate }: BatchTabProps) {
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [activeSection, setActiveSection] = useState<"overview" | "gaps" | "workshops">("overview");
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const readyCount = SAMPLE_STUDENTS.filter((s) => s.status === "Ready").length;
-  const avgScore = Math.round(SAMPLE_STUDENTS.reduce((a, b) => a + b.score, 0) / SAMPLE_STUDENTS.length);
+  useEffect(() => {
+    getCohortData()
+      .then(data => {
+        setStudents(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  const readyCount = students.filter((s) => s.status === "Ready").length;
+  const avgScore = students.length > 0 ? Math.round(students.reduce((a, b) => a + b.score, 0) / students.length) : 0;
 
   function toggleStudent(name: string) {
     setSelectedStudents((prev) => {
@@ -83,7 +102,7 @@ export default function BatchTab() {
       {/* Stats bar */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
         {[
-          { label: "Total Students", value: SAMPLE_STUDENTS.length, color: "var(--blue)", bg: "var(--blue-light)", icon: <Users size={24} /> },
+          { label: "Total Students", value: students.length, color: "var(--blue)", bg: "var(--blue-light)", icon: <Users size={24} /> },
           { label: "Placement Ready", value: readyCount, color: "var(--green)", bg: "var(--green-light)", icon: <CheckCircle size={24} /> },
           { label: "Avg Score", value: `${avgScore}%`, color: "var(--purple)", bg: "var(--purple-light)", icon: <BarChart size={24} /> },
           { label: "Top Gap", value: "Sys Design", color: "var(--pink)", bg: "var(--pink-light)", icon: <AlertTriangle size={24} /> },
@@ -103,15 +122,20 @@ export default function BatchTab() {
       {activeSection === "overview" && (
         <div className="fade-in-up">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <h3 style={{ fontWeight: 900, fontSize: "1rem" }}>Student Roster ({SAMPLE_STUDENTS.length})</h3>
+            <h3 style={{ fontWeight: 900, fontSize: "1rem" }}>Student Roster ({students.length})</h3>
             {selectedStudents.size > 0 && (
               <span className="badge" style={{ background: "var(--blue-light)", color: "var(--blue)", borderColor: "var(--blue)" }}>
                 {selectedStudents.size} selected
               </span>
             )}
           </div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 40, color: "var(--text-mid)", fontWeight: 600 }}>Loading profiles...</div>
+          ) : students.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 40, color: "var(--text-mid)", fontWeight: 600 }}>No candidates registered yet.</div>
+          ) : (
           <div style={{ display: "grid", gap: 10 }}>
-            {SAMPLE_STUDENTS.map((s, i) => (
+            {students.map((s, i) => (
               <div
                 key={s.name}
                 className="card"
@@ -172,9 +196,28 @@ export default function BatchTab() {
                     )}
                   </div>
                 )}
+                {onSelectCandidate && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectCandidate(s.id);
+                    }}
+                    className="btn"
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "0.75rem",
+                      background: "white",
+                      borderColor: "var(--border)",
+                      color: "var(--text)"
+                    }}
+                  >
+                    View Profile
+                  </button>
+                )}
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 

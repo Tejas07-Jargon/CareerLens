@@ -51,7 +51,7 @@ class WhatIfRequest(BaseModel):
 @router.post("/", status_code=202)
 async def create_profile(
     request: Request,
-    # Multipart form: JSON fields + file uploads
+    full_name: Optional[str] = Form(None),
     github_username: Optional[str] = Form(None),
     portfolio_url: Optional[str] = Form(None),
     design_portfolio_url: Optional[str] = Form(None),
@@ -95,6 +95,7 @@ async def create_profile(
     # Create profile
     profile = Profile(
         id=profile_id,
+        display_name=full_name,
         github_username=github_username,
         portfolio_url=portfolio_url,
         design_portfolio_url=design_portfolio_url,
@@ -160,6 +161,113 @@ async def create_profile(
     return {"profile_id": profile_id, "status": "pending"}
 
 
+# ── GET /profiles ─────────────────────────────────────────────────────────────
+
+@router.get("/")
+async def list_profiles(session: AsyncSession = Depends(get_session)):
+    # Fetch all registered profiles and their readiness
+    stmt = select(Profile).order_by(Profile.created_at.desc())
+    result = await session.execute(stmt)
+    profiles = result.scalars().all()
+    
+    # Format for the batch tab
+    batch_data = []
+    for p in profiles:
+        # Determine status based on score
+        score = p.overall_readiness_score or 0
+        if score >= 80:
+            status = "Ready"
+        elif score >= 65:
+            status = "Near-Ready"
+        elif score >= 50:
+            status = "Developing"
+        else:
+            status = "Needs Work"
+            
+        color = "var(--green)" if status == "Ready" else "var(--blue)" if status == "Near-Ready" else "var(--orange)" if status == "Developing" else "var(--pink)"
+            
+        batch_data.append({
+            "id": p.id,
+            "name": p.display_name or p.github_username or "Unknown Candidate",
+            "role": p.target_role or "Unspecified",
+            "score": round(score),
+            "status": status,
+            "gaps": [],  # We can pull weakest_skills if needed, but keeping it empty for now or populate a few
+            "color": color
+        })
+        
+    return batch_data
+
+# ── GET /profiles ─────────────────────────────────────────────────────────────
+
+@router.get("/")
+async def get_all_profiles(session: AsyncSession = Depends(get_session)):
+    stmt = select(Profile).order_by(Profile.created_at.desc())
+    result = await session.execute(stmt)
+    profiles = result.scalars().all()
+    
+    data = []
+    for p in profiles:
+        score = p.overall_readiness_score or 0
+        if score >= 80:
+            status = "Ready"
+            color = "var(--green)"
+        elif score >= 65:
+            status = "Near-Ready"
+            color = "var(--blue)"
+        elif score >= 50:
+            status = "Developing"
+            color = "var(--orange)"
+        else:
+            status = "Needs Work"
+            color = "var(--pink)"
+            
+        data.append({
+            "id": p.id,
+            "name": p.display_name or p.github_username or "Unknown Candidate",
+            "role": p.target_role or "Unspecified",
+            "score": round(score),
+            "status": status,
+            "gaps": [],
+            "color": color
+        })
+    return data
+
+# ── GET /profiles ─────────────────────────────────────────────────────────────
+
+@router.get("/")
+async def get_all_profiles(session: AsyncSession = Depends(get_session)):
+    stmt = select(Profile).order_by(Profile.created_at.desc())
+    result = await session.execute(stmt)
+    profiles = result.scalars().all()
+    
+    data = []
+    for p in profiles:
+        score = p.overall_readiness_score or 0
+        if score >= 80:
+            status = "Ready"
+            color = "var(--green)"
+        elif score >= 65:
+            status = "Near-Ready"
+            color = "var(--blue)"
+        elif score >= 50:
+            status = "Developing"
+            color = "var(--orange)"
+        else:
+            status = "Needs Work"
+            color = "var(--pink)"
+            
+        data.append({
+            "id": p.id,
+            "name": p.display_name or p.github_username or "Unknown Candidate",
+            "role": p.target_role or "Unspecified",
+            "score": round(score),
+            "status": status,
+            "gaps": [],
+            "color": color
+        })
+    return data
+
 # ── GET /profiles/{id}/stream ─────────────────────────────────────────────────
 
 @router.get("/{profile_id}/stream")
@@ -210,6 +318,74 @@ async def stream_progress(
             await asyncio.sleep(1)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+# ── GET /profiles/search ──────────────────────────────────────────────────────
+
+@router.get("/search")
+async def search_profile(
+    username: str,
+    session: AsyncSession = Depends(get_session)
+):
+    stmt = select(Profile).where(Profile.github_username == username)
+    result = await session.execute(stmt)
+    profile = result.scalar_one_or_none()
+    
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Candidate doesn't exist")
+        
+    return {"profile_id": profile.id}
+
+
+# ── GET /profiles/search ──────────────────────────────────────────────────────
+
+@router.get("/search")
+async def search_profile(
+    username: str,
+    session: AsyncSession = Depends(get_session)
+):
+    stmt = select(Profile).where(Profile.github_username == username)
+    result = await session.execute(stmt)
+    profile = result.scalar_one_or_none()
+    
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Candidate doesn't exist")
+        
+    return {"profile_id": profile.id}
+
+
+# ── GET /profiles/search ──────────────────────────────────────────────────────
+
+@router.get("/search")
+async def search_profile(
+    username: str,
+    session: AsyncSession = Depends(get_session)
+):
+    stmt = select(Profile).where(Profile.github_username == username)
+    result = await session.execute(stmt)
+    profile = result.scalar_one_or_none()
+    
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Candidate doesn't exist")
+        
+    return {"profile_id": profile.id}
+
+
+# ── GET /profiles/search ──────────────────────────────────────────────────────
+
+@router.get("/search")
+async def search_profile(
+    username: str,
+    session: AsyncSession = Depends(get_session)
+):
+    stmt = select(Profile).where(Profile.github_username == username)
+    result = await session.execute(stmt)
+    profile = result.scalar_one_or_none()
+    
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Candidate doesn't exist")
+        
+    return {"profile_id": profile.id}
 
 
 # ── GET /profiles/{id}/report ─────────────────────────────────────────────────
@@ -413,8 +589,12 @@ async def get_dashboard(
     # Formulate response
     return {
         "student": {
-            "name": profile.display_name or "Student",
+            "name": profile.display_name or "Guest Candidate",
             "target_role": profile.target_role or "Software Engineer"
+        },
+        "job_offer": {
+            "company": profile.job_offer_company,
+            "offered_at": profile.job_offer_at.isoformat() if profile.job_offer_at else None
         },
         "readiness": {
             "score": round(profile.overall_readiness_score or 0.0, 1),
@@ -438,6 +618,25 @@ async def get_dashboard(
         "recommendations": recommendations
     }
 
+
+class JobOfferRequest(BaseModel):
+    company_name: str
+
+@router.post("/{profile_id}/offer")
+async def make_job_offer(
+    profile_id: str,
+    body: JobOfferRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    profile = await session.get(Profile, profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    profile.job_offer_company = body.company_name
+    from datetime import datetime
+    profile.job_offer_at = datetime.utcnow()
+    await session.commit()
+    return {"status": "success", "message": f"Job offered by {body.company_name}"}
 
 # ── GET /profiles/{id}/roadmap ────────────────────────────────────────────────
 

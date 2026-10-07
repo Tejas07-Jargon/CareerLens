@@ -17,11 +17,12 @@ const STATUS_LABELS: Record<string, React.ReactNode> = {
 };
 
 interface Props {
+  defaultName?: string;
   onProfileCreated: (id: string) => void;
   onReportReady: (report: ProfileReport) => void;
 }
 
-export default function SubmitForm({ onProfileCreated, onReportReady }: Props) {
+export default function SubmitForm({ defaultName, onProfileCreated, onReportReady }: Props) {
   const [loading, setLoading] = useState(false);
   const [progressStatus, setProgressStatus] = useState<string | null>(null);
   const [liveScore, setLiveScore] = useState<{ mid: number; lo: number; hi: number } | null>(null);
@@ -79,6 +80,16 @@ export default function SubmitForm({ onProfileCreated, onReportReady }: Props) {
             <p style={{ fontSize: "0.85rem", color: "var(--text-mid)", fontWeight: 600 }}>Connect your work — GitHub, portfolio, and resume</p>
           </div>
           <div style={{ display: "grid", gap: 16 }}>
+
+            <div>
+              <label className="input-label" htmlFor="full_name">Full Name</label>
+              <input
+                id="full_name" name="full_name" className="input" required
+                placeholder="e.g. Jane Doe"
+                defaultValue={defaultName}
+                style={{ borderColor: "var(--blue)" }}
+              />
+            </div>
 
             <div>
               <label className="input-label" htmlFor="github_username">GitHub Username</label>

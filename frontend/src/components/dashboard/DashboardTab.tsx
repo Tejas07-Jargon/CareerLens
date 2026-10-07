@@ -66,7 +66,7 @@ import type {
   NextMilestoneInfo,
   WhatIfResultItem
 } from "@/types";
-import { getPersonalizedRoadmap, runWhatIf, getDashboardData } from "@/lib/api";
+import { getPersonalizedRoadmap, runWhatIf, getDashboardData, offerJob } from "@/lib/api";
 import { getEvidenceReport, DEMO_EVIDENCE_REPORT } from "@/lib/evidenceApi";
 import type { EvidenceReport } from "@/types/evidence";
 import ConsistencyChart from "./ConsistencyChart";
@@ -76,6 +76,7 @@ interface DashboardTabProps {
   profileId: string | null;
   report: ProfileReport | null;
   persona: "student" | "placement";
+  userName?: string;
   onNavigateTab: (tab: "analyse" | "quiz" | "roadmap" | "dashboard" | "batch" | "evidence" | "resume" | "jobfit") => void;
   onSelectRole?: (role: string) => void;
   onReanalyze?: () => void;
@@ -107,6 +108,7 @@ export default function DashboardTab({
   profileId,
   report,
   persona,
+  userName,
   onNavigateTab,
   onSelectRole,
   onReanalyze,
@@ -121,6 +123,7 @@ export default function DashboardTab({
   const [dashboardData, setDashboardData] = useState<any | null>(null);
   const [dashboardMeta, setDashboardMeta] = useState<{
     student?: { name: string; target_role: string };
+    job_offer?: { company: string | null; offered_at: string | null };
     quiz_stats?: { total_quizzes: number; average_score: number; current_streak: number };
     readiness?: { score: number; change: number; trend: string };
   } | null>(null);
@@ -433,7 +436,7 @@ export default function DashboardTab({
   }
 
   const hasSecurityFlags = (activeReport?.security_flags?.length ?? 0) > 0;
-  const candidateName = dashboardMeta?.student?.name || (activeReport ? "Pushkar Kumar" : "Guest Candidate");
+  const candidateName = dashboardMeta?.student?.name || (activeReport ? "Candidate" : userName || "Guest Candidate");
   const quizCount = dashboardMeta?.quiz_stats?.total_quizzes ?? (activeReport ? 1 : 0);
   const quizAvg = dashboardMeta?.quiz_stats?.average_score ?? (activeReport ? 78 : 0);
   const quizStreak = dashboardMeta?.quiz_stats?.current_streak ?? (activeReport ? 3 : 0);
@@ -620,14 +623,43 @@ export default function DashboardTab({
               </span>
             </div>
           </div>
-          <button
-            id="dashboard-quick-batch-analytics"
-            onClick={() => onNavigateTab("batch")}
-            className="btn btn-primary"
-            style={{ fontSize: "0.8rem", padding: "6px 14px", fontWeight: 800 }}
-          >
-            Cohort Analytics <ArrowRight size={14} />
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            {profileId && !dashboardMeta?.job_offer?.company && (
+              <button
+                onClick={async () => {
+                  const company = prompt("Enter company name for job offer:");
+                  if (company) {
+                    try {
+                      await offerJob(profileId, company);
+                      alert("Job offer sent!");
+                      if (dashboardMeta) {
+                        setDashboardMeta({ ...dashboardMeta, job_offer: { company, offered_at: new Date().toISOString() } });
+                      }
+                    } catch (e: any) {
+                      alert(e.message);
+                    }
+                  }
+                }}
+                className="btn"
+                style={{ background: "var(--green)", color: "white", fontSize: "0.8rem", padding: "6px 14px", fontWeight: 800 }}
+              >
+                <CheckCircle size={14} className="mr-1" style={{ display: 'inline' }} /> Offer Job
+              </button>
+            )}
+            {dashboardMeta?.job_offer?.company && (
+              <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", border: "1px solid var(--green)", fontWeight: 800 }}>
+                <PartyPopper size={14} className="mr-1 inline" style={{ display: 'inline' }} /> Job Offered by {dashboardMeta.job_offer.company}
+              </span>
+            )}
+            <button
+              id="dashboard-quick-batch-analytics"
+              onClick={() => onNavigateTab("batch")}
+              className="btn btn-primary"
+              style={{ fontSize: "0.8rem", padding: "6px 14px", fontWeight: 800 }}
+            >
+              Cohort Analytics <ArrowRight size={14} />
+            </button>
+          </div>
         </div>
       )}
 

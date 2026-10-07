@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import CareerLensLoading from "@/components/loading/CareerLensLoading";
 import { SocialFlipButton } from "@/components/ui/social-flip-button";
+import LoginScreen from "@/components/ui/LoginScreen";
+import { searchProfile, getReport } from "@/lib/api";
 import SubmitForm from "@/components/ui/SubmitForm";
 import ReportView from "@/components/evidence/ReportView";
 import QuizTab from "@/components/quiz/QuizTab";
@@ -210,11 +212,23 @@ const SAMPLE_BENCHMARK_REPORT: ProfileReport = {
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
-  const [report, setReport] = useState<ProfileReport | null>(SAMPLE_BENCHMARK_REPORT);
-  const [profileId, setProfileId] = useState<string | null>("demo-candidate-82");
+  const [report, setReport] = useState<ProfileReport | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [persona, setPersona] = useState<"student" | "placement">("student");
+  const [userName, setUserName] = useState<string>("");
   const [viewDetailedReport, setViewDetailedReport] = useState<boolean>(false);
+
+  const visibleTabs = TABS.filter(tab => {
+    if (persona === "placement") {
+      // HR Tabs: Only dashboard (viewing/selection) and cohort batch
+      return ["dashboard", "batch"].includes(tab.id);
+    } else {
+      // Applicant Tabs
+      return ["dashboard", "jobfit", "resume", "analyse", "roadmap", "quiz"].includes(tab.id);
+    }
+  });
 
   function handleProfileCreated(id: string) {
     setProfileId(id);
@@ -238,6 +252,17 @@ export default function HomePage() {
       return;
     }
     setActiveTab(tab);
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <LoginScreen onLogin={(p, name) => {
+        setPersona(p);
+        if (name) setUserName(name);
+        setIsLoggedIn(true);
+        setActiveTab("dashboard");
+      }} />
+    );
   }
 
   return (
@@ -313,38 +338,37 @@ export default function HomePage() {
                 <ShieldCheck size={16} /> Evidence Verification
               </Link>
 
-              {(["student", "placement"] as const).map((p, i) => (
-                <button
-                  key={p}
-                  id={`persona-${p}`}
-                  onClick={() => {
-                    setPersona(p);
-                    if (p === "placement") {
-                      setActiveTab("batch");
-                    } else {
-                      setActiveTab("dashboard");
-                    }
-                  }}
-                  className="btn"
-                  style={{
-                    padding: "7px 18px",
-                    fontSize: "0.82rem",
-                    background:
-                      persona === p
-                        ? i === 0
-                          ? "var(--blue)"
-                          : "var(--purple)"
-                        : "var(--white)",
-                    color: persona === p ? "white" : "var(--text-mid)",
-                    borderColor: persona === p ? "var(--text)" : "var(--border)",
-                    boxShadow: persona === p ? "var(--shadow-sm)" : "none",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    {p === "student" ? <><GraduationCap size={16} /> Student</> : <><Building2 size={16} /> Placement Cell</>}
-                  </div>
-                </button>
-              ))}
+              <div
+                style={{
+                  padding: "7px 18px",
+                  fontSize: "0.82rem",
+                  background: persona === "student" ? "var(--blue)" : "var(--purple)",
+                  color: "white",
+                  borderColor: "var(--text)",
+                  boxShadow: "var(--shadow-sm)",
+                  borderRadius: "8px",
+                  border: "2px solid var(--text)",
+                  fontWeight: 800,
+                  display: "flex", alignItems: "center", gap: "6px"
+                }}
+              >
+                {persona === "student" ? <><GraduationCap size={16} /> Student Portal</> : <><Building2 size={16} /> HR Portal</>}
+              </div>
+
+              <button
+                onClick={() => setIsLoggedIn(false)}
+                className="btn"
+                style={{
+                  padding: "7px 16px",
+                  fontSize: "0.82rem",
+                  background: "var(--bg-soft)",
+                  color: "var(--text)",
+                  borderColor: "var(--border)",
+                  fontWeight: 800
+                }}
+              >
+                Logout
+              </button>
             </div>
           </div>
         </nav>
@@ -370,7 +394,7 @@ export default function HomePage() {
                 paddingTop: "6px",
               }}
             >
-              {TABS.map((tab) => {
+              {visibleTabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
@@ -413,10 +437,66 @@ export default function HomePage() {
           {/* TAB 1: DASHBOARD COMMAND CENTER */}
           {activeTab === "dashboard" && (
             <div key="dashboard-command-center" className="fade-in-up">
+              {persona === "placement" && (
+                <div className="card fade-in-up" style={{
+                  marginBottom: 24,
+                  padding: 24,
+                  background: "var(--purple-light)",
+                  borderColor: "var(--purple)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Search size={20} color="var(--purple)" />
+                    <h3 style={{ fontWeight: 900, fontSize: "1.1rem", margin: 0, color: "var(--text)" }}>HR Candidate Search Portal</h3>
+                  </div>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-mid)", fontWeight: 600, margin: 0 }}>
+                    Enter a GitHub username to pull their verified Profile Database record, including Quiz stats, What-If results, and Roadmaps.
+                  </p>
+                  <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+                    <input
+                      type="text"
+                      id="hr-search-input"
+                      placeholder="e.g. demo-candidate"
+                      className="input-field"
+                      style={{ flex: 1, padding: "10px 16px", borderRadius: "8px", border: "2px solid var(--border)", fontFamily: "var(--font)", fontSize: "0.95rem" }}
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter') {
+                          document.getElementById('hr-search-btn')?.click();
+                        }
+                      }}
+                    />
+                    <button
+                      id="hr-search-btn"
+                      className="btn"
+                      style={{ background: "var(--purple)", color: "white", padding: "10px 24px", fontWeight: 800, borderRadius: "8px", border: "2px solid var(--text)", boxShadow: "2px 2px 0 var(--text)" }}
+                      onClick={async () => {
+                        const input = document.getElementById('hr-search-input') as HTMLInputElement;
+                        const username = input?.value.trim();
+                        if (!username) return;
+                        
+                        try {
+                          const res = await searchProfile(username);
+                          setProfileId(res.profile_id);
+                          const userReport = await getReport(res.profile_id);
+                          setReport(userReport);
+                          input.value = ""; // clear
+                        } catch (err: any) {
+                          alert(err.message || "Failed to find candidate");
+                        }
+                      }}
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+              )}
               <DashboardTab
                 profileId={profileId}
                 report={report}
                 persona={persona}
+                userName={userName}
                 onNavigateTab={handleTabSwitch}
                 onReanalyze={() => setActiveTab("analyse")}
                 onLoadBenchmark={handleLoadBenchmark}
@@ -492,6 +572,7 @@ export default function HomePage() {
                     <EvidenceDashboardWidget profileId={profileId || undefined} />
                   </div>
                   <SubmitForm
+                    defaultName={userName}
                     onProfileCreated={handleProfileCreated}
                     onReportReady={handleReportReady}
                   />
@@ -521,7 +602,18 @@ export default function HomePage() {
           {/* TAB 5: BATCH */}
           {activeTab === "batch" && (
             <div key="batch-view" className="fade-in-up">
-              <BatchTab />
+              <BatchTab 
+                onSelectCandidate={async (id) => {
+                  setProfileId(id);
+                  try {
+                    const r = await getReport(id);
+                    setReport(r);
+                  } catch(e) {
+                    // Ignore if no report
+                  }
+                  setActiveTab("dashboard");
+                }}
+              />
             </div>
           )}
 

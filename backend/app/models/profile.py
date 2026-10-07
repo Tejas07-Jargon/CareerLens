@@ -67,6 +67,10 @@ class Profile(Base):
     quiz_streak: Mapped[int] = mapped_column(Integer, default=0)
     last_quiz_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
+    # ── Job Offer ─────────────────────────────────────────────────────────────
+    job_offer_company: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    job_offer_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
     # ── Relationships ─────────────────────────────────────────────────────────
     evidence_items = relationship(
         "Evidence", back_populates="profile", cascade="all, delete-orphan"
