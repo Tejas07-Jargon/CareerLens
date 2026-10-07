@@ -14,7 +14,7 @@ import type {
   QuizResponse,
 } from "@/types";
 
-const BASE = "/api";
+const BASE = "http://localhost:8000";
 
 // ── Profiles ──────────────────────────────────────────────────────────────────
 
