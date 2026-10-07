@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { generateQuiz } from "@/lib/api";
 import type { QuizQuestion, QuizResponse } from "@/types";
-import { BrainCircuit, AlertTriangle, FlaskConical, BarChart as BarChartIcon, Target, Rocket, CheckCircle, TrendingUp, Zap, BookOpen, PartyPopper, XCircle, RotateCcw, Pin, Trophy, Activity, Dumbbell, Lightbulb, Beaker } from "lucide-react";
+import { BrainCircuit, AlertTriangle, FlaskConical, BarChart as BarChartIcon, Target, Rocket, CheckCircle, TrendingUp, Zap, BookOpen, PartyPopper, XCircle, RotateCcw, Pin, Trophy, Activity, Dumbbell, Lightbulb, Beaker, Clock } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ROLES = [
@@ -630,7 +630,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                       <p style={{ fontWeight: 800, fontSize: "0.9rem", marginBottom: 8, lineHeight: 1.6, flex: 1 }}>{q.question}</p>
-                      <span className="badge" style={{ background: "var(--white)", color: "var(--text-mid)", borderColor: "var(--border)", whiteSpace: "nowrap" }}>⏱️ {timePerQ[i]}s</span>
+                      <span className="badge" style={{ background: "var(--white)", color: "var(--text-mid)", borderColor: "var(--border)", whiteSpace: "nowrap" }}><Clock size={12} className="inline mr-1 align-text-bottom" /> {timePerQ[i]}s</span>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
                       <span className="badge" style={{ background: "var(--bg-soft)", color: "var(--text-mid)", borderColor: "var(--border)" }}><BookOpen size={14} className="inline mr-1 align-text-bottom" /> {q.topic}</span>

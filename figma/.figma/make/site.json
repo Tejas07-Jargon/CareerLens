@@ -1,0 +1,10 @@
+{
+  "description": "Empower job seekers with AI-driven insights into employability and career readiness, analyzing claims against verifiable evidence for informed decisions.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
