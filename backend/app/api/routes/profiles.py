@@ -438,3 +438,95 @@ async def get_dashboard(
         "recommendations": recommendations
     }
 
+
+# ── GET /profiles/{id}/roadmap ────────────────────────────────────────────────
+
+@router.get("/{profile_id}/roadmap")
+async def get_profile_roadmap(
+    profile_id: str,
+    target_role: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+):
+    from app.models.evidence import Evidence
+    from app.services.roadmap.roadmap_engine import PersonalizedRoadmapEngine
+
+    profile = await session.get(Profile, profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Load latest score run for claim statuses
+    stmt = (
+        select(ScoreRun)
+        .where(ScoreRun.profile_id == profile_id)
+        .order_by(ScoreRun.created_at.desc())
+        .limit(1)
+    )
+    result = await session.execute(stmt)
+    score_run = result.scalar_one_or_none()
+
+    claim_statuses = score_run.claim_statuses if score_run else []
+
+    # Load evidence
+    ev_stmt = select(Evidence).where(Evidence.profile_id == profile_id)
+    ev_result = await session.execute(ev_stmt)
+    db_evidence = ev_result.scalars().all()
+
+    chosen_role = target_role or profile.target_role or "Software Engineer"
+    engine = PersonalizedRoadmapEngine()
+    roadmap_data = engine.generate_personalized_roadmap(
+        target_role=chosen_role,
+        claim_statuses=claim_statuses,
+        evidence_items=db_evidence,
+        security_flags=profile.security_flags or [],
+    )
+    roadmap_data["is_user_selected"] = bool(target_role is not None)
+    return roadmap_data
+
+
+# ── GET /profiles/{id}/roadmap/next ───────────────────────────────────────────
+
+@router.get("/{profile_id}/roadmap/next")
+async def get_next_milestone(
+    profile_id: str,
+    target_role: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+):
+    roadmap_data = await get_profile_roadmap(profile_id, target_role=target_role, session=session)
+    next_m = roadmap_data.get("next_milestone")
+    if next_m is None:
+        raise HTTPException(status_code=404, detail="No remaining milestones found")
+    return next_m
+
+
+# ── GET /profiles/{id}/roadmap/milestones/{milestone_id} ──────────────────────
+
+@router.get("/{profile_id}/roadmap/milestones/{milestone_id}")
+async def get_milestone_detail(
+    profile_id: str,
+    milestone_id: str,
+    target_role: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+):
+    roadmap_data = await get_profile_roadmap(profile_id, target_role=target_role, session=session)
+    for m in roadmap_data.get("milestones", []):
+        if m["id"] == milestone_id:
+            return m
+    raise HTTPException(status_code=404, detail="Milestone not found")
+
+
+# ── GET /profiles/sample-roadmap/{role_name} ─────────────────────────────────
+
+@router.get("/sample-roadmap/{role_name}")
+async def get_sample_roadmap(
+    role_name: str,
+):
+    from app.services.roadmap.roadmap_engine import PersonalizedRoadmapEngine
+    engine = PersonalizedRoadmapEngine()
+    return engine.generate_personalized_roadmap(
+        target_role=role_name,
+        claim_statuses=[],
+        evidence_items=[],
+        security_flags=[],
+    )
+
+

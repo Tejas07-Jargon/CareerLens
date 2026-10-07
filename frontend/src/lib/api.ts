@@ -12,6 +12,7 @@ import type {
   ProgressEvent,
   QuizRequest,
   QuizResponse,
+  PersonalizedRoadmapResponse,
 } from "@/types";
 
 const BASE = "http://localhost:8000";
@@ -136,4 +137,25 @@ export async function generateQuiz(req: QuizRequest): Promise<QuizResponse> {
   }
   return res.json();
 }
+
+// ── Personalized Roadmap ──────────────────────────────────────────────────────
+
+export async function getPersonalizedRoadmap(
+  profileId?: string | null,
+  targetRole?: string
+): Promise<PersonalizedRoadmapResponse> {
+  const query = targetRole ? `?target_role=${encodeURIComponent(targetRole)}` : "";
+  if (profileId) {
+    const res = await fetch(`${BASE}/profiles/${profileId}/roadmap${query}`);
+    if (res.ok) return res.json();
+  }
+  const role = targetRole || "Software Engineer";
+  const res = await fetch(`${BASE}/profiles/sample-roadmap/${encodeURIComponent(role)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? "Failed to load roadmap");
+  }
+  return res.json();
+}
+
 

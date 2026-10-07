@@ -182,9 +182,10 @@ class AnalysisOrchestrator:
             for ev in evidence_items
         ]
         claim_skills = [
-            ev.skill_hints[0]
+            s
             for ev in evidence_items
             if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
+            for s in ev.skill_hints
         ]
 
         score_input = ScoreInput(
@@ -365,9 +366,10 @@ class AnalysisOrchestrator:
             for ev in all_evidence
         ]
         claim_skills = [
-            ev.skill_hints[0]
+            s
             for ev in all_evidence
             if ev.source in {"resume", "linkedin_pdf"} and ev.skill_hints
+            for s in ev.skill_hints
         ]
 
         all_supplied = list(set([e.source for e in all_evidence] + supplied_sources))

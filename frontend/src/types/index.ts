@@ -87,6 +87,55 @@ export interface RoadmapMilestone {
   resources: string[];
 }
 
+export interface PersonalizedMilestone {
+  id: string;
+  name: string;
+  roadmap: string;
+  status: "STRONG" | "VERIFIED" | "MODERATE" | "LIMITED EVIDENCE" | "WEAK" | "MISSING" | "CONFLICTING";
+  evidence_score: number;
+  reason: string;
+  related_skills: string[];
+  prerequisites: string[];
+  source_url: string;
+  skill_roadmap_url: string;
+  recommended_artifact: string;
+  expected_proof: string;
+  why_it_matters: string;
+  importance: number;
+  evidence_ids: string[];
+  locators: any[];
+  has_provenance: boolean;
+}
+
+export interface NextMilestoneInfo {
+  id: string;
+  name: string;
+  status: string;
+  current_evidence_score: number;
+  why_recommended: string;
+  recommended_artifact: string;
+  expected_proof: string;
+  source_url: string;
+  related_skills: string[];
+}
+
+export interface PersonalizedRoadmapResponse {
+  target_role: string;
+  role_options: string[];
+  roadmap: {
+    name: string;
+    url: string;
+    description: string;
+    supporting_roadmaps: Array<{ name: string; url: string }>;
+  };
+  overall_progress: number;
+  confidence: string;
+  confidence_note: string;
+  milestones: PersonalizedMilestone[];
+  next_milestone: NextMilestoneInfo | null;
+  is_user_selected?: boolean;
+}
+
 // ── Role Fit ──────────────────────────────────────────────────────────────────
 
 export interface RoleFit {

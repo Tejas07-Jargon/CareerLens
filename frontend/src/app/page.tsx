@@ -411,7 +411,15 @@ export default function HomePage() {
         )}
 
         {activeTab === "quiz" && <div key="quiz-view" className="fade-in-up"><QuizTab profileId={profileId} /></div>}
-        {activeTab === "roadmap" && <div key="roadmap-view" className="fade-in-up"><RoadmapTab /></div>}
+        {activeTab === "roadmap" && (
+          <div key="roadmap-view" className="fade-in-up">
+            <RoadmapTab
+              profileId={profileId}
+              report={report}
+              onNavigateToAnalyse={() => setActiveTab("analyse")}
+            />
+          </div>
+        )}
         {activeTab === "dashboard" && <div key="dashboard-view" className="fade-in-up"><DashboardTab profileId={profileId} /></div>}
         {activeTab === "batch" && <div key="batch-view" className="fade-in-up"><BatchTab /></div>}
       </div>
