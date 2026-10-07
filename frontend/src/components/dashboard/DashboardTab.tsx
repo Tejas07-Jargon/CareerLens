@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BarChart, Target, TrendingUp, Clock, Lightbulb } from "lucide-react";
 
 const SAMPLE_SKILLS = [
   { skill: "React / Next.js", importance: 92, marketFreq: 88, confidence: 75, priority: 80 },
@@ -32,8 +33,8 @@ export default function DashboardTab() {
       <div className="card fade-in-up" style={{ borderColor: "var(--yellow)", boxShadow: "5px 5px 0 var(--yellow)", marginBottom: 24, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 4 }}>
-              📊 <span className="gradient-text">Placement Dashboard</span>
+            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+              <BarChart size={24} /> <span className="gradient-text">Placement Dashboard</span>
             </h2>
             <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", fontWeight: 600 }}>
               Market intelligence · skill gap analysis · consistency timeline
@@ -43,9 +44,9 @@ export default function DashboardTab() {
           {/* Sub-tab switcher */}
           <div style={{ display: "flex", gap: 8 }}>
             {([
-              { key: "gap", label: "🎯 Skill Gaps" },
-              { key: "market", label: "📈 Market Intel" },
-              { key: "timeline", label: "🕐 Timeline" },
+              { key: "gap", label: <><Target size={14} className="inline mr-1 align-text-bottom" /> Skill Gaps</> },
+              { key: "market", label: <><TrendingUp size={14} className="inline mr-1 align-text-bottom" /> Market Intel</> },
+              { key: "timeline", label: <><Clock size={14} className="inline mr-1 align-text-bottom" /> Timeline</> },
             ] as const).map(({ key, label }) => (
               <button
                 key={key}
@@ -73,7 +74,7 @@ export default function DashboardTab() {
         background: "var(--blue-light)", marginBottom: 24, padding: "12px 16px",
         display: "flex", gap: 10, alignItems: "center",
       }}>
-        <span>💡</span>
+        <span><Lightbulb size={24} /></span>
         <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600, margin: 0 }}>
           This is sample data. Analyse your profile to see your real skill gaps, consistency, and role-fit scores.
         </p>
@@ -161,8 +162,8 @@ export default function DashboardTab() {
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}>
-                    📈 {r.growth} YoY
+                  <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <TrendingUp size={14} /> {r.growth} YoY
                   </span>
                 </div>
               </div>
@@ -183,7 +184,7 @@ export default function DashboardTab() {
               { month: "May 2025", event: "Internship at early-stage startup", type: "achievement", color: "var(--orange)" },
               { month: "Jul 2025", event: "Published technical blog (2k reads)", type: "achievement", color: "var(--green)" },
               { month: "Sep 2025", event: "DSA: solved 200+ LeetCode problems", type: "skill", color: "var(--blue)" },
-              { month: "Oct 2025", event: "CareerLens profile analysed 🎉", type: "current", color: "var(--pink)" },
+              { month: "Oct 2025", event: "CareerLens profile analysed", type: "current", color: "var(--pink)" },
             ].map((e, i) => (
               <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                 <div style={{

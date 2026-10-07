@@ -7,6 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, Cell,
 } from "recharts";
+import { AlertTriangle } from "lucide-react";
 
 const PRESET_WORKSHOPS = [
   { name: "Docker & CI/CD Bootcamp", skills_covered: ["Docker", "CI/CD", "DevOps"] },
@@ -86,7 +87,7 @@ export default function BatchDashboard() {
         </button>
       </div>
 
-      {error && <div className="flag-banner" style={{ marginBottom: 20 }}><span>⚠</span><span>{error}</span></div>}
+      {error && <div className="flag-banner" style={{ marginBottom: 20 }}><span style={{ display: "flex", alignItems: "center" }}><AlertTriangle size={18} /></span><span>{error}</span></div>}
 
       {insights && (
         <>

@@ -2,87 +2,131 @@
 
 import { useState } from "react";
 import type { ClaimStatus, Locator } from "@/types";
+import { Search } from "lucide-react";
 
 interface Props {
   claimStatuses: ClaimStatus[];
 }
 
 const STATUS_CONFIG = {
-  "Verified":            { cls: "badge-verified",    icon: "✓" },
-  "Partial":             { cls: "badge-partial",     icon: "◑" },
-  "Not yet evidenced":   { cls: "badge-unevidenced", icon: "○" },
+  "Verified":            { cls: "badge-verified",    icon: "✓", border: "var(--green)", bg: "var(--green-light)" },
+  "Partial":             { cls: "badge-partial",     icon: "◑", border: "var(--yellow)", bg: "var(--yellow-light)" },
+  "Not yet evidenced":   { cls: "badge-unevidenced", icon: "○", border: "var(--pink)", bg: "var(--pink-light)" },
 } as const;
 
 function LocatorLink({ locator }: { locator: Locator }) {
   if (locator.repo && locator.commit_sha) {
     const url = `https://github.com/${locator.repo}/commit/${locator.commit_sha}`;
-    return <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent-blue)", fontSize: "0.78rem", textDecoration: "underline" }}>
-      {locator.repo} @ {locator.commit_sha.slice(0, 7)}
-    </a>;
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer"
+        style={{ color: "var(--blue)", fontSize: "0.82rem", fontWeight: 700, textDecoration: "underline" }}>
+        <code>{locator.repo}</code> @ <code>{locator.commit_sha.slice(0, 7)}</code>
+      </a>
+    );
   }
   if (locator.repo && locator.path) {
     const url = `https://github.com/${locator.repo}/blob/HEAD/${locator.path}`;
-    return <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent-blue)", fontSize: "0.78rem", textDecoration: "underline" }}>
-      {locator.repo}/{locator.path}
-    </a>;
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer"
+        style={{ color: "var(--blue)", fontSize: "0.82rem", fontWeight: 700, textDecoration: "underline" }}>
+        <code>{locator.repo}/{locator.path}</code>
+      </a>
+    );
   }
   if (locator.url) {
-    return <a href={locator.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent-blue)", fontSize: "0.78rem", textDecoration: "underline" }}>
-      {locator.url}
-    </a>;
+    return (
+      <a href={locator.url} target="_blank" rel="noopener noreferrer"
+        style={{ color: "var(--blue)", fontSize: "0.82rem", fontWeight: 700, textDecoration: "underline" }}>
+        {locator.url}
+      </a>
+    );
   }
   if (locator.snippet) {
-    return <span style={{ color: "var(--text-muted)", fontSize: "0.78rem", fontStyle: "italic" }}>"{locator.snippet.slice(0, 80)}"</span>;
+    return <span style={{ color: "var(--text-mid)", fontSize: "0.82rem", fontStyle: "italic" }}>"{locator.snippet.slice(0, 90)}"</span>;
   }
   if (locator.signal) {
-    return <span style={{ color: "var(--accent-amber)", fontSize: "0.78rem" }}>
-      ⚑ {locator.label ?? "signal for review"}: {locator.detail}
-    </span>;
+    return (
+      <span style={{ color: "var(--orange)", fontSize: "0.82rem", fontWeight: 700 }}>
+        ⚑ {locator.label ?? "signal for review"}: {locator.detail}
+      </span>
+    );
   }
-  return <span style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>—</span>;
+  return <span style={{ color: "var(--text-soft)", fontSize: "0.82rem" }}>—</span>;
 }
 
-function ClaimCard({ cs }: { cs: ClaimStatus }) {
+function ClaimCard({ cs, index }: { cs: ClaimStatus; index: number }) {
   const [open, setOpen] = useState(false);
   const cfg = STATUS_CONFIG[cs.status] ?? STATUS_CONFIG["Not yet evidenced"];
 
   return (
-    <div className="card" style={{ padding: "14px 18px" }}>
+    <div
+      className={`card fade-in-up stagger-${(index % 8) + 1}`}
+      style={{
+        padding: "16px 20px",
+        borderColor: cfg.border,
+        boxShadow: `3px 3px 0 ${cfg.border}`,
+        marginBottom: 10,
+      }}
+    >
       <div
-        style={{ display: "flex", alignItems: "center", gap: 12, cursor: cs.locators?.length ? "pointer" : "default" }}
+        style={{ display: "flex", alignItems: "center", gap: 14, cursor: cs.locators?.length ? "pointer" : "default", flexWrap: "wrap" }}
         onClick={() => cs.locators?.length && setOpen(!open)}
       >
         <span className={`badge ${cfg.cls}`}>{cfg.icon} {cs.status}</span>
-        <span style={{ fontWeight: 600, flex: 1 }}>{cs.skill}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontWeight: 800, fontSize: "0.95rem", flex: 1, minWidth: 140 }}>{cs.skill}</span>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* Confidence bar */}
-          <div style={{ width: 80, height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
+          <div style={{ width: 90, height: 8, background: "var(--border)", borderRadius: 99, border: "1.5px solid var(--text)", overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: 99,
               width: `${cs.confidence * 100}%`,
-              background: cs.status === "Verified" ? "var(--accent-green)"
-                : cs.status === "Partial" ? "var(--accent-amber)"
-                : "rgba(248,113,113,0.5)",
-              transition: "width 0.8s var(--ease-out)",
+              background: cs.status === "Verified" ? "var(--green)"
+                : cs.status === "Partial" ? "var(--orange)"
+                : "var(--pink)",
+              transition: "width 0.6s var(--ease-out)",
             }} />
           </div>
-          <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", minWidth: 32 }}>
+          <span style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 800, minWidth: 36 }}>
             {(cs.confidence * 100).toFixed(0)}%
           </span>
           {cs.locators?.length ? (
-            <span style={{ fontSize: "0.78rem", color: "var(--accent-blue)", marginLeft: 4 }}>
-              {open ? "▲" : "▼"} {cs.locators.length} source{cs.locators.length > 1 ? "s" : ""}
-            </span>
+            <button
+              type="button"
+              style={{
+                background: "var(--bg-soft)",
+                border: "1.5px solid var(--border)",
+                borderRadius: 8,
+                padding: "2px 8px",
+                fontSize: "0.78rem",
+                color: "var(--blue)",
+                fontWeight: 800,
+                cursor: "pointer",
+                transition: "transform var(--dur-fast) var(--ease-spring)",
+              }}
+            >
+              {open ? "▲" : "▼"} {cs.locators.length} proof{cs.locators.length > 1 ? "s" : ""}
+            </button>
           ) : null}
         </div>
       </div>
 
       {/* ── Provenance drill-down ──────────────────────────────────────── */}
       {open && cs.locators?.length > 0 && (
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="fade-in-up" style={{
+          marginTop: 14,
+          paddingTop: 12,
+          borderTop: "2px dashed var(--border)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          background: "var(--bg-soft)",
+          padding: "12px 14px",
+          borderRadius: 8,
+        }}>
           {cs.locators.map((loc, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <span style={{ color: "var(--text-muted)", fontSize: "0.78rem", minWidth: 18 }}>#{i + 1}</span>
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{ color: "var(--text-soft)", fontSize: "0.78rem", fontWeight: 800, minWidth: 20 }}>#{i + 1}</span>
               <LocatorLink locator={loc} />
             </div>
           ))}
@@ -107,39 +151,48 @@ export default function ClaimList({ claimStatuses }: Props) {
   };
 
   return (
-    <div>
+    <div className="fade-in-up">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-        <h2 style={{ fontWeight: 700, fontSize: "1.05rem" }}>Skill Claims & Evidence</h2>
-        <div style={{ display: "flex", gap: 6 }}>
-          {(["all", "Verified", "Partial", "Not yet evidenced"] as const).map((f) => (
-            <button
-              key={f}
-              id={`filter-${f.replace(/\s+/g, "-").toLowerCase()}`}
-              onClick={() => setFilter(f)}
-              className="btn"
-              style={{
-                padding: "5px 12px",
-                fontSize: "0.78rem",
-                background: filter === f ? "rgba(79,158,255,0.15)" : "rgba(255,255,255,0.04)",
-                color: filter === f ? "#4f9eff" : "var(--text-secondary)",
-                border: "1px solid " + (filter === f ? "rgba(79,158,255,0.3)" : "var(--border)"),
-                borderRadius: 8,
-              }}
-            >
-              {f} ({counts[f as keyof typeof counts]})
-            </button>
-          ))}
+        <div>
+          <h2 style={{ fontWeight: 900, fontSize: "1.2rem", marginBottom: 2, display: "flex", alignItems: "center", gap: 8 }}><Search size={20} /> Verified Skills & Evidence</h2>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600 }}>Every claim traced down to exact source commits and files</p>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {(["all", "Verified", "Partial", "Not yet evidenced"] as const).map((f) => {
+            const isActive = filter === f;
+            return (
+              <button
+                key={f}
+                id={`filter-${f.replace(/\s+/g, "-").toLowerCase()}`}
+                onClick={() => setFilter(f)}
+                className="btn"
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "0.8rem",
+                  background: isActive ? "var(--text)" : "var(--white)",
+                  color: isActive ? "white" : "var(--text-mid)",
+                  borderColor: isActive ? "var(--text)" : "var(--border)",
+                  boxShadow: isActive ? "2px 2px 0 var(--text)" : "none",
+                }}
+              >
+                {f === "all" ? "All" : f} ({counts[f as keyof typeof counts]})
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div>
         {filtered.length === 0 && (
-          <div style={{ color: "var(--text-muted)", textAlign: "center", padding: 24 }}>No claims in this category.</div>
+          <div className="card" style={{ color: "var(--text-soft)", textAlign: "center", padding: 32, fontWeight: 700 }}>
+            No claims found in this category.
+          </div>
         )}
-        {filtered.map((cs) => (
-          <ClaimCard key={cs.skill} cs={cs} />
+        {filtered.map((cs, idx) => (
+          <ClaimCard key={cs.skill} cs={cs} index={idx} />
         ))}
       </div>
     </div>
   );
 }
+

@@ -10,15 +10,16 @@ import DashboardTab from "@/components/dashboard/DashboardTab";
 import BatchTab from "@/components/batch/BatchTab";
 import EvidenceDashboardWidget from "@/components/evidence/EvidenceDashboardWidget";
 import type { ProfileReport } from "@/types";
+import { Search, BrainCircuit, Map, LayoutDashboard, Building2, GraduationCap } from "lucide-react";
 
 type Tab = "analyse" | "quiz" | "roadmap" | "dashboard" | "batch";
 
-const TABS: { id: Tab; icon: string; label: string; description: string }[] = [
-  { id: "analyse",   icon: "🔍", label: "Analyse",    description: "Score your profile against real evidence" },
-  { id: "quiz",      icon: "🧠", label: "Quiz",       description: "Expert-level MCQs powered by Gemini AI" },
-  { id: "roadmap",   icon: "🗺️", label: "Roadmap",    description: "Personalised 10-week skill-up plan" },
-  { id: "dashboard", icon: "📊", label: "Dashboard",  description: "Gap analysis, market intel & timeline" },
-  { id: "batch",     icon: "🏢", label: "Batch",      description: "Placement-cell cohort analytics" },
+const TABS: { id: Tab; icon: React.ReactNode; label: string; description: string }[] = [
+  { id: "analyse",   icon: <Search size={18} />, label: "Analyse",    description: "Score your profile against real evidence" },
+  { id: "quiz",      icon: <BrainCircuit size={18} />, label: "Quiz",       description: "Expert-level MCQs powered by Gemini AI" },
+  { id: "roadmap",   icon: <Map size={18} />, label: "Roadmap",    description: "Personalised 10-week skill-up plan" },
+  { id: "dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard",  description: "Gap analysis, market intel & timeline" },
+  { id: "batch",     icon: <Building2 size={18} />, label: "Batch",      description: "Placement-cell cohort analytics" },
 ];
 
 export default function HomePage() {
@@ -28,7 +29,7 @@ export default function HomePage() {
   const [persona, setPersona] = useState<"student" | "placement">("student");
 
   return (
-    <main>
+    <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       {/* ── Nav ──────────────────────────────────────────────────────────────── */}
       <nav className="nav-bar">
         <div
@@ -41,7 +42,16 @@ export default function HomePage() {
           }}
         >
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              cursor: "pointer",
+              transition: "transform var(--dur-fast) var(--ease-spring)",
+            }}
+            onClick={() => { setActiveTab("analyse"); setReport(null); }}
+          >
             <div
               style={{
                 width: 38,
@@ -54,6 +64,7 @@ export default function HomePage() {
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "1.2rem",
+                transition: "transform var(--dur-fast) var(--ease-spring)",
               }}
             >
               🔍
@@ -109,7 +120,9 @@ export default function HomePage() {
                   boxShadow: persona === p ? "var(--shadow-sm)" : "none",
                 }}
               >
-                {p === "student" ? "🎓 Student" : "🏢 Placement Cell"}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {p === "student" ? <><GraduationCap size={16} /> Student</> : <><Building2 size={16} /> Placement Cell</>}
+                </div>
               </button>
             ))}
           </div>
@@ -124,15 +137,17 @@ export default function HomePage() {
           position: "sticky",
           top: "65px",
           zIndex: 90,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
         }}
       >
         <div className="container" style={{ padding: "0 24px" }}>
           <div
             style={{
               display: "flex",
-              gap: 4,
+              gap: 6,
               overflowX: "auto",
               paddingBottom: "2px",
+              paddingTop: "4px",
             }}
           >
             {TABS.map((tab) => {
@@ -146,23 +161,23 @@ export default function HomePage() {
                     display: "flex",
                     alignItems: "center",
                     gap: 7,
-                    padding: "12px 18px",
+                    padding: "10px 18px",
                     fontFamily: "var(--font)",
                     fontWeight: 800,
                     fontSize: "0.88rem",
-                    border: "none",
-                    borderBottom: isActive
-                      ? "3px solid var(--blue)"
-                      : "3px solid transparent",
-                    background: "transparent",
+                    border: "2px solid",
+                    borderColor: isActive ? "var(--text)" : "transparent",
+                    background: isActive ? "var(--bg-soft)" : "transparent",
                     cursor: "pointer",
-                    color: isActive ? "var(--blue)" : "var(--text-mid)",
+                    color: isActive ? "var(--text)" : "var(--text-mid)",
                     whiteSpace: "nowrap",
-                    transition: "all 0.15s var(--ease)",
-                    borderRadius: 0,
+                    borderRadius: "10px 12px 8px 11px",
+                    boxShadow: isActive ? "2px 2px 0 var(--text)" : "none",
+                    transform: isActive ? "translateY(-1px)" : "none",
+                    transition: "all var(--dur-fast) var(--ease-out)",
                   }}
                 >
-                  <span style={{ fontSize: "1rem" }}>{tab.icon}</span>
+                  <span style={{ fontSize: "1.05rem", display: "flex" }}>{tab.icon}</span>
                   {tab.label}
                 </button>
               );
@@ -173,10 +188,11 @@ export default function HomePage() {
 
       {/* ── Hero (only on Analyse tab, no report) ────────────────────────────── */}
       {activeTab === "analyse" && !report && (
-        <section style={{ padding: "52px 0 32px", textAlign: "center" }}>
+        <section style={{ padding: "48px 0 28px", textAlign: "center" }}>
           <div className="container">
             {/* Live badge */}
             <div
+              className="fade-in-up stagger-1"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -185,7 +201,7 @@ export default function HomePage() {
                 background: "var(--green-light)",
                 border: "2px solid var(--green)",
                 borderRadius: "99px",
-                marginBottom: 24,
+                marginBottom: 20,
                 boxShadow: "2px 2px 0 var(--green)",
               }}
             >
@@ -198,15 +214,16 @@ export default function HomePage() {
                   letterSpacing: "0.04em",
                 }}
               >
-                DataQuest 3.0 · CareerLens is Live!
+                DataQuest 3.0 · CareerLens Evidence Engine Active
               </span>
             </div>
 
             <h1
+              className="fade-in-up stagger-2"
               style={{
-                fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                fontSize: "clamp(2rem, 5vw, 3.4rem)",
                 fontWeight: 900,
-                lineHeight: 1.1,
+                lineHeight: 1.15,
                 letterSpacing: "-0.03em",
                 marginBottom: 16,
                 color: "var(--text)",
@@ -214,37 +231,39 @@ export default function HomePage() {
             >
               Know exactly how
               <br />
-              <span className="gradient-text">job-ready you are</span> 🚀
+              <span className="gradient-text">job-ready you are</span>
             </h1>
 
             <p
+              className="fade-in-up stagger-3"
               style={{
                 fontSize: "1.05rem",
                 color: "var(--text-mid)",
-                maxWidth: 540,
-                margin: "0 auto 32px",
+                maxWidth: 560,
+                margin: "0 auto 28px",
                 lineHeight: 1.7,
                 fontWeight: 600,
               }}
             >
-              Every skill claim verified against real proof of work — GitHub,
-              portfolio, resume. Get an explainable score, not just a number.
+              Every skill claim verified against real proof of work — GitHub commits,
+              project code, and live deployments. Get a 100% explainable score, not AI guesswork.
             </p>
 
             {/* Quick-action cards */}
             <div
+              className="fade-in-up stagger-4"
               style={{
                 display: "flex",
                 gap: 12,
                 justifyContent: "center",
                 flexWrap: "wrap",
-                marginBottom: 36,
+                marginBottom: 32,
               }}
             >
               {[
-                { tab: "quiz" as Tab, icon: "🧠", label: "Take Expert Quiz", color: "var(--purple)", bg: "var(--purple-light)" },
-                { tab: "roadmap" as Tab, icon: "🗺️", label: "View Roadmap", color: "var(--green)", bg: "var(--green-light)" },
-                { tab: "dashboard" as Tab, icon: "📊", label: "Market Intel", color: "var(--orange)", bg: "var(--orange-light)" },
+                { tab: "quiz" as Tab, icon: <BrainCircuit size={16}/>, label: "Take Expert Quiz", color: "var(--purple)", bg: "var(--purple-light)" },
+                { tab: "roadmap" as Tab, icon: <Map size={16}/>, label: "View Roadmap", color: "var(--green)", bg: "var(--green-light)" },
+                { tab: "dashboard" as Tab, icon: <LayoutDashboard size={16}/>, label: "Market Intel", color: "var(--orange)", bg: "var(--orange-light)" },
               ].map((a) => (
                 <button
                   key={a.tab}
@@ -261,7 +280,9 @@ export default function HomePage() {
                     padding: "10px 20px",
                   }}
                 >
-                  {a.icon} {a.label}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {a.icon} {a.label}
+                  </div>
                 </button>
               ))}
             </div>
@@ -272,6 +293,7 @@ export default function HomePage() {
       {/* ── Hero on Quiz tab ─────────────────────────────────────────────────── */}
       {activeTab === "quiz" && (
         <div
+          className="fade-in-up"
           style={{
             textAlign: "center",
             padding: "32px 0 24px",
@@ -280,8 +302,8 @@ export default function HomePage() {
           }}
         >
           <div className="container">
-            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
-              🧠 Expert <span className="gradient-text">Technical Quiz</span>
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+              <BrainCircuit size={32} /> Expert <span className="gradient-text">Technical Quiz</span>
             </h1>
             <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
               Gemini AI generates FAANG-level questions tailored to your role &amp; skills.
@@ -294,6 +316,7 @@ export default function HomePage() {
       {/* ── Roadmap hero ─────────────────────────────────────────────────────── */}
       {activeTab === "roadmap" && (
         <div
+          className="fade-in-up"
           style={{
             textAlign: "center",
             padding: "32px 0 24px",
@@ -302,8 +325,8 @@ export default function HomePage() {
           }}
         >
           <div className="container">
-            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
-              🗺️ Your <span className="gradient-text">Career Roadmap</span>
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+              <Map size={32} /> Your <span className="gradient-text">Career Roadmap</span>
             </h1>
             <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
               A structured, week-by-week plan to close your skill gaps and become placement-ready.
@@ -315,6 +338,7 @@ export default function HomePage() {
       {/* ── Dashboard hero ───────────────────────────────────────────────────── */}
       {activeTab === "dashboard" && (
         <div
+          className="fade-in-up"
           style={{
             textAlign: "center",
             padding: "32px 0 24px",
@@ -323,8 +347,8 @@ export default function HomePage() {
           }}
         >
           <div className="container">
-            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
-              📊 <span className="gradient-text">Placement Dashboard</span>
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+              <LayoutDashboard size={32} /> <span className="gradient-text">Placement Dashboard</span>
             </h1>
             <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
               Market intelligence, skill gap analysis, and your consistency timeline in one place.
@@ -336,6 +360,7 @@ export default function HomePage() {
       {/* ── Batch hero ───────────────────────────────────────────────────────── */}
       {activeTab === "batch" && (
         <div
+          className="fade-in-up"
           style={{
             textAlign: "center",
             padding: "32px 0 24px",
@@ -344,8 +369,8 @@ export default function HomePage() {
           }}
         >
           <div className="container">
-            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8 }}>
-              🏢 <span className="gradient-text">Placement Cell</span> Portal
+            <h1 style={{ fontWeight: 900, fontSize: "1.8rem", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+              <Building2 size={32} /> <span className="gradient-text">Placement Cell</span> Portal
             </h1>
             <p style={{ color: "var(--text-mid)", fontWeight: 600, fontSize: "0.92rem" }}>
               View batch analytics, identify cohort gaps, and optimise workshop scheduling.
@@ -355,9 +380,9 @@ export default function HomePage() {
       )}
 
       {/* ── Main content ─────────────────────────────────────────────────────── */}
-      <div className="container" style={{ paddingBottom: 80 }}>
+      <div className="container" style={{ paddingBottom: 40, flex: 1 }}>
         {activeTab === "analyse" && (
-          <>
+          <div key={report ? "report-view" : "submit-view"} className="fade-in-up">
             {!report ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
                 <div style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
@@ -378,47 +403,16 @@ export default function HomePage() {
                 }}
               />
             )}
-          </>
+          </div>
         )}
 
-        {activeTab === "quiz" && <QuizTab />}
-        {activeTab === "roadmap" && <RoadmapTab />}
-        {activeTab === "dashboard" && <DashboardTab />}
-        {activeTab === "batch" && <BatchTab />}
+        {activeTab === "quiz" && <div key="quiz-view" className="fade-in-up"><QuizTab /></div>}
+        {activeTab === "roadmap" && <div key="roadmap-view" className="fade-in-up"><RoadmapTab /></div>}
+        {activeTab === "dashboard" && <div key="dashboard-view" className="fade-in-up"><DashboardTab /></div>}
+        {activeTab === "batch" && <div key="batch-view" className="fade-in-up"><BatchTab /></div>}
       </div>
 
-      {/* ── Footer ───────────────────────────────────────────────────────────── */}
-      <footer
-        style={{
-          borderTop: "2.5px solid var(--text)",
-          background: "var(--white)",
-          padding: "20px 0",
-          textAlign: "center",
-        }}
-      >
-        <div className="container">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-            <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text-mid)" }}>
-              Built with ❤️ for DataQuest 3.0 · CareerLens Team
-            </span>
-            <div style={{ display: "flex", gap: 8 }}>
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    fontSize: "0.78rem", fontWeight: 700, color: "var(--text-soft)",
-                    padding: "2px 8px", fontFamily: "var(--font)",
-                  }}
-                >
-                  {t.icon} {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
+

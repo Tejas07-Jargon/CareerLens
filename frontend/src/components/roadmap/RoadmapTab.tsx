@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 
+import { Map, Lightbulb, CheckCircle, BookOpen, Blocks, Code2, Settings, Database, Rocket } from "lucide-react";
+
 interface RoadmapItem {
   week: string;
   title: string;
   description: string;
   skills: string[];
   color: string;
-  icon: string;
+  icon: React.ReactNode;
   effort: string;
   resources: string[];
 }
@@ -20,7 +22,7 @@ const SAMPLE_ROADMAP: RoadmapItem[] = [
     description: "Master scalable system design: load balancers, caches, databases, and distributed tracing.",
     skills: ["System Design", "Distributed Systems", "CAP Theorem"],
     color: "var(--blue)",
-    icon: "🏗️",
+    icon: <Blocks size={20} />,
     effort: "~10 hrs",
     resources: ["Designing Data-Intensive Applications", "system-design-primer (GitHub)", "ByteByteGo blog"],
   },
@@ -30,7 +32,7 @@ const SAMPLE_ROADMAP: RoadmapItem[] = [
     description: "Deep dive into advanced DSA: graphs, dynamic programming, segment trees, and complexity proofs.",
     skills: ["Graphs", "DP", "Trees", "Complexity"],
     color: "var(--purple)",
-    icon: "🧮",
+    icon: <Code2 size={20} />,
     effort: "~12 hrs",
     resources: ["LeetCode Top 150", "NeetCode.io", "CLRS Introduction to Algorithms"],
   },
@@ -40,7 +42,7 @@ const SAMPLE_ROADMAP: RoadmapItem[] = [
     description: "Threads, locks, async/await internals, deadlocks, and OS scheduling — critical for senior interviews.",
     skills: ["Concurrency", "OS", "Async"],
     color: "var(--green)",
-    icon: "⚙️",
+    icon: <Settings size={20} />,
     effort: "~8 hrs",
     resources: ["OSTEP (free book)", "Java Concurrency in Practice", "Golang tour"],
   },
@@ -50,7 +52,7 @@ const SAMPLE_ROADMAP: RoadmapItem[] = [
     description: "Indexing strategies, query plans, transactions (ACID), and NoSQL trade-offs.",
     skills: ["SQL", "Indexing", "NoSQL", "Transactions"],
     color: "var(--orange)",
-    icon: "🗄️",
+    icon: <Database size={20} />,
     effort: "~9 hrs",
     resources: ["Use The Index, Luke", "PostgreSQL docs", "MongoDB University"],
   },
@@ -60,7 +62,7 @@ const SAMPLE_ROADMAP: RoadmapItem[] = [
     description: "Ship a production-quality project or contribute to an open-source repo to close evidence gaps.",
     skills: ["GitHub", "Documentation", "CI/CD"],
     color: "var(--pink)",
-    icon: "🚀",
+    icon: <Rocket size={20} />,
     effort: "~15 hrs",
     resources: ["Good First Issues (goodfirstissue.dev)", "Readme-driven development", "GitHub Actions docs"],
   },
@@ -88,8 +90,8 @@ export default function RoadmapTab() {
       <div className="card fade-in-up" style={{ borderColor: "var(--green)", boxShadow: "5px 5px 0 var(--green)", marginBottom: 24, padding: "24px 28px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 6 }}>
-              🗺️ Personalised <span className="gradient-text">Roadmap</span>
+            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 6, display: "flex", alignItems: "center", gap: "8px" }}>
+              <Map size={24} /> Personalised <span className="gradient-text">Roadmap</span>
             </h2>
             <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", fontWeight: 600 }}>
               A 10-week plan to close your skill gaps and land your dream role
@@ -132,7 +134,7 @@ export default function RoadmapTab() {
         background: "var(--yellow-light)", marginBottom: 24, padding: "14px 18px",
         display: "flex", gap: 12, alignItems: "center",
       }}>
-        <span style={{ fontSize: "1.2rem" }}>💡</span>
+        <span style={{ fontSize: "1.2rem", display: "flex" }}><Lightbulb size={24} /></span>
         <p style={{ fontSize: "0.85rem", color: "var(--text-mid)", fontWeight: 600, margin: 0 }}>
           Analyse your profile in the <strong>Analyse</strong> tab to get a personalised roadmap based on your actual skill gaps.
           This is a sample roadmap for {role}.
@@ -173,7 +175,7 @@ export default function RoadmapTab() {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0, border: "2.5px solid var(--text)",
                 }}>
-                  {done ? "✅" : item.icon}
+                  {done ? <CheckCircle size={20} /> : item.icon}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 900, fontSize: "1rem", color: "var(--text)" }}>{item.title}</div>
@@ -193,7 +195,7 @@ export default function RoadmapTab() {
                       borderColor: done ? "var(--green)" : "var(--border)",
                     }}
                   >
-                    {done ? "✅ Done" : "Mark Done"}
+                    {done ? <><CheckCircle size={14} className="inline mr-1 align-text-bottom" /> Done</> : "Mark Done"}
                   </button>
                   <span style={{ fontSize: "0.9rem", color: "var(--text-mid)" }}>{isOpen ? "▲" : "▼"}</span>
                 </div>
@@ -212,7 +214,7 @@ export default function RoadmapTab() {
                       </span>
                     ))}
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: "0.8rem", color: "var(--text)", marginBottom: 8 }}>📚 Resources</div>
+                  <div style={{ fontWeight: 800, fontSize: "0.8rem", color: "var(--text)", marginBottom: 8, display: "flex", alignItems: "center", gap: 4 }}><BookOpen size={14} /> Resources</div>
                   <ul style={{ paddingLeft: 18, display: "grid", gap: 4 }}>
                     {item.resources.map((r) => (
                       <li key={r} style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600, lineHeight: 1.5 }}>{r}</li>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Building2, Users, Target, Calendar, CheckCircle, BarChart, AlertTriangle } from "lucide-react";
 
 const SAMPLE_STUDENTS = [
   { name: "Arjun Sharma", role: "Software Engineer", score: 82, status: "Ready", gaps: ["System Design", "K8s"], color: "var(--green)" },
@@ -50,8 +51,8 @@ export default function BatchTab() {
       <div className="card fade-in-up" style={{ borderColor: "var(--teal)", boxShadow: "5px 5px 0 var(--teal)", marginBottom: 24, padding: "20px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 4 }}>
-              🏢 <span className="gradient-text">Placement Cell</span> Dashboard
+            <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+              <Building2 size={24} /> <span className="gradient-text">Placement Cell</span> Dashboard
             </h2>
             <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", fontWeight: 600 }}>
               Batch analytics · gap prioritisation · workshop optimisation
@@ -72,7 +73,7 @@ export default function BatchTab() {
                   boxShadow: activeSection === s ? "var(--shadow-sm)" : "none",
                 }}
               >
-                {s === "overview" ? "👥 Batch" : s === "gaps" ? "🎯 Gap Map" : "📅 Workshops"}
+                {s === "overview" ? <><Users size={14} className="inline mr-1 align-text-bottom" /> Batch</> : s === "gaps" ? <><Target size={14} className="inline mr-1 align-text-bottom" /> Gap Map</> : <><Calendar size={14} className="inline mr-1 align-text-bottom" /> Workshops</>}
               </button>
             ))}
           </div>
@@ -82,16 +83,16 @@ export default function BatchTab() {
       {/* Stats bar */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
         {[
-          { label: "Total Students", value: SAMPLE_STUDENTS.length, color: "var(--blue)", bg: "var(--blue-light)", icon: "👥" },
-          { label: "Placement Ready", value: readyCount, color: "var(--green)", bg: "var(--green-light)", icon: "✅" },
-          { label: "Avg Score", value: `${avgScore}%`, color: "var(--purple)", bg: "var(--purple-light)", icon: "📊" },
-          { label: "Top Gap", value: "Sys Design", color: "var(--pink)", bg: "var(--pink-light)", icon: "⚠️" },
+          { label: "Total Students", value: SAMPLE_STUDENTS.length, color: "var(--blue)", bg: "var(--blue-light)", icon: <Users size={24} /> },
+          { label: "Placement Ready", value: readyCount, color: "var(--green)", bg: "var(--green-light)", icon: <CheckCircle size={24} /> },
+          { label: "Avg Score", value: `${avgScore}%`, color: "var(--purple)", bg: "var(--purple-light)", icon: <BarChart size={24} /> },
+          { label: "Top Gap", value: "Sys Design", color: "var(--pink)", bg: "var(--pink-light)", icon: <AlertTriangle size={24} /> },
         ].map((stat) => (
           <div key={stat.label} className="card fade-in-up" style={{
             borderColor: stat.color, boxShadow: `3px 3px 0 ${stat.color}`,
             background: stat.bg, padding: "16px 18px", textAlign: "center",
           }}>
-            <div style={{ fontSize: "1.4rem", marginBottom: 4 }}>{stat.icon}</div>
+            <div style={{ fontSize: "1.4rem", marginBottom: 4, display: "flex", justifyContent: "center" }}>{stat.icon}</div>
             <div style={{ fontWeight: 900, fontSize: "1.5rem", color: stat.color }}>{stat.value}</div>
             <div style={{ fontSize: "0.72rem", color: "var(--text-mid)", fontWeight: 700 }}>{stat.label}</div>
           </div>
@@ -180,7 +181,7 @@ export default function BatchTab() {
       {/* ── Gap Map ───────────────────────────────────────────────────────────────── */}
       {activeSection === "gaps" && (
         <div className="fade-in-up">
-          <h3 style={{ fontWeight: 900, marginBottom: 16, fontSize: "1rem" }}>🎯 Cohort-Wide Skill Gaps (Priority Order)</h3>
+          <h3 style={{ fontWeight: 900, marginBottom: 16, fontSize: "1rem", display: "flex", alignItems: "center", gap: 8 }}><Target size={20} /> Cohort-Wide Skill Gaps (Priority Order)</h3>
           <div style={{ display: "grid", gap: 14 }}>
             {TOP_GAPS.map((g, i) => (
               <div key={g.skill} className="card" style={{ borderColor: g.color, boxShadow: `3px 3px 0 ${g.color}`, padding: "16px 20px" }}>
@@ -212,7 +213,7 @@ export default function BatchTab() {
       {/* ── Workshops ─────────────────────────────────────────────────────────────── */}
       {activeSection === "workshops" && (
         <div className="fade-in-up">
-          <h3 style={{ fontWeight: 900, marginBottom: 16, fontSize: "1rem" }}>📅 Recommended Workshops</h3>
+          <h3 style={{ fontWeight: 900, marginBottom: 16, fontSize: "1rem", display: "flex", alignItems: "center", gap: 8 }}><Calendar size={20} /> Recommended Workshops</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
             {WORKSHOPS.map((w, i) => {
               const colors = ["var(--blue)", "var(--purple)", "var(--green)", "var(--orange)"];
@@ -245,7 +246,7 @@ export default function BatchTab() {
                       background: c, color: "white", borderColor: "var(--text)",
                     }}
                   >
-                    📅 Schedule Workshop
+                    <Calendar size={16} className="inline mr-2 align-text-bottom" /> Schedule Workshop
                   </button>
                 </div>
               );

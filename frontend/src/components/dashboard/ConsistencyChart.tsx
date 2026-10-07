@@ -5,6 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
 } from "recharts";
+import { TrendingUp } from "lucide-react";
 
 /**
  * Extracts the weekly activity series from the consistency evidence locators.
@@ -41,22 +42,24 @@ export default function ConsistencyChart({ claimStatuses }: Props) {
   })();
 
   return (
-    <div className="card">
+    <div className="card fade-in-up" style={{ borderColor: "var(--green)", boxShadow: "5px 5px 0 var(--green)", padding: "24px 28px" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
         <div>
-          <h2 style={{ fontWeight: 700, fontSize: "1.05rem", marginBottom: 4 }}>Consistency Timeline</h2>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>12-month weekly GitHub contribution activity</p>
+          <h2 style={{ fontWeight: 900, fontSize: "1.2rem", marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+            <TrendingUp size={20} /> Engineering Consistency Timeline
+          </h2>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-mid)", fontWeight: 600 }}>52-week GitHub commit and contribution velocity</p>
         </div>
         <div style={{ display: "flex", gap: 20 }}>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--accent-green)" }}>{activeWeeks}/{total}</div>
-            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>active weeks</div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--green)" }}>{activeWeeks}/{total}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-mid)", fontWeight: 800 }}>active weeks</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "1.4rem", fontWeight: 800, color: longestGap > 8 ? "var(--accent-red)" : longestGap > 4 ? "var(--accent-amber)" : "var(--accent-green)" }}>
+            <div style={{ fontSize: "1.5rem", fontWeight: 900, color: longestGap > 8 ? "var(--pink)" : longestGap > 4 ? "var(--orange)" : "var(--green)" }}>
               {longestGap}w
             </div>
-            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>longest gap</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-mid)", fontWeight: 800 }}>longest gap</div>
           </div>
         </div>
       </div>
@@ -65,11 +68,11 @@ export default function ConsistencyChart({ claimStatuses }: Props) {
         <AreaChart data={data} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="consistencyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4f9eff" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="#4f9eff" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--green)" stopOpacity={0.35} />
+              <stop offset="95%" stopColor="var(--green)" stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.04)" />
+          <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
           <XAxis
             dataKey="week"
             tick={false}
@@ -78,18 +81,28 @@ export default function ConsistencyChart({ claimStatuses }: Props) {
           />
           <YAxis hide />
           <Tooltip
-            contentStyle={{ background: "#1a2035", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: "0.8rem" }}
-            labelStyle={{ color: "#8b9cc4" }}
-            itemStyle={{ color: "#4f9eff" }}
+            contentStyle={{
+              background: "var(--white)",
+              border: "2px solid var(--text)",
+              borderRadius: 8,
+              boxShadow: "2px 2px 0 var(--text)",
+              fontSize: "0.82rem",
+              fontWeight: 800,
+              color: "var(--text)"
+            }}
+            labelStyle={{ color: "var(--text-mid)", fontWeight: 700 }}
+            itemStyle={{ color: "var(--green)" }}
           />
           <Area
             type="monotone"
             dataKey="contributions"
-            stroke="#4f9eff"
-            strokeWidth={2}
+            stroke="var(--green)"
+            strokeWidth={2.5}
             fill="url(#consistencyGrad)"
             dot={false}
-            activeDot={{ r: 4, fill: "#4f9eff" }}
+            activeDot={{ r: 5, fill: "var(--green)", stroke: "var(--text)", strokeWidth: 2 }}
+            animationDuration={900}
+            animationEasing="ease-out"
           />
         </AreaChart>
       </ResponsiveContainer>

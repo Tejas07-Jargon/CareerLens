@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { generateQuiz } from "@/lib/api";
 import type { QuizQuestion, QuizResponse } from "@/types";
+import { BrainCircuit, AlertTriangle, FlaskConical, BarChart as BarChartIcon, Target, Rocket, CheckCircle, TrendingUp, Zap, BookOpen, PartyPopper, XCircle, RotateCcw, Pin, Trophy, Activity, Dumbbell, Lightbulb, Beaker } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ROLES = [
@@ -58,9 +59,9 @@ function calcAnalytics(
 
   const pct = Math.round((correct / questions.length) * 100);
   const grade =
-    pct >= 85 ? "🏆 Expert" :
-    pct >= 70 ? "🎯 Proficient" :
-    pct >= 50 ? "📈 Developing" : "📚 Needs Work";
+    pct >= 85 ? "Expert" :
+    pct >= 70 ? "Proficient" :
+    pct >= 50 ? "Developing" : "Needs Work";
   const gradeColor =
     pct >= 85 ? "var(--green)" :
     pct >= 70 ? "var(--blue)" :
@@ -223,8 +224,8 @@ function ConfigScreen({ role, setRole, skills, setSkills, interests, setInterest
     <div style={{ maxWidth: 680, margin: "0 auto" }}>
       <div className="card fade-in-up" style={{ borderColor: "var(--purple)", boxShadow: "5px 5px 0 var(--purple)" }}>
         <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 6 }}>
-            🧠 Expert <span className="gradient-text">Quiz Generator</span>
+          <h2 style={{ fontWeight: 900, fontSize: "1.5rem", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
+            <BrainCircuit size={28} /> Expert <span className="gradient-text">Quiz Generator</span>
           </h2>
           <p style={{ color: "var(--text-mid)", fontSize: "0.9rem", fontWeight: 600 }}>
             Gemini AI · FAANG-level questions · Full analytics after
@@ -283,24 +284,24 @@ function ConfigScreen({ role, setRole, skills, setSkills, interests, setInterest
             </div>
           </div>
 
-          {error && <div className="flag-banner"><span>⚠️</span><span>{error}</span></div>}
+          {error && <div className="flag-banner"><span style={{display: "flex"}}><AlertTriangle size={20} /></span><span>{error}</span></div>}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {[
-              { icon: "🧪", label: "Expert difficulty" },
-              { icon: "📊", label: "Full analytics" },
-              { icon: "🎯", label: "Role-specific" },
+              { icon: <Beaker size={24} />, label: "Expert difficulty" },
+              { icon: <BarChartIcon size={24} />, label: "Full analytics" },
+              { icon: <Target size={24} />, label: "Role-specific" },
             ].map((f) => (
               <div key={f.label} style={{ textAlign: "center", padding: "12px 8px", background: "var(--purple-light)", border: "2px solid var(--purple)", borderRadius: "var(--doodle-sm)" }}>
-                <div style={{ fontSize: "1.4rem" }}>{f.icon}</div>
+                <div style={{ display: "flex", justifyContent: "center" }}>{f.icon}</div>
                 <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--purple)", marginTop: 4 }}>{f.label}</div>
               </div>
             ))}
           </div>
 
           <button id="quiz-start-btn" className="btn btn-purple" onClick={onStart}
-            style={{ height: 54, fontSize: "1.05rem", fontWeight: 900 }}>
-            🚀 Generate Quiz with Analytics
+            style={{ height: 54, fontSize: "1.05rem", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Rocket size={20} /> Generate Quiz with Analytics
           </button>
         </div>
       </div>
@@ -312,7 +313,7 @@ function LoadingScreen({ role }: { role: string }) {
   return (
     <div style={{ maxWidth: 520, margin: "60px auto", textAlign: "center" }}>
       <div className="card" style={{ borderColor: "var(--purple)", boxShadow: "5px 5px 0 var(--purple)", padding: "48px 32px" }}>
-        <div style={{ fontSize: "3rem", marginBottom: 20 }}>🧠</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}><BrainCircuit size={48} color="var(--purple)" /></div>
         <div className="spinner" style={{ borderTopColor: "var(--purple)", borderColor: "var(--purple-light)", width: 40, height: 40, margin: "0 auto 20px", borderWidth: 4 }} />
         <h2 style={{ fontWeight: 900, fontSize: "1.3rem", marginBottom: 8 }}>Crafting Expert Questions…</h2>
         <p style={{ color: "var(--text-mid)", fontSize: "0.88rem", fontWeight: 600 }}>
@@ -356,18 +357,18 @@ function QuizScreen({ questions, role, current, answers, showExplanation, onAnsw
           <div style={{ display: "flex", gap: 8 }}>
             {current > 0 && (
               <span className="badge" style={{ background: "var(--white)", color: scoreSoFar >= 60 ? "var(--green)" : "var(--pink)", borderColor: scoreSoFar >= 60 ? "var(--green)" : "var(--pink)" }}>
-                {scoreSoFar >= 60 ? "✅" : "📈"} {scoreSoFar}% so far
+                {scoreSoFar >= 60 ? <CheckCircle size={14} className="inline mr-1 align-text-bottom" /> : <TrendingUp size={14} className="inline mr-1 align-text-bottom" />} {scoreSoFar}% so far
               </span>
             )}
-            <span className="badge" style={{ background: "var(--orange-light)", color: "var(--orange)", borderColor: "var(--orange)" }}>⚡ {q.difficulty}</span>
-            <span className="badge" style={{ background: "var(--blue-light)", color: "var(--blue)", borderColor: "var(--blue)" }}>📚 {q.topic}</span>
+            <span className="badge" style={{ background: "var(--orange-light)", color: "var(--orange)", borderColor: "var(--orange)" }}><Zap size={14} className="inline mr-1 align-text-bottom" /> {q.difficulty}</span>
+            <span className="badge" style={{ background: "var(--blue-light)", color: "var(--blue)", borderColor: "var(--blue)" }}><BookOpen size={14} className="inline mr-1 align-text-bottom" /> {q.topic}</span>
           </div>
         </div>
         <div className="progress-bar">
           <div className="progress-bar-fill" style={{ width: `${progress}%`, background: "var(--purple)" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: "0.75rem", color: "var(--text-mid)", fontWeight: 700 }}>
-          <span>🎯 {role}</span><span>{Math.round(progress)}% complete</span>
+          <span><Target size={14} className="inline mr-1 align-text-bottom" /> {role}</span><span>{Math.round(progress)}% complete</span>
         </div>
       </div>
 
@@ -381,10 +382,11 @@ function QuizScreen({ questions, role, current, answers, showExplanation, onAnsw
         {q.options.map((opt) => {
           const isChosen = chosen === opt.label;
           const isCorrectOpt = opt.label === q.correct;
-          let bg = "var(--white)", border = "var(--border)", shadow = "none", icon = "";
+          let bg = "var(--white)", border = "var(--border)", shadow = "none";
+          let icon: React.ReactNode = null;
           if (chosen) {
-            if (isCorrectOpt) { bg = "var(--green-light)"; border = "var(--green)"; shadow = "3px 3px 0 var(--green)"; icon = "✅"; }
-            else if (isChosen) { bg = "var(--pink-light)"; border = "var(--pink)"; shadow = "3px 3px 0 var(--pink)"; icon = "❌"; }
+            if (isCorrectOpt) { bg = "var(--green-light)"; border = "var(--green)"; shadow = "3px 3px 0 var(--green)"; icon = <CheckCircle size={16} />; }
+            else if (isChosen) { bg = "var(--pink-light)"; border = "var(--pink)"; shadow = "3px 3px 0 var(--pink)"; icon = <XCircle size={16} />; }
             else { bg = "var(--bg-soft)"; }
           }
           return (
@@ -406,7 +408,7 @@ function QuizScreen({ questions, role, current, answers, showExplanation, onAnsw
       {showExplanation && (
         <div className="card fade-in-up" style={{ borderColor: isCorrect ? "var(--green)" : "var(--orange)", boxShadow: `4px 4px 0 ${isCorrect ? "var(--green)" : "var(--orange)"}`, background: isCorrect ? "var(--green-light)" : "var(--orange-light)", marginBottom: 16 }}>
           <div style={{ fontWeight: 900, marginBottom: 8, fontSize: "1.05rem" }}>
-            {isCorrect ? "🎉 Correct!" : `❌ Incorrect — Correct answer: ${q.correct}`}
+            {isCorrect ? <><PartyPopper size={18} className="inline mr-2 align-text-bottom" /> Correct!</> : <><XCircle size={18} className="inline mr-2 align-text-bottom" /> Incorrect — Correct answer: {q.correct}</>}
           </div>
           <p style={{ fontSize: "0.88rem", lineHeight: 1.75, color: "var(--text-mid)", fontWeight: 600 }}>{q.explanation}</p>
         </div>
@@ -414,8 +416,8 @@ function QuizScreen({ questions, role, current, answers, showExplanation, onAnsw
 
       {showExplanation && (
         <button id="quiz-next-btn" className={`btn ${isCorrect ? "btn-green" : "btn-primary"}`} onClick={onNext}
-          style={{ width: "100%", height: 50, fontSize: "1rem", fontWeight: 900 }}>
-          {current + 1 >= questions.length ? "📊 View Full Analytics →" : "Next Question →"}
+          style={{ width: "100%", height: 50, fontSize: "1rem", fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          {current + 1 >= questions.length ? <><BarChartIcon size={18} /> View Full Analytics →</> : "Next Question →"}
         </button>
       )}
     </div>
@@ -455,16 +457,16 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}>
-                ✅ Strong in {a.strongTopics.length} topic{a.strongTopics.length !== 1 ? "s" : ""}
+                <CheckCircle size={16} className="inline mr-1 align-text-bottom" /> Strong in {a.strongTopics.length} topic{a.strongTopics.length !== 1 ? "s" : ""}
               </span>
               <span className="badge" style={{ background: "var(--pink-light)", color: "var(--pink)", borderColor: "var(--pink)" }}>
-                ⚠️ {a.wrongTopics.length} gap{a.wrongTopics.length !== 1 ? "s" : ""} to close
+                <AlertTriangle size={16} className="inline mr-1 align-text-bottom" /> {a.wrongTopics.length} gap{a.wrongTopics.length !== 1 ? "s" : ""} to close
               </span>
             </div>
           </div>
           <button id="quiz-retry-btn" className="btn" onClick={onReset}
-            style={{ background: a.gradeColor, color: "white", fontWeight: 900, alignSelf: "flex-start" }}>
-            🔄 Retry Quiz
+            style={{ background: a.gradeColor, color: "white", fontWeight: 900, alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8 }}>
+            <RotateCcw size={18} /> Retry Quiz
           </button>
         </div>
       </div>
@@ -472,11 +474,11 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
       {/* ── What to improve banner ─────────────────────────────────────────── */}
       {a.wrongTopics.length > 0 && (
         <div className="card fade-in-up" style={{ borderColor: "var(--orange)", boxShadow: "4px 4px 0 var(--orange)", background: "var(--orange-light)", marginBottom: 20, padding: "18px 20px" }}>
-          <div style={{ fontWeight: 900, fontSize: "1rem", marginBottom: 8 }}>🎯 Focus Areas — what you need to improve</div>
+          <div style={{ fontWeight: 900, fontSize: "1rem", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}><Target size={20} /> Focus Areas — what you need to improve</div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {a.wrongTopics.map((t) => (
               <span key={t} className="badge" style={{ background: "var(--white)", color: "var(--orange)", borderColor: "var(--orange)", fontSize: "0.8rem" }}>
-                📌 {t}
+                <Pin size={14} className="inline mr-1 align-text-bottom" /> {t}
               </span>
             ))}
           </div>
@@ -489,9 +491,9 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
       {/* ── Section tabs ──────────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
         {([
-          { id: "overview", label: "📊 Overview" },
-          { id: "topics", label: "🧩 Topic Breakdown" },
-          { id: "review", label: "📝 Full Review" },
+          { id: "overview", label: <><BarChartIcon size={16} className="inline mr-1 align-text-bottom" /> Overview</> },
+          { id: "topics", label: <><Target size={16} className="inline mr-1 align-text-bottom" /> Topic Breakdown</> },
+          { id: "review", label: <><BookOpen size={16} className="inline mr-1 align-text-bottom" /> Full Review</> },
         ] as const).map(({ id, label }) => (
           <button key={id} id={`result-tab-${id}`} onClick={() => setActiveSection(id)} className="btn"
             style={{ padding: "8px 18px", fontSize: "0.84rem", fontWeight: 800, background: activeSection === id ? "var(--purple)" : "var(--white)", color: activeSection === id ? "white" : "var(--text-mid)", borderColor: activeSection === id ? "var(--text)" : "var(--border)", boxShadow: activeSection === id ? "var(--shadow-sm)" : "none" }}>
@@ -506,12 +508,12 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
           {/* Stats grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
             {[
-              { label: "Overall Score", value: `${a.pct}%`, icon: "🎯", color: "var(--purple)", bg: "var(--purple-light)" },
-              { label: "Correct Answers", value: `${a.correct}/${a.total}`, icon: "✅", color: "var(--green)", bg: "var(--green-light)" },
-              { label: "Topics Covered", value: a.topicStats.length, icon: "📚", color: "var(--blue)", bg: "var(--blue-light)" },
-              { label: "Strong Topics", value: a.strongTopics.length, icon: "💪", color: "var(--green)", bg: "var(--green-light)" },
-              { label: "Needs Work", value: a.wrongTopics.length, icon: "⚠️", color: "var(--orange)", bg: "var(--orange-light)" },
-              { label: "Pass Rate", value: a.pct >= 50 ? "Pass ✓" : "Fail ✗", icon: a.pct >= 50 ? "🏆" : "📖", color: a.pct >= 50 ? "var(--green)" : "var(--pink)", bg: a.pct >= 50 ? "var(--green-light)" : "var(--pink-light)" },
+              { label: "Overall Score", value: `${a.pct}%`, icon: <Target size={24} />, color: "var(--purple)", bg: "var(--purple-light)" },
+              { label: "Correct Answers", value: `${a.correct}/${a.total}`, icon: <CheckCircle size={24} />, color: "var(--green)", bg: "var(--green-light)" },
+              { label: "Topics Covered", value: a.topicStats.length, icon: <BookOpen size={24} />, color: "var(--blue)", bg: "var(--blue-light)" },
+              { label: "Strong Topics", value: a.strongTopics.length, icon: <Dumbbell size={24} />, color: "var(--green)", bg: "var(--green-light)" },
+              { label: "Needs Work", value: a.wrongTopics.length, icon: <AlertTriangle size={24} />, color: "var(--orange)", bg: "var(--orange-light)" },
+              { label: "Pass Rate", value: a.pct >= 50 ? "Pass" : "Fail", icon: a.pct >= 50 ? <Trophy size={24} /> : <BookOpen size={24} />, color: a.pct >= 50 ? "var(--green)" : "var(--pink)", bg: a.pct >= 50 ? "var(--green-light)" : "var(--pink-light)" },
             ].map((s) => (
               <div key={s.label} className="card" style={{ borderColor: s.color, boxShadow: `3px 3px 0 ${s.color}`, background: s.bg, padding: "16px", textAlign: "center" }}>
                 <div style={{ fontSize: "1.4rem" }}>{s.icon}</div>
@@ -524,7 +526,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
           {/* Radar chart */}
           {a.topicStats.length >= 3 && (
             <div className="card" style={{ borderColor: "var(--blue)", boxShadow: "4px 4px 0 var(--blue)" }}>
-              <div style={{ fontWeight: 900, marginBottom: 16 }}>🕸️ Skill Radar — Topic Coverage</div>
+              <div style={{ fontWeight: 900, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}><Activity size={20} /> Skill Radar — Topic Coverage</div>
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <RadarChart topics={a.topicStats} />
               </div>
@@ -537,7 +539,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
           {/* Strong vs weak summary */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div className="card" style={{ borderColor: "var(--green)", boxShadow: "3px 3px 0 var(--green)", background: "var(--green-light)" }}>
-              <div style={{ fontWeight: 900, marginBottom: 10, color: "var(--green)" }}>💪 You're strong in…</div>
+              <div style={{ fontWeight: 900, marginBottom: 10, color: "var(--green)", display: "flex", alignItems: "center", gap: 8 }}><Dumbbell size={20} /> You're strong in…</div>
               {a.strongTopics.length === 0
                 ? <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600 }}>Keep practising to build strong topics!</p>
                 : a.strongTopics.map((t) => (
@@ -548,7 +550,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
                 ))}
             </div>
             <div className="card" style={{ borderColor: "var(--pink)", boxShadow: "3px 3px 0 var(--pink)", background: "var(--pink-light)" }}>
-              <div style={{ fontWeight: 900, marginBottom: 10, color: "var(--pink)" }}>📌 Work on…</div>
+              <div style={{ fontWeight: 900, marginBottom: 10, color: "var(--pink)", display: "flex", alignItems: "center", gap: 8 }}><Pin size={20} /> Work on…</div>
               {a.wrongTopics.length === 0
                 ? <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", fontWeight: 600 }}>Excellent! No critical gaps found.</p>
                 : a.wrongTopics.map((t) => (
@@ -567,7 +569,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
         <div className="fade-in-up" style={{ display: "grid", gap: 20 }}>
           {/* Bar chart */}
           <div className="card" style={{ borderColor: "var(--purple)", boxShadow: "4px 4px 0 var(--purple)" }}>
-            <div style={{ fontWeight: 900, marginBottom: 16 }}>📊 Score by Topic</div>
+            <div style={{ fontWeight: 900, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}><BarChartIcon size={20} /> Score by Topic</div>
             <div style={{ overflowX: "auto" }}>
               <BarChart data={barData} />
             </div>
@@ -603,7 +605,7 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
                   </div>
                   {t.pct < 50 && (
                     <p style={{ fontSize: "0.78rem", color: "var(--text-mid)", marginTop: 8, fontWeight: 600 }}>
-                      💡 Tip: Dedicate focused study time to <strong>{t.topic}</strong> — it's a high-priority gap for {role} roles.
+                      <Lightbulb size={16} className="inline mr-1 align-text-bottom" /> Tip: Dedicate focused study time to <strong>{t.topic}</strong> — it's a high-priority gap for {role} roles.
                     </p>
                   )}
                 </div>
@@ -631,18 +633,18 @@ function ResultScreen({ questions, answers, role, timePerQ, onReset }: ResultPro
                       <span className="badge" style={{ background: "var(--white)", color: "var(--text-mid)", borderColor: "var(--border)", whiteSpace: "nowrap" }}>⏱️ {timePerQ[i]}s</span>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                      <span className="badge" style={{ background: "var(--bg-soft)", color: "var(--text-mid)", borderColor: "var(--border)" }}>📚 {q.topic}</span>
+                      <span className="badge" style={{ background: "var(--bg-soft)", color: "var(--text-mid)", borderColor: "var(--border)" }}><BookOpen size={14} className="inline mr-1 align-text-bottom" /> {q.topic}</span>
                       {isCorrect
-                        ? <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}>✅ Correct: {q.correct} — {correctOpt?.text.slice(0, 40)}</span>
+                        ? <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}><CheckCircle size={14} className="inline mr-1 align-text-bottom" /> Correct: {q.correct} — {correctOpt?.text.slice(0, 40)}</span>
                         : <>
-                          <span className="badge" style={{ background: "var(--pink-light)", color: "var(--pink)", borderColor: "var(--pink)" }}>❌ You: {chosen} — {chosenOpt?.text.slice(0, 30) ?? "—"}</span>
-                          <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}>✅ {q.correct} — {correctOpt?.text.slice(0, 30)}</span>
+                          <span className="badge" style={{ background: "var(--pink-light)", color: "var(--pink)", borderColor: "var(--pink)" }}><XCircle size={14} className="inline mr-1 align-text-bottom" /> You: {chosen} — {chosenOpt?.text.slice(0, 30) ?? "—"}</span>
+                          <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)" }}><CheckCircle size={14} className="inline mr-1 align-text-bottom" /> {q.correct} — {correctOpt?.text.slice(0, 30)}</span>
                         </>
                       }
                     </div>
                     <div style={{ background: "rgba(255,255,255,0.6)", borderRadius: 8, padding: "10px 12px" }}>
                       <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", lineHeight: 1.7, fontWeight: 600 }}>
-                        <strong style={{ color: "var(--text)" }}>📖 Explanation: </strong>{q.explanation}
+                        <strong style={{ color: "var(--text)" }}><BookOpen size={14} className="inline mr-1 align-text-bottom" /> Explanation: </strong>{q.explanation}
                       </p>
                     </div>
                   </div>
