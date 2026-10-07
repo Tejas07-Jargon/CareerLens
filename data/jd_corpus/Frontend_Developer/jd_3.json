@@ -1,0 +1,14 @@
+﻿{
+    "title":  "UI Developer",
+    "company":  "DesignTech",
+    "skills":  [
+                   "JavaScript",
+                   "Vue.js",
+                   "CSS",
+                   "HTML",
+                   "Git",
+                   "Figma",
+                   "TypeScript",
+                   "Testing"
+               ]
+}

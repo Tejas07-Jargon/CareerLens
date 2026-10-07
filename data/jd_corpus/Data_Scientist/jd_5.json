@@ -1,0 +1,15 @@
+﻿{
+    "title":  "Data Scientist",
+    "company":  "E-commerce",
+    "skills":  [
+                   "Python",
+                   "Scikit-learn",
+                   "Pandas",
+                   "SQL",
+                   "Machine Learning",
+                   "Data Analysis",
+                   "Statistics",
+                   "Git",
+                   "NumPy"
+               ]
+}

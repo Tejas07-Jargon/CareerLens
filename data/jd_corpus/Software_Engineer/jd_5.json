@@ -1,0 +1,16 @@
+﻿{
+    "title":  "Backend Developer",
+    "company":  "FinTech Inc",
+    "skills":  [
+                   "Python",
+                   "FastAPI",
+                   "PostgreSQL",
+                   "Redis",
+                   "Docker",
+                   "CI/CD",
+                   "Git",
+                   "Testing",
+                   "REST API",
+                   "System Design"
+               ]
+}

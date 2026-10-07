@@ -1,0 +1,14 @@
+﻿{
+    "title":  "Frontend Engineer",
+    "company":  "AppStudio",
+    "skills":  [
+                   "React",
+                   "TypeScript",
+                   "CSS",
+                   "HTML",
+                   "Git",
+                   "REST API",
+                   "Testing",
+                   "Performance Optimization"
+               ]
+}

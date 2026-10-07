@@ -1,0 +1,120 @@
+[
+  {
+    "id": "seed_profile_001",
+    "display_name": "Strong SWE candidate",
+    "human_seniority": 4,
+    "claim_skills": ["Python", "Django", "PostgreSQL", "Docker", "Testing", "Git"],
+    "supplied_sources": ["github_repo", "github_calendar", "resume"],
+    "evidence": [
+      {
+        "id": "ev_001_python",
+        "skill_hints": ["Python"],
+        "strength": 0.82,
+        "source": "github_repo",
+        "locator": { "repo": "seed/api-project", "path": "app/main.py" }
+      },
+      {
+        "id": "ev_001_django",
+        "skill_hints": ["Django"],
+        "strength": 0.75,
+        "source": "github_repo",
+        "locator": { "repo": "seed/api-project", "path": "requirements.txt" }
+      },
+      {
+        "id": "ev_001_testing",
+        "skill_hints": ["Testing"],
+        "strength": 0.68,
+        "source": "github_repo",
+        "locator": { "repo": "seed/api-project", "signal": "has_tests" }
+      },
+      {
+        "id": "ev_001_docker",
+        "skill_hints": ["Docker"],
+        "strength": 0.70,
+        "source": "github_repo",
+        "locator": { "repo": "seed/api-project", "signal": "has_docker" }
+      },
+      {
+        "id": "ev_001_git",
+        "skill_hints": ["Git"],
+        "strength": 0.90,
+        "source": "github_repo",
+        "locator": { "repo": "seed/api-project" }
+      },
+      {
+        "id": "ev_001_consistency",
+        "skill_hints": ["Consistency"],
+        "strength": 0.78,
+        "source": "github_calendar",
+        "locator": { "metric": "active_week_ratio", "value": 0.78, "weekly_series": [3,5,2,0,4,6,3,2,1,0,5,7,4,3,2,6,5,4,3,1,0,2,4,5,6,3,2,1,4,5,6,3,2,1,0,4,5,6,7,4,3,2,1,5,6,3,2,1,4,5,6,3] }
+      },
+      {
+        "id": "ev_001_resume_python",
+        "skill_hints": ["Python"],
+        "strength": 0.17,
+        "source": "resume",
+        "locator": { "section": "Skills", "snippet": "Python (3 years)" }
+      }
+    ]
+  },
+  {
+    "id": "seed_profile_002",
+    "display_name": "Junior with resume inflation",
+    "human_seniority": 2,
+    "claim_skills": ["Python", "Machine Learning", "Docker", "Kubernetes", "System Design", "React"],
+    "supplied_sources": ["resume"],
+    "evidence": [
+      {
+        "id": "ev_002_python",
+        "skill_hints": ["Python"],
+        "strength": 0.18,
+        "source": "resume",
+        "locator": { "section": "Skills", "snippet": "Python" }
+      },
+      {
+        "id": "ev_002_ml",
+        "skill_hints": ["Machine Learning"],
+        "strength": 0.16,
+        "source": "resume",
+        "locator": { "section": "Skills", "snippet": "Machine Learning" }
+      },
+      {
+        "id": "ev_002_docker",
+        "skill_hints": ["Docker"],
+        "strength": 0.15,
+        "source": "resume",
+        "locator": { "section": "Skills", "snippet": "Docker, Kubernetes" }
+      }
+    ]
+  },
+  {
+    "id": "seed_profile_003",
+    "display_name": "Active contributor, inconsistent",
+    "human_seniority": 3,
+    "claim_skills": ["JavaScript", "React", "Node.js", "MongoDB"],
+    "supplied_sources": ["github_repo", "github_calendar", "resume"],
+    "evidence": [
+      {
+        "id": "ev_003_js",
+        "skill_hints": ["JavaScript"],
+        "strength": 0.72,
+        "source": "github_repo",
+        "locator": { "repo": "seed/portfolio-site" }
+      },
+      {
+        "id": "ev_003_react",
+        "skill_hints": ["React"],
+        "strength": 0.65,
+        "source": "github_repo",
+        "locator": { "repo": "seed/portfolio-site", "path": "src/App.jsx" }
+      },
+      {
+        "id": "ev_003_consistency_low",
+        "skill_hints": ["Consistency"],
+        "strength": 0.35,
+        "source": "github_calendar",
+        "locator": { "metric": "active_week_ratio", "value": 0.35, "weekly_series": [0,0,0,5,8,0,0,0,3,2,0,0,0,0,7,6,0,0,0,0,0,4,3,0,0,0,0,0,0,5,4,0,0,0,0,0,0,0,6,4,0,0,0,0,0,0,3,2,0,0,0,1] }
+      }
+    ]
+  }
+]

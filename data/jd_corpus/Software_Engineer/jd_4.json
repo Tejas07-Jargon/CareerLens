@@ -1,0 +1,15 @@
+﻿{
+    "title":  "Full Stack Engineer",
+    "company":  "ProductHouse",
+    "skills":  [
+                   "Python",
+                   "JavaScript",
+                   "React",
+                   "Node.js",
+                   "PostgreSQL",
+                   "Git",
+                   "Docker",
+                   "REST API",
+                   "Testing"
+               ]
+}

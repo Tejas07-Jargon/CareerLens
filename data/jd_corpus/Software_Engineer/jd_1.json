@@ -1,0 +1,15 @@
+﻿{
+    "title":  "Software Engineer",
+    "company":  "TechCorp",
+    "skills":  [
+                   "Python",
+                   "Git",
+                   "REST API",
+                   "SQL",
+                   "Testing",
+                   "Docker",
+                   "CI/CD",
+                   "System Design",
+                   "Data Structures \u0026 Algorithms"
+               ]
+}

@@ -1,0 +1,14 @@
+﻿{
+    "title":  "Software Developer",
+    "company":  "Enterprise Co",
+    "skills":  [
+                   "Java",
+                   "Git",
+                   "SQL",
+                   "Testing",
+                   "System Design",
+                   "REST API",
+                   "Data Structures \u0026 Algorithms",
+                   "Docker"
+               ]
+}

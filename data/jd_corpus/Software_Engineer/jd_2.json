@@ -1,0 +1,15 @@
+﻿{
+    "title":  "Backend Engineer",
+    "company":  "StartupXYZ",
+    "skills":  [
+                   "Python",
+                   "Django",
+                   "PostgreSQL",
+                   "Docker",
+                   "Git",
+                   "REST API",
+                   "Testing",
+                   "CI/CD",
+                   "Redis"
+               ]
+}

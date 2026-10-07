@@ -1,0 +1,14 @@
+﻿{
+    "title":  "AI Researcher",
+    "company":  "ResearchLab",
+    "skills":  [
+                   "Python",
+                   "PyTorch",
+                   "Machine Learning",
+                   "Deep Learning",
+                   "NLP",
+                   "Git",
+                   "Statistics",
+                   "Data Analysis"
+               ]
+}

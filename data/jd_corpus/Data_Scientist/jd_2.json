@@ -1,0 +1,15 @@
+﻿{
+    "title":  "ML Engineer",
+    "company":  "DeepTech",
+    "skills":  [
+                   "Python",
+                   "TensorFlow",
+                   "PyTorch",
+                   "Machine Learning",
+                   "Docker",
+                   "Git",
+                   "SQL",
+                   "NLP",
+                   "Data Analysis"
+               ]
+}

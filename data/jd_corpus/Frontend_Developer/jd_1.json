@@ -1,0 +1,15 @@
+﻿{
+    "title":  "Frontend Developer",
+    "company":  "WebAgency",
+    "skills":  [
+                   "JavaScript",
+                   "React",
+                   "TypeScript",
+                   "CSS",
+                   "HTML",
+                   "Git",
+                   "REST API",
+                   "Testing",
+                   "Tailwind CSS"
+               ]
+}

@@ -1,0 +1,280 @@
+/* CareerLens – Global Design System */
+
+:root {
+  /* Palette */
+  --bg-base:       #0a0d14;
+  --bg-surface:    #10141f;
+  --bg-card:       #141928;
+  --bg-card-hover: #1a2035;
+  --border:        rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.14);
+
+  /* Accent */
+  --accent-blue:   #4f9eff;
+  --accent-purple: #a78bfa;
+  --accent-cyan:   #22d3ee;
+  --accent-green:  #4ade80;
+  --accent-amber:  #fbbf24;
+  --accent-red:    #f87171;
+
+  /* Gradients */
+  --gradient-hero:    linear-gradient(135deg, #1a2035 0%, #0d1220 60%, #0a0d14 100%);
+  --gradient-accent:  linear-gradient(135deg, #4f9eff 0%, #a78bfa 100%);
+  --gradient-green:   linear-gradient(135deg, #4ade80 0%, #22d3ee 100%);
+  --gradient-amber:   linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+
+  /* Text */
+  --text-primary:   #f0f4ff;
+  --text-secondary: #8b9cc4;
+  --text-muted:     #4a5578;
+
+  /* Glow */
+  --glow-blue:   0 0 20px rgba(79,158,255,0.25);
+  --glow-purple: 0 0 20px rgba(167,139,250,0.25);
+  --glow-green:  0 0 20px rgba(74,222,128,0.20);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ── Layout helpers ─────────────────────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+.card:hover { border-color: var(--border-bright); }
+
+.card-glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* ── Status badge ───────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge-verified  { background: rgba(74,222,128,0.12); color: var(--accent-green);  border: 1px solid rgba(74,222,128,0.25); }
+.badge-partial   { background: rgba(251,191,36,0.12);  color: var(--accent-amber);  border: 1px solid rgba(251,191,36,0.25); }
+.badge-unevidenced { background: rgba(248,113,113,0.10); color: var(--accent-red); border: 1px solid rgba(248,113,113,0.22); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s var(--ease-out);
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--gradient-accent);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(79,158,255,0.30);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(79,158,255,0.45); }
+.btn-primary:active { transform: translateY(0); }
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.10); border-color: var(--border-bright); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ── Form inputs ────────────────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  transition: border-color 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out);
+  outline: none;
+}
+.input::placeholder { color: var(--text-muted); }
+.input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(79,158,255,0.15);
+}
+
+.input-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* ── Score ring ─────────────────────────────────────────────────────────────── */
+.score-ring-track { fill: none; stroke: rgba(255,255,255,0.06); }
+.score-ring-fill  { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1.2s var(--ease-out); }
+
+/* ── Animated gradient text ─────────────────────────────────────────────────── */
+.gradient-text {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────────────────── */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--gradient-accent);
+  transition: width 0.8s var(--ease-out);
+}
+
+/* ── Section divider ────────────────────────────────────────────────────────── */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+/* ── Loading spinner ────────────────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Pulse animation for live status ────────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ── Fade-in animation ──────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp 0.45s var(--ease-out) forwards; }
+
+/* ── Security flag banner ────────────────────────────────────────────────────── */
+.flag-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.22);
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  color: #fca5a5;
+}
+
+/* ── Tooltip ────────────────────────────────────────────────────────────────── */
+.tooltip {
+  position: relative;
+  cursor: help;
+}
+.tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e2840;
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  border: 1px solid var(--border);
+  z-index: 100;
+}
+.tooltip:hover::after { opacity: 1; }
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: #2a3355; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4a6b; }
+
+/* ── Mono code snippets ─────────────────────────────────────────────────────── */
+code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+}

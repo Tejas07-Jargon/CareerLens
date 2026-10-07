@@ -1,0 +1,14 @@
+﻿{
+    "title":  "Web Developer",
+    "company":  "MediaHouse",
+    "skills":  [
+                   "JavaScript",
+                   "React",
+                   "HTML",
+                   "CSS",
+                   "Git",
+                   "REST API",
+                   "TypeScript",
+                   "Next.js"
+               ]
+}

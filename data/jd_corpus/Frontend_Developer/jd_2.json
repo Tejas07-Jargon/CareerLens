@@ -1,0 +1,15 @@
+﻿{
+    "title":  "React Developer",
+    "company":  "SaaSCo",
+    "skills":  [
+                   "React",
+                   "TypeScript",
+                   "JavaScript",
+                   "CSS",
+                   "HTML",
+                   "Git",
+                   "Testing",
+                   "Next.js",
+                   "REST API"
+               ]
+}

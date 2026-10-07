@@ -1,0 +1,14 @@
+﻿{
+    "title":  "Data Analyst",
+    "company":  "DataCo",
+    "skills":  [
+                   "Python",
+                   "Pandas",
+                   "SQL",
+                   "Data Analysis",
+                   "NumPy",
+                   "Scikit-learn",
+                   "Statistics",
+                   "Git"
+               ]
+}
