@@ -18,11 +18,13 @@ from app.services.scoring.quiz_engine import process_quiz_submission
 
 router = APIRouter()
 
-# Working models confirmed via live test (others are overloaded / return empty content)
+# Working models with fallback chain
 MODELS = [
     "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
     "gemini-flash-lite-latest",
+    "gemini-3.5-flash",
+    "gemini-3.6-flash",
+    "gemini-flash-latest",
 ]
 
 GEMINI_REST = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"

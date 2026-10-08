@@ -182,7 +182,8 @@ async def analyze_job_fit(
     Analyze candidate evidence against a specified Job Description.
     """
     engine = JobFitEngine()
-    profile_id = req.profile_id or "demo-candidate-82"
+    # Use the provided profile_id directly; fall back to demo only if truly unset
+    profile_id = req.profile_id if req.profile_id and req.profile_id != "null" else "demo-candidate-82"
 
     profile = await session.get(Profile, profile_id)
     
@@ -199,6 +200,7 @@ async def analyze_job_fit(
     ev_stmt = select(Evidence).where(Evidence.profile_id == profile_id)
     ev_res = await session.execute(ev_stmt)
     evidence_items = list(ev_res.scalars().all())
+    # Only use demo fallback evidence for the demo candidate
     evidence_items = _get_evidence_fallback(profile_id, evidence_items)
     evidence_items = await _add_leetcode_evidence(session, profile_id, evidence_items)
 
@@ -210,7 +212,7 @@ async def analyze_job_fit(
         company=req.company,
     )
 
-    # Evaluate
+    # Evaluate — profile may be None for non-existent profiles; engine handles this safely
     result = engine.evaluate_job_fit(
         jd_data=jd_data,
         profile=profile,
@@ -219,6 +221,7 @@ async def analyze_job_fit(
     )
 
     return result
+
 
 
 # ── POST /job-fit/whatif ──────────────────────────────────────────────────────

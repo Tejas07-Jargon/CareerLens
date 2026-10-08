@@ -35,10 +35,10 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
   const [analysisTriggered, setAnalysisTriggered] = useState<boolean>(false);
   const [githubToken, setGithubToken] = useState<string>("");
 
-  const isRealProfile = Boolean(profileId && profileId !== "demo-candidate-82");
+  const isRealProfile = Boolean(profileId);
 
   const loadData = useCallback(async (showLoading = true) => {
-    if (!profileId || profileId === "demo-candidate-82") {
+    if (!profileId) {
       setData(null);
       if (showLoading) setLoading(false);
       return;
@@ -74,17 +74,19 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
     }
   }, [profileId, isRealProfile]);
 
-  // Auto-trigger analysis if repos are discovered but analysis hasn't run.
-  // This handles the case where the page is refreshed and repos exist in 'discovered' state.
+  // Auto-trigger analysis if repos are discovered but analysis hasn't run, OR if it's completely empty.
+  // This handles the case where the page is refreshed and repos exist in 'discovered' state,
+  // or when an HR searches a new profile and repos haven't been discovered yet.
   useEffect(() => {
     if (!isRealProfile || !data || analysisTriggered || refreshing) return;
 
     const hasDiscoveredNotAnalysed = data.repositories.some((r) => r.status === "discovered");
     const hasNoTerminal = data.repositories.every((r) => !TERMINAL_STATUSES.has(r.status));
+    const isCompletelyEmpty = data.repositories.length === 0 && Boolean(data.github_username);
 
-    if (hasDiscoveredNotAnalysed && hasNoTerminal && data.repositories.length > 0) {
-      // Repos are staged but analysis was never queued – trigger it
-      console.info("[OwnershipPanel] Auto-triggering analysis for discovered repos");
+    if (isCompletelyEmpty || (hasDiscoveredNotAnalysed && hasNoTerminal && data.repositories.length > 0)) {
+      // Repos are staged but analysis was never queued (or not discovered yet) – trigger it
+      console.info("[OwnershipPanel] Auto-triggering analysis");
       setAnalysisTriggered(true);
       setRefreshing(true);
       refreshOwnership(profileId!, githubToken).then(() => {
@@ -94,7 +96,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
         setRefreshing(false);
       });
     }
-  }, [data, isRealProfile, analysisTriggered, refreshing, profileId]);
+  }, [data, isRealProfile, analysisTriggered, refreshing, profileId, githubToken, loadData]);
 
   // Polling: while refreshing or while any repository is being analyzed
   const isAnyRepoProcessing = Boolean(
@@ -114,7 +116,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
   }, [isRealProfile, isAnyRepoProcessing, data, loadData]);
 
   async function handleRefresh() {
-    if (!profileId || profileId === "demo-candidate-82" || refreshing) return;
+    if (!profileId || refreshing) return;
     setRefreshing(true);
     setAnalysisTriggered(true);
     try {

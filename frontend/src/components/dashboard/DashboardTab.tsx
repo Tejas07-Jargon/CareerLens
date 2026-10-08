@@ -186,7 +186,7 @@ export default function DashboardTab({
   // Fetch interconnected dashboard data (Quiz stats, etc)
   useEffect(() => {
     let isMounted = true;
-    if (!profileId || profileId === "demo-candidate-82") return;
+    if (!profileId) return;
     
     async function loadDashboard() {
       try {
@@ -304,20 +304,54 @@ export default function DashboardTab({
       if (unverifiedSkills.length > 0) {
         gapList.push(`Limited evidence found for ${unverifiedSkills.slice(0, 2).join(", ")}`);
       }
+    } else if (persona === "placement") {
+      // HR / Placement Cell placeholder
+      strList.push(`Search for a candidate by GitHub username to view verified proof-of-work`);
+      strList.push("Use Cohort Batch view to compare multiple candidates side by side");
+      strList.push("Job Fit scores are evidence-backed — no keyword matching");
+      gapList.push("No candidate loaded — search a GitHub username above");
+      gapList.push("Evidence depth varies by GitHub activity and resume claims");
     } else {
-      strList.push("High code verification for backend microservices: Python & FastAPI");
-      strList.push("46 weeks of active GitHub commit cadence");
-      strList.push("Automated unit tests and DB migration scripts detected");
-      gapList.push("Containerization lacks multi-stage production build proof");
-      gapList.push("Cloud architecture unobserved in public repositories");
-      gapList.push("Architectural RFC & system design benchmarks missing");
+      // Student: role-specific placeholders
+      const roleHints: Record<string, { strengths: string[]; gaps: string[] }> = {
+        "ai engineer": {
+          strengths: ["Python & ML framework usage detectable from GitHub repos", "Model training scripts and notebooks indicate hands-on AI depth"],
+          gaps: ["No deployed model API or inference endpoint detected", "Limited MLOps or model monitoring evidence"],
+        },
+        "frontend developer": {
+          strengths: ["JavaScript/TypeScript component usage visible in repositories", "UI project commits indicate frontend development activity"],
+          gaps: ["Accessibility (a11y) and performance testing artifacts missing", "No deployed live project URL detected"],
+        },
+        "data scientist": {
+          strengths: ["Jupyter notebooks and data analysis scripts show analytical depth", "Statistical modeling evidence detectable from project structure"],
+          gaps: ["Feature engineering and ML pipeline documentation missing", "No published dataset or public competition entry found"],
+        },
+        "devops engineer": {
+          strengths: ["CI/CD configuration files detected in repositories", "Infrastructure-as-code patterns visible in project structure"],
+          gaps: ["Kubernetes orchestration evidence not yet verified", "Cloud provider deployment proof missing"],
+        },
+      };
+      const roleKey = selectedRole.toLowerCase();
+      const hints = Object.entries(roleHints).find(([k]) => roleKey.includes(k))?.[1];
+      if (hints) {
+        strList.push(...hints.strengths);
+        gapList.push(...hints.gaps);
+      } else {
+        // Generic Software Engineer / default
+        strList.push(`Submit your profile to see verified ${selectedRole} evidence`);
+        strList.push("GitHub commit cadence and project depth will be auto-detected");
+        strList.push("Resume claims are cross-referenced against AST-scanned code");
+        gapList.push(`No proof-of-work data yet — analyse your profile to populate this`);
+        gapList.push(`${selectedRole} skill gaps will appear after analysis`);
+      }
     }
 
     return {
       strengths: strList.slice(0, 3),
       scoreGaps: gapList.slice(0, 3),
     };
-  }, [activeReport]);
+  }, [activeReport, selectedRole, persona]);
+
 
   // Skill landscape: Strong, Moderate, Missing
   const skillLandscape = useMemo(() => {
@@ -1036,7 +1070,7 @@ export default function DashboardTab({
 
           <div style={{ paddingTop: 10, borderTop: "1px dashed var(--border)" }}>
             <button
-              onClick={() => onNavigateTab("analyse")}
+              onClick={() => onNavigateTab("jobfit")}
               className="btn btn-ghost"
               style={{ width: "100%", fontSize: "0.76rem", padding: "5px 10px", fontWeight: 800 }}
             >
@@ -1597,7 +1631,7 @@ export default function DashboardTab({
             </div>
 
             <p style={{ fontSize: "0.76rem", color: "var(--text-mid)", fontWeight: 600, marginBottom: 12 }}>
-              Simulate the mathematical impact of verifying your #1 gap (Docker) before writing code.
+              Simulate the mathematical impact of verifying your #1 gap ({priorityGaps[0]?.skill || "top skill gap"}) before writing code.
             </p>
 
             <div
@@ -1641,7 +1675,7 @@ export default function DashboardTab({
             </button>
             <button
               id="dashboard-open-whatif-full"
-              onClick={() => onNavigateTab("analyse")}
+              onClick={() => onNavigateTab("jobfit")}
               className="btn btn-purple"
               style={{ flex: 1, fontSize: "0.76rem", padding: "6px 8px", fontWeight: 800 }}
             >

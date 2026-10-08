@@ -126,7 +126,7 @@ export default function ResumeBuilderTab({
     async function loadResume() {
       setIsLoading(true);
       try {
-        if (profileId && profileId !== "demo-candidate-82") {
+        if (profileId) {
           const list = await listProfileResumes(profileId);
           setVersionList(list);
           if (list && list.length > 0) {
@@ -137,8 +137,8 @@ export default function ResumeBuilderTab({
             setVersionList([created]);
           }
         } else {
-          // Demo benchmark candidate
-          const sample = await getSampleResume(report?.role_fits?.[0]?.role || "AI Engineer");
+          // No profile at all, fallback to benchmark
+          const sample = await getSampleResume("Software Engineer");
           setResumeData(sample);
           setVersionList([sample]);
         }

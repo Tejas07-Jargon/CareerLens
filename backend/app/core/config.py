@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     # ── LLM ──────────────────────────────────────────────────────────────────
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
-    LLM_FAST_MODEL: str = "gemini-1.5-flash"
-    LLM_STRONG_MODEL: str = "gemini-1.5-pro"
+    LLM_FAST_MODEL: str = "gemini-3.5-flash"
+    LLM_STRONG_MODEL: str = "gemini-2.5-pro"
 
     # ── Embedding ────────────────────────────────────────────────────────────
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
