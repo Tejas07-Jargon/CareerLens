@@ -181,7 +181,7 @@ async def _call_gemini(api_key: str, prompt: str) -> str:
 async def generate_quiz(req: QuizRequest):
     from app.core.config import settings
 
-    api_key = settings.GEMINI_API_KEY
+    api_key = settings.get_gemini_api_key()
     if not api_key:
         raise HTTPException(status_code=503, detail="GEMINI_API_KEY not set in .env")
 

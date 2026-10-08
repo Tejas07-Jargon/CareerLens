@@ -229,7 +229,8 @@ class SyncService:
                                 solved_obj.recent_submission_time = sub_time
                                 
                     sub_time = datetime.fromtimestamp(int(sub.get("timestamp", 0)))
-                    sub_id = f"{q_id}_{int(sub.get('timestamp', 0))}"
+                    sub_id_str = f"{q_id}_{int(sub.get('timestamp', 0))}"
+                    sub_id = sum(ord(c) * (i+1) * 31 for i, c in enumerate(sub_id_str)) % 2147483647
                     exist_sub = await self.db.execute(
                         select(LeetCodeSubmission).where(LeetCodeSubmission.submission_id == sub_id)
                     )
@@ -240,9 +241,7 @@ class SyncService:
                             question_id=q_id,
                             lang=sub.get("lang", ""),
                             timestamp=sub_time,
-                            status_display=sub.get("statusDisplay", ""),
-                            runtime="0 ms",
-                            memory="0 MB"
+                            status_display=sub.get("statusDisplay", "")
                         )
                         self.db.add(sub_obj)
                         

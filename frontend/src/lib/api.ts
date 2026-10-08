@@ -90,7 +90,7 @@ export async function getDashboardData(profileId: string): Promise<{
   weakest_skills: { name: string; score: number; trend: string }[];
   recommendations: { title: string; description: string; type: string }[];
 }> {
-  const res = await fetch(`${BASE}/profiles/${profileId}/dashboard`);
+  const res = await fetch(`${BASE}/profiles/${profileId}/dashboard`, { cache: 'no-store', headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } });
   if (!res.ok) throw new Error("Dashboard data not available");
   return res.json();
 }

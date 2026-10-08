@@ -1521,14 +1521,25 @@ export default function DashboardTab({
                 </div>
 
                 <div style={{ fontSize: "0.76rem", color: "var(--text-mid)", fontWeight: 600 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                    <span>Python Backend APIs</span>
-                    <strong style={{ color: "var(--green)" }}>92% (Strong)</strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span>Docker &amp; Caching</span>
-                    <strong style={{ color: "var(--orange)" }}>58% (Needs Work)</strong>
-                  </div>
+                  {dashboardMeta?.strongest_skills?.length > 0 ? (
+                    dashboardMeta.strongest_skills.slice(0, 2).map((skill: any, idx: number) => (
+                      <div key={idx} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                        <span>{skill.name}</span>
+                        <strong style={{ color: "var(--green)" }}>{skill.score}% (Strong)</strong>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                      <span>General Software Engineering</span>
+                      <strong style={{ color: "var(--green)" }}>{Math.round(quizAvg)}% (Strong)</strong>
+                    </div>
+                  )}
+                  {dashboardMeta?.weakest_skills?.length > 0 && dashboardMeta.weakest_skills.slice(0, 1).map((skill: any, idx: number) => (
+                    <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>{skill.name}</span>
+                      <strong style={{ color: "var(--orange)" }}>{skill.score}% (Needs Work)</strong>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
