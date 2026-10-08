@@ -1,5 +1,5 @@
 """
-Unit tests for CareerLens Evidence-Aware Resume Builder.
+Unit tests for Kareer Kranti Evidence-Aware Resume Builder.
 """
 
 import pytest
@@ -67,7 +67,7 @@ def test_unverified_claim_integrity_check():
     """
     CRITICAL TEST:
     Given: Resume claims Docker/Kubernetes, but NO evidence exists for Kubernetes.
-    CareerLens must NOT mark Kubernetes as verified.
+    Kareer Kranti must NOT mark Kubernetes as verified.
     """
     validator = ATSValidator()
     
@@ -157,14 +157,14 @@ def test_pdf_export_deterministic():
         "header": {
             "full_name": "Tejas Jargon",
             "target_title": "AI Engineer",
-            "email": "tejas@careerlens.io",
+            "email": "tejas@kareerkranti.io",
             "github": "https://github.com/tejas-ai",
         },
         "summary": "Proven AI Engineer with verified Python and PyTorch project architectures.",
         "skills": [{"name": "Python"}, {"name": "SQL"}],
         "projects": [
             {
-                "name": "CareerLens Engine",
+                "name": "Kareer Kranti Engine",
                 "technologies": ["Python", "FastAPI"],
                 "bullets": ["Built deterministic static evidence analysis engine."],
             }

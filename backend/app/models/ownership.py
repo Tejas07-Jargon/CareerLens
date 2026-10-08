@@ -1,5 +1,5 @@
 """
-SQLAlchemy Models for CareerLens Ownership Map.
+SQLAlchemy Models for Kareer Kranti Ownership Map.
 
 Entities:
 1. RepoAttribution: Persistent repository ownership snapshot per profile, repo, and HEAD SHA.

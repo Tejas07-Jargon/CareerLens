@@ -77,7 +77,7 @@ export const DEMO_EVIDENCE_REPORT: EvidenceReport = {
       },
       sources: [
         { source: "Resume", description: "Candidate claims 'React — Frontend'", contribution: 10, status: "verified", details: "Included in projects and coursework" },
-        { source: "GitHub", description: "3 React/Next.js repositories with 84 commits", contribution: 35, status: "verified", details: "dashboard-ui, careerlens-frontend" },
+        { source: "GitHub", description: "3 React/Next.js repositories with 84 commits", contribution: 35, status: "verified", details: "dashboard-ui, kareerkranti-frontend" },
         { source: "Projects", description: "Interactive dashboard with Recharts & TypeScript", contribution: 30, status: "verified", details: "Component modularity and clean state handling" },
         { source: "Portfolio", description: "Portfolio evidence unavailable", contribution: 0, status: "unavailable", details: "No live portfolio link" },
       ],

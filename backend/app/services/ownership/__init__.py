@@ -1,5 +1,5 @@
 """
-CareerLens Ownership Map Module (Production Engine).
+Kareer Kranti Ownership Map Module (Production Engine).
 """
 
 from app.services.ownership.git_blame_runner import GitBlameRunner

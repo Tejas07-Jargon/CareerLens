@@ -41,7 +41,7 @@ export default function QualityScorePanel({ score, breakdown }: QualityScorePane
             INTELLIGENCE AUDIT
           </span>
           <h3 style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
-            <Sparkles size={16} color="var(--blue)" /> CareerLens Resume Quality
+            <Sparkles size={16} color="var(--blue)" /> Kareer Kranti Resume Quality
           </h3>
         </div>
 

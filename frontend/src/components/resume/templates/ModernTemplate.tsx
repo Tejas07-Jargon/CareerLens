@@ -30,7 +30,7 @@ export default function ModernTemplate({ content, onSkillClick, onProjectClick }
       {/* Top Accent Header Bar */}
       <div style={{ borderLeft: "4px solid #2563EB", paddingLeft: 16, marginBottom: 20 }}>
         <h1 style={{ fontSize: "1.85rem", fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: 0 }}>
-          {header.full_name || "CareerLens Candidate"}
+          {header.full_name || "Kareer Kranti Candidate"}
         </h1>
         <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#2563EB", marginTop: 2, letterSpacing: "0.01em" }}>
           {header.target_title || "Software Engineer"}

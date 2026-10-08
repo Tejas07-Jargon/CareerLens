@@ -1,5 +1,5 @@
 """
-CareerLens – FastAPI application entry point.
+Kareer Kranti – FastAPI application entry point.
 
 Everything the system says (score, gap, roadmap, dashboard) is a pure function
 of Evidence records. The LLM never decides anything; it only explains.
@@ -23,13 +23,13 @@ log = structlog.get_logger(__name__)
 async def lifespan(app: FastAPI):
     configure_logging()
     await init_db()
-    log.info("CareerLens backend started", env=settings.APP_ENV)
+    log.info("Kareer Kranti backend started", env=settings.APP_ENV)
     yield
-    log.info("CareerLens backend shutting down")
+    log.info("Kareer Kranti backend shutting down")
 
 
 app = FastAPI(
-    title="CareerLens API",
+    title="Kareer Kranti API",
     description=(
         "Evidence-based employability analysis. Every score is a pure function "
         "of Evidence records; every sentence cites at least one."

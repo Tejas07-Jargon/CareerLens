@@ -459,7 +459,7 @@ class EvidenceConfidenceEngine:
             if not has_github:
                 ai_explanation = (
                     f"Evidence for {skill} is currently unverified because your GitHub account has not been connected. "
-                    f"Connecting external repositories will allow CareerLens to scan and verify your commits."
+                    f"Connecting external repositories will allow Kareer Kranti to scan and verify your commits."
                 )
             else:
                 ai_explanation = (

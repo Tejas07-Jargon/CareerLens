@@ -27,7 +27,7 @@ export default function AISuggestionCard({ suggestion, onApply, onDismiss }: AIS
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Sparkles size={16} color="var(--purple)" />
           <span style={{ fontWeight: 900, fontSize: "0.85rem", color: "var(--text)" }}>
-            CareerLens Evidence Suggestion
+            Kareer Kranti Evidence Suggestion
           </span>
         </div>
         <span

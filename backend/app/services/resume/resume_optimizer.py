@@ -3,7 +3,7 @@ Resume Optimizer Service.
 
 Evaluates resume content against target role requirements or custom Job Descriptions.
 Computes alignment metrics, identifies JD gaps, connects gaps to roadmap milestones,
-and calculates the CareerLens Resume Quality Score.
+and calculates the Kareer Kranti Resume Quality Score.
 """
 
 from typing import Any, Dict, List, Optional, Set
@@ -223,7 +223,7 @@ class ResumeOptimizer:
                     "evidence_level": "MISSING",
                     "confidence": 0,
                     "recommendation": f"Target role strongly prioritizes {norm_req}.",
-                    "action": f"Follow CareerLens {norm_req} roadmap milestone to gain proof of work.",
+                    "action": f"Follow Kareer Kranti {norm_req} roadmap milestone to gain proof of work.",
                     "roadmap_ref": norm_req.lower().replace(" ", "-"),
                 })
 
@@ -253,7 +253,7 @@ class ResumeOptimizer:
             0.15 * evidence_backed_pct
         )
 
-        # 4. CareerLens Resume Quality Score
+        # 4. Kareer Kranti Resume Quality Score
         # ATS Compatibility (Heading presence, standard sections, contact info)
         header = resume_content.get("header", {})
         ats_score = 70

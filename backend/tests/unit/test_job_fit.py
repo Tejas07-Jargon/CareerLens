@@ -1,5 +1,5 @@
 """
-Unit tests for CareerLens Job Fit & Job Match Intelligence Engine.
+Unit tests for Kareer Kranti Job Fit & Job Match Intelligence Engine.
 """
 
 import pytest

@@ -278,7 +278,7 @@ export default function ResumeBuilderTab({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${resumeData.content.header.full_name || "CareerLens"}_Resume.pdf`;
+      a.download = `${resumeData.content.header.full_name || "Kareer Kranti"}_Resume.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -339,7 +339,7 @@ export default function ResumeBuilderTab({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <h2 style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--text)", margin: 0 }}>
-                {resumeData.title || "CareerLens Resume"}
+                {resumeData.title || "Kareer Kranti Resume"}
               </h2>
               <span className="badge" style={{ background: "var(--green-light)", color: "var(--green)", borderColor: "var(--green)", fontSize: "0.70rem" }}>
                 ✓ Evidence-Aware
@@ -683,7 +683,7 @@ export default function ResumeBuilderTab({
                         gap: 4,
                       }}
                     >
-                      <Sparkles size={12} /> {aiLoading ? "Generating..." : "Improve with CareerLens"}
+                      <Sparkles size={12} /> {aiLoading ? "Generating..." : "Improve with Kareer Kranti"}
                     </button>
                   </div>
 
@@ -919,7 +919,7 @@ export default function ResumeBuilderTab({
                                 disabled={aiLoading}
                                 className="btn btn-ghost"
                                 style={{ padding: "6px 8px", fontSize: "0.72rem", color: "var(--purple)" }}
-                                title="Improve this bullet with CareerLens"
+                                title="Improve this bullet with Kareer Kranti"
                               >
                                 <Sparkles size={13} />
                               </button>

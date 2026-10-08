@@ -1,5 +1,5 @@
 /**
- * TypeScript types for CareerLens Evidence-Aware AI Resume Builder.
+ * TypeScript types for Kareer Kranti Evidence-Aware AI Resume Builder.
  */
 
 export type EvidenceStatusLevel = "VERIFIED" | "STRONG" | "MODERATE" | "WEAK" | "UNVERIFIED";

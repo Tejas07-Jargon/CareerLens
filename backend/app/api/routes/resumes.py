@@ -468,7 +468,7 @@ async def export_pdf_direct(req: PDFExportRequest):
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=CareerLens_Resume.pdf"},
+        headers={"Content-Disposition": "attachment; filename=Kareer_Kranti_Resume.pdf"},
     )
 
 

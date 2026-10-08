@@ -47,7 +47,7 @@ def get_github_headers(token: Optional[str] = None) -> dict:
     """Get HTTP headers for GitHub REST/GraphQL API requests."""
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "CareerLens-OwnershipEngine/1.0",
+        "User-Agent": "KareerKranti-OwnershipEngine/1.0",
     }
     t = (token or settings.GITHUB_TOKEN or "").strip()
     if is_github_token_valid(t):

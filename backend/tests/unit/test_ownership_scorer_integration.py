@@ -1,5 +1,5 @@
 """
-Unit Tests for Ownership Map & CareerLens Scorer Integration.
+Unit Tests for Ownership Map & Kareer Kranti Scorer Integration.
 
 Verifies:
 1. Evidence without ownership behaves exactly as before (neutral factor = 1.0).

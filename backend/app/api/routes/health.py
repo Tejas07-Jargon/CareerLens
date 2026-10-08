@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/health")
 async def health():
-    return {"status": "ok", "service": "CareerLens API"}
+    return {"status": "ok", "service": "Kareer Kranti API"}
 
 
 @router.get("/health/github")

@@ -423,7 +423,7 @@ def test_phase_12_skill_mapping_accuracy():
     """
     service = OwnershipService()
 
-    # 1. Generic Python file in CareerLens
+    # 1. Generic Python file in Kareer Kranti
     skills_generic = service.map_file_to_skills("backend/app/core/config.py")
     assert "Python" in skills_generic
     assert "Django" not in skills_generic

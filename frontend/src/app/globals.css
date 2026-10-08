@@ -1,6 +1,20 @@
-/* CareerLens – Playful White Doodle Design System */
+/* Kareer Kranti – Playful White Doodle Design System */
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+@font-face {
+  font-family: 'Harlow Solid Italic';
+  src: local('Harlow Solid Italic'), local('Harlow Solid'), local('HarlowSolidItalic'),
+       url('/fonts/harlow-solid-italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+.kareer-kranti-harlow {
+  font-family: 'Harlow Solid Italic', 'Harlow Solid', cursive, sans-serif !important;
+  font-style: italic;
+}
 
 :root {
   /* ── Base ────────────────────────────────────────────── */

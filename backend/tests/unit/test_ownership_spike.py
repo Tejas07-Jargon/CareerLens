@@ -8,7 +8,7 @@ Covers:
 4. Author classification (student, bot, other, unknown)
 5. Controlled Multi-Author Repository Test (Gate G1)
 6. Whitespace change invariance test (-w)
-7. Skill mapping with CareerLens vocabulary
+7. Skill mapping with Kareer Kranti vocabulary
 8. Share bounds [0.0, 1.0] and order-independent aggregation
 """
 

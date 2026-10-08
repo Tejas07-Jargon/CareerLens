@@ -10,7 +10,7 @@ Two validity checks:
 
   2. Rank correlation
      Given human-labelled profiles (ground-truth seniority 1–5),
-     compute Spearman's rank correlation with CareerLens scores.
+     compute Spearman's rank correlation with Kareer Kranti scores.
      Target: rho >= 0.65.
 """
 
@@ -143,7 +143,7 @@ def run_claim_injection_test(n_profiles: int = 30) -> dict:
 def run_rank_correlation_test() -> dict:
     """
     Loads human-labelled profiles and computes Spearman's rho
-    between CareerLens score_mid and human seniority labels.
+    between Kareer Kranti score_mid and human seniority labels.
     """
     labelled_path = FIXTURES_PATH / "labelled_profiles.json"
     if not labelled_path.exists():

@@ -86,7 +86,7 @@ export default function EvidenceDetailModal({
             </div>
             <div>
               <div style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-soft)", fontWeight: 800 }}>
-                CAREERLENS PROVENANCE
+                KAREER KRANTI PROVENANCE
               </div>
               <h3 style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--text)", margin: 0 }}>
                 {title}
@@ -221,7 +221,7 @@ export default function EvidenceDetailModal({
               lineHeight: 1.45,
             }}
           >
-            <strong>CareerLens Principle:</strong> This evidence score is computed directly from verifiable files and commit telemetry. We never synthesize unproven claims.
+            <strong>Kareer Kranti Principle:</strong> This evidence score is computed directly from verifiable files and commit telemetry. We never synthesize unproven claims.
           </div>
         </div>
 

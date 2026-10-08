@@ -2,7 +2,7 @@
 Deterministic Ownership Factor Calculation.
 
 Pure function computing the ownership factor for evidence strength adjustments.
-Follows the CareerLens Ownership Map specification:
+Follows the Kareer Kranti Ownership Map specification:
 
 Rules:
 1. 0 surviving meaningful lines (or student has 0 lines):

@@ -242,7 +242,7 @@ export default function LeetCodeAnalyzer({ profileId }: { profileId: string }) {
           <AlertCircle size={48} color={COLORS.purple} style={{ marginBottom: 20, opacity: 0.8 }} />
           <h3 style={{ margin: "0 0 12px 0", fontSize: "1.5rem" }}>No LeetCode Data Found</h3>
           <p style={{ color: COLORS.textMid, maxWidth: 500, margin: "0 auto 32px auto", fontSize: "1rem", lineHeight: 1.5 }}>
-            Enter your LeetCode username below. CareerLens will securely fetch your public profile statistics and submissions to generate your Problem-Solving Intelligence report.
+            Enter your LeetCode username below. Kareer Kranti will securely fetch your public profile statistics and submissions to generate your Problem-Solving Intelligence report.
           </p>
           
           <div style={{ maxWidth: 450, margin: "0 auto", textAlign: "left", background: COLORS.bgSoft, padding: 32, borderRadius: 16, border: `1px solid ${COLORS.border}` }}>

@@ -205,7 +205,7 @@ export default function CareerLensLoading({
       className={`careerlens-loading-root ${isFadingOut ? "fade-out" : ""}`}
       role="dialog"
       aria-modal="true"
-      aria-label="CareerLens loading introduction"
+      aria-label="Kareer Kranti loading introduction"
     >
       <div className="intro intro--playing">
         <div className="intro-glow" />
@@ -225,8 +225,8 @@ export default function CareerLensLoading({
           <div className="intro-wordmark">
             <LensMark />
             <span>
-              <span>Career</span>
-              <span className="wordmark-accent">Lens</span>
+              <span>Kareer </span>
+              <span className="wordmark-accent">Kranti</span>
             </span>
           </div>
           <p>See beyond the resume.</p>

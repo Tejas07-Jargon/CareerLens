@@ -1,4 +1,4 @@
-"""Quick diagnostic query for CareerLens database."""
+"""Quick diagnostic query for Kareer Kranti database."""
 import sqlite3
 
 conn = sqlite3.connect("careerlens_demo.db")

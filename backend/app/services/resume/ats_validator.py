@@ -126,7 +126,7 @@ class ATSValidator:
                 "detail": "Break long bullets over 35 words into punchy, outcome-oriented statements.",
             })
 
-        # 5. Evidence-Aware Integrity Check (Verify claims against CareerLens Evidence)
+        # 5. Evidence-Aware Integrity Check (Verify claims against Kareer Kranti Evidence)
         skills_list = resume_content.get("skills", [])
         for s in skills_list:
             s_name = s.get("name", "")
@@ -138,7 +138,7 @@ class ATSValidator:
                 evidence_alerts.append({
                     "skill": s_name,
                     "title": f"Evidence Check: {s_name}",
-                    "message": f"Claim for '{s_name}' is not currently supported by available CareerLens evidence.",
+                    "message": f"Claim for '{s_name}' is not currently supported by available Kareer Kranti evidence.",
                     "observed": "No repository commits, tests, or code files detected for this skill.",
                     "severity": "WARN",
                 })

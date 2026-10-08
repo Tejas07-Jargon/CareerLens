@@ -65,7 +65,7 @@ export default function RoadmapTab({ profileId, report, onNavigateToAnalyse }: P
   // Load completed milestone checks from localStorage
   useEffect(() => {
     try {
-      const storageKey = `careerlens_roadmap_checked_${profileId || "anon"}`;
+      const storageKey = `kareerkranti_roadmap_checked_${profileId || "anon"}`;
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         setCompletedMap(JSON.parse(saved));
@@ -110,7 +110,7 @@ export default function RoadmapTab({ profileId, report, onNavigateToAnalyse }: P
     setCompletedMap((prev) => {
       const next = { ...prev, [id]: !prev[id] };
       try {
-        const storageKey = `careerlens_roadmap_checked_${profileId || "anon"}`;
+        const storageKey = `kareerkranti_roadmap_checked_${profileId || "anon"}`;
         localStorage.setItem(storageKey, JSON.stringify(next));
       } catch {
         // ignore

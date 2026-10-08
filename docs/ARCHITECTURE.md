@@ -1,4 +1,4 @@
-# CareerLens — Architecture Reference
+# Kareer Kranti — Architecture Reference
 
 ## System overview
 

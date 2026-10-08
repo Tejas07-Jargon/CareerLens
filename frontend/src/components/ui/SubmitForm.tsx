@@ -174,7 +174,7 @@ export default function SubmitForm({ defaultName, onProfileCreated, onReportRead
               <input id="agreed_to_analysis" name="agreed_to_analysis" type="checkbox" required value="true"
                 style={{ marginTop: 3, accentColor: "var(--green)", width: 18, height: 18, cursor: "pointer" }} />
               <span style={{ fontSize: "0.88rem", color: "var(--text-mid)", lineHeight: 1.6, fontWeight: 600 }}>
-                I consent to CareerLens extracting skill evidence from my submitted repos and resume.
+                I consent to Kareer Kranti extracting skill evidence from my submitted repos and resume.
                 My demographic attributes are <strong style={{ color: "var(--text)" }}>never</strong> ingested or scored.
               </span>
             </label>

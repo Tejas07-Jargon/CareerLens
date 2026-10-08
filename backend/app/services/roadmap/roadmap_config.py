@@ -1,5 +1,5 @@
 """
-CareerLens Roadmap Configuration & Reference Layer.
+Kareer Kranti Roadmap Configuration & Reference Layer.
 
 Uses roadmap.sh as the external roadmap reference layer.
 Contains maintainable static mappings without dynamic scraping.

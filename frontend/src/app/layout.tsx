@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CareerLens 🔍 — Know how job-ready you are",
+  title: "Kareer Kranti",
   description:
     "Evidence-based employability analysis. Every skill claim is verified against real proof of work. Get your explainable Job Readiness Score, skill gap report, and personalised roadmap.",
   keywords: ["employability", "career readiness", "GitHub analysis", "skill gap", "placement"],

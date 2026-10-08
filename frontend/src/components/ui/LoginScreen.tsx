@@ -46,23 +46,27 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <div
           style={{
-            width: 48,
-            height: 48,
-            background: "var(--blue)",
-            borderRadius: "12px 15px 11px 14px",
-            border: "3px solid var(--text)",
+            width: 72,
+            height: 72,
+            borderRadius: "18px",
+            border: "2.5px solid var(--text)",
             boxShadow: "3px 3px 0 var(--text)",
+            overflow: "hidden",
+            margin: "0 auto 16px",
+            background: "#ffffff",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "white",
-            margin: "0 auto 16px",
           }}
         >
-          <ShieldCheck size={28} strokeWidth={2.5} />
+          <img
+            src="/logo.png"
+            alt="Kareer Kranti Logo"
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          />
         </div>
-        <h1 style={{ fontWeight: 900, fontSize: "2.5rem", letterSpacing: "-0.02em", marginBottom: "8px" }}>
-          Career<span className="gradient-text">Lens</span>
+        <h1 className="kareer-kranti-harlow" style={{ fontWeight: 900, fontSize: "2.75rem", letterSpacing: "0.01em", marginBottom: "8px" }}>
+          Kareer <span className="gradient-text">Kranti</span>
         </h1>
         <p style={{ color: "var(--text-mid)", fontSize: "1.1rem", fontWeight: 600 }}>
           Evidence-based employability & skill verification

@@ -44,14 +44,19 @@ function EvidencePageContent() {
           {/* Logo */}
           <Link href="/" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
-              width: 38, height: 38, background: "var(--blue)", borderRadius: "10px 13px 9px 12px",
-              border: "2.5px solid var(--text)", boxShadow: "2px 2px 0 var(--text)",
-              display: "flex", alignItems: "center", justifyContent: "center", color: "white"
+              width: 36, height: 36, borderRadius: "10px",
+              border: "2px solid var(--text)", boxShadow: "2px 2px 0 var(--text)",
+              overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
+              background: "#ffffff"
             }}>
-              <Search size={20} strokeWidth={2.5} />
+              <img
+                src="/logo.png"
+                alt="Kareer Kranti Logo"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
             </div>
             <span style={{ fontWeight: 900, fontSize: "1.25rem", letterSpacing: "-0.02em" }}>
-              Career<span className="gradient-text">Lens</span>
+              Kareer <span className="gradient-text">Kranti</span>
             </span>
           </Link>
 
@@ -119,7 +124,7 @@ function EvidencePageContent() {
       }}>
         <div className="container">
           <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text-mid)" }}>
-            CareerLens Evidence Verification Engine · DataQuest 3.0
+            Kareer Kranti Evidence Verification Engine · DataQuest 3.0
           </span>
         </div>
       </footer>

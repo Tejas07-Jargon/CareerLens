@@ -95,7 +95,7 @@ export function FileInput({
         }}
       />
 
-      {/* Styled visible CareerLens control */}
+      {/* Styled visible Kareer Kranti control */}
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}

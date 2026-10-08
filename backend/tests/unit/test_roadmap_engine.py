@@ -1,5 +1,5 @@
 """
-Unit tests for CareerLens Personalized Roadmap Engine & roadmap.sh Reference Layer.
+Unit tests for Kareer Kranti Personalized Roadmap Engine & roadmap.sh Reference Layer.
 """
 
 import pytest

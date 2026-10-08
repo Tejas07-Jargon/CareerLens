@@ -38,7 +38,7 @@ def _find_matching_attribution(
             continue
         if attr_name == target:
             return attr
-        # Also match if target is just the repo portion: "CareerLens" matches "owner/CareerLens"
+        # Also match if target is just the repo portion: "KareerKranti" matches "owner/KareerKranti"
         if "/" in attr_name and attr_name.split("/")[-1] == target:
             return attr
         if "/" in target and target.split("/")[-1] == attr_name:

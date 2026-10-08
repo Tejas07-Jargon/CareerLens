@@ -53,9 +53,9 @@ services:
   db:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: careerlens
-      POSTGRES_USER: careerlens
-      POSTGRES_PASSWORD: careerlens
+      POSTGRES_DB: kareerkranti
+      POSTGRES_USER: kareerkranti
+      POSTGRES_PASSWORD: kareerkranti
     ports:
       - "5432:5432"
     volumes:

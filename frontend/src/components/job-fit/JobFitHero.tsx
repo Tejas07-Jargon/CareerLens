@@ -105,7 +105,7 @@ export default function JobFitHero({ jobFit, onOpenJDSelector, onOptimizeResume 
         {/* Left: Big Job Fit Score Hero */}
         <div style={{ textAlign: "center", borderRight: "2px dashed var(--border)", paddingRight: 16 }}>
           <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-            CAREERLENS JOB FIT
+            KAREER KRANTI JOB FIT
           </div>
           <div style={{ fontSize: "3.2rem", fontWeight: 900, color: scoreColor, lineHeight: 1.05, letterSpacing: "-0.04em" }}>
             {overall_fit_score}<span style={{ fontSize: "1.4rem", color: "var(--text-soft)", fontWeight: 700 }}>%</span>

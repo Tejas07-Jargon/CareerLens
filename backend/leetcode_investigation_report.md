@@ -13,7 +13,7 @@
    The initial source of the `0` was an unverified JSON import (or early testing payload) that hardcoded `"acceptance_rate": 0`. 
    However, this `0.0` was never overwritten by the real data because of a bug in `sync_service.py` (`lc_profile.acceptance_rate = prof_data.get("acceptance_rate", 0.0)`). If a subsequent sync failed to retrieve the rate, it aggressively defaulted to `0.0` rather than `None`.
 6. **Actual acceptance-rate value**: **58.49%** (Calculated from 62 accepted submissions / 106 total submissions retrieved via GraphQL).
-   *(I have updated the sync pipeline to never blindly overwrite missing/null data with 0.0, and updated the UI label to correctly classify this as "CareerLens Submission Acceptance Rate" complete with a provenance tooltip).*
+   *(I have updated the sync pipeline to never blindly overwrite missing/null data with 0.0, and updated the UI label to correctly classify this as "Kareer Kranti Submission Acceptance Rate" complete with a provenance tooltip).*
 
 ## 7-11. Data Verification Against Actual GraphQL Source
 7. **Total solved verification**: 59 (Verified: Matches API `acSubmissionNum` All count)

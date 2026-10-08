@@ -1,5 +1,5 @@
 """
-End-to-End Integration Tests for CareerLens Pipeline.
+End-to-End Integration Tests for Kareer Kranti Pipeline.
 
 Verifies:
 1. Candidate ingestion
@@ -71,7 +71,7 @@ async def test_end_to_end_candidate_pipeline():
                 depth=0.88,
                 recency=0.95,
                 authenticity=0.95,
-                locator={"repo": "careerlens/core-api", "path": "backend/app/main.py", "commit_sha": "9a8b7c6d5e4f1234"},
+                locator={"repo": "kareerkranti/core-api", "path": "backend/app/main.py", "commit_sha": "9a8b7c6d5e4f1234"},
                 extractor_id="test_suite::github",
             ),
             Evidence(
@@ -83,7 +83,7 @@ async def test_end_to_end_candidate_pipeline():
                 depth=0.75,
                 recency=0.92,
                 authenticity=0.90,
-                locator={"repo": "careerlens/core-api", "path": "infra/docker-compose.yml", "commit_sha": "9a8b7c6d5e4f1234"},
+                locator={"repo": "kareerkranti/core-api", "path": "infra/docker-compose.yml", "commit_sha": "9a8b7c6d5e4f1234"},
                 extractor_id="test_suite::github",
             ),
             Evidence(
@@ -95,7 +95,7 @@ async def test_end_to_end_candidate_pipeline():
                 depth=0.70,
                 recency=0.90,
                 authenticity=0.90,
-                locator={"repo": "careerlens/core-api", "path": "backend/tests/unit/test_scorer.py", "commit_sha": "9a8b7c6d5e4f1234"},
+                locator={"repo": "kareerkranti/core-api", "path": "backend/tests/unit/test_scorer.py", "commit_sha": "9a8b7c6d5e4f1234"},
                 extractor_id="test_suite::github",
             ),
             Evidence(

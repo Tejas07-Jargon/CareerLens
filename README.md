@@ -1,8 +1,8 @@
-# CareerLens 🔍
+# Kareer Kranti 🔍
 **AI-Powered Employability & Career Readiness Analyzer**
 *DataQuest 3.0 Submission*
 
-CareerLens gives every student a clear, fair, and data-backed picture of their employability by verifying skills against real proof of work — not just keywords.
+Kareer Kranti gives every student a clear, fair, and data-backed picture of their employability by verifying skills against real proof of work — not just keywords.
 
 ---
 
@@ -65,4 +65,4 @@ npm run dev
 ---
 
 ## Team
-DataQuest 3.0 — CareerLens Team
+DataQuest 3.0 — Kareer Kranti Team

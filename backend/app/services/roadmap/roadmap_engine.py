@@ -1,5 +1,5 @@
 """
-CareerLens Personalized Roadmap Engine.
+Kareer Kranti Personalized Roadmap Engine.
 
 Interprets the student's actual evidence records against the roadmap.sh reference taxonomy.
 Answers: "Given what this student has actually demonstrated, what should they learn/build next

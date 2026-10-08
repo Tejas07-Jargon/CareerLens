@@ -58,9 +58,9 @@ class ResumeGenerator:
         
         # 1. Header Information (Only real fields)
         header = {
-            "full_name": profile.display_name or (profile.github_username.replace("-", " ").title() if profile.github_username else "CareerLens Candidate"),
+            "full_name": profile.display_name or (profile.github_username.replace("-", " ").title() if profile.github_username else "Kareer Kranti Candidate"),
             "target_title": role,
-            "email": f"{profile.github_username or 'candidate'}@careerlens.edu" if profile.github_username else "candidate@careerlens.edu",
+            "email": f"{profile.github_username or 'candidate'}@kareerkranti.io" if profile.github_username else "candidate@kareerkranti.io",
             "phone": "",
             "location": "Bengaluru, India",
             "github": f"https://github.com/{profile.github_username}" if profile.github_username else "",
@@ -284,10 +284,10 @@ class ResumeGenerator:
         certifications = [
             {
                 "id": "cert_1",
-                "name": "CareerLens Verified Proof-of-Work: Backend Engineering",
-                "issuer": "CareerLens Verification Authority",
+                "name": "Kareer Kranti Verified Proof-of-Work: Backend Engineering",
+                "issuer": "Kareer Kranti Verification Authority",
                 "date": "2024",
-                "credential_url": "https://careerlens.io/verify/demo-candidate-82",
+                "credential_url": "https://kareerkranti.io/verify/demo-candidate-82",
                 "is_verified": True,
             }
         ]

@@ -1,5 +1,5 @@
 """
-CareerLens Analysis Orchestrator.
+Kareer Kranti Analysis Orchestrator.
 
 Coordinates the end-to-end evidence-based evaluation pipeline:
 1. Ingest input sources (Resume, LinkedIn PDF, GitHub, Live Probe, Design Portfolio)

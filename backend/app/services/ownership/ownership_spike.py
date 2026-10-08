@@ -396,7 +396,7 @@ def blame_blob(
 
 def map_file_to_skills(path_str: str, content_sample: str = "") -> List[str]:
     """
-    Map file path and content to canonical skills using CareerLens vocabulary.
+    Map file path and content to canonical skills using Kareer Kranti vocabulary.
     """
     p = Path(path_str)
     filename = p.name.lower()

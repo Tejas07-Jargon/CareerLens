@@ -85,7 +85,7 @@ class LLMExplainer:
 
         evidence_context = self._build_evidence_context(components, claim_statuses)
         prompt = f"""
-You are CareerLens, an employability analysis system. Explain the score below.
+You are Kareer Kranti, an employability analysis system. Explain the score below.
 
 RULES (MANDATORY):
 - Every sentence must cite at least one evidence ID using the format [ev:uuid].

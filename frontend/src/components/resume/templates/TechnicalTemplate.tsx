@@ -105,7 +105,7 @@ export default function TechnicalTemplate({ content, onSkillClick, onProjectClic
               </div>
             )}
             <div style={{ fontSize: "0.68rem", color: "#047857", marginTop: 2, fontStyle: "italic" }}>
-              * Denotes CareerLens AST / Git-history verified proficiency
+              * Denotes Kareer Kranti AST / Git-history verified proficiency
             </div>
           </div>
         </div>

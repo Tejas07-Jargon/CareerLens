@@ -1,5 +1,5 @@
 /**
- * TypeScript types for CareerLens Job Fit & Job Match Intelligence.
+ * TypeScript types for Kareer Kranti Job Fit & Job Match Intelligence.
  */
 
 export type RequirementImportance = "CRITICAL" | "IMPORTANT" | "NICE_TO_HAVE";
