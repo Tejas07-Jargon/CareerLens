@@ -41,7 +41,12 @@ class SyncService:
         """
         provider = ImportProvider()
         
-        result = await self.db.execute(select(Profile).where(Profile.id == profile_id))
+        from sqlalchemy.orm import load_only
+        result = await self.db.execute(
+            select(Profile)
+            .options(load_only(Profile.id, Profile.display_name, Profile.leetcode_username, Profile.status))
+            .where(Profile.id == profile_id)
+        )
         user_profile = result.scalars().first()
         if not user_profile:
             raise ValueError(f"Profile {profile_id} not found")
@@ -102,7 +107,12 @@ class SyncService:
         """
         provider = ScrapeProvider()
         
-        result = await self.db.execute(select(Profile).where(Profile.id == profile_id))
+        from sqlalchemy.orm import load_only
+        result = await self.db.execute(
+            select(Profile)
+            .options(load_only(Profile.id, Profile.display_name, Profile.leetcode_username, Profile.status))
+            .where(Profile.id == profile_id)
+        )
         user_profile = result.scalars().first()
         if not user_profile:
             raise ValueError(f"Profile {profile_id} not found")

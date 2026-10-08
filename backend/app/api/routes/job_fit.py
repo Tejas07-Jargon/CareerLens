@@ -107,6 +107,60 @@ def _get_evidence_fallback(profile_id: str, evidence_items: List[Evidence]) -> L
             ),
         ]
     return evidence_items
+    
+from app.models.leetcode import LeetCodeProfile, LeetCodeSolvedProblem, LeetCodeProblemTopic, LeetCodeProblem
+
+async def _add_leetcode_evidence(session: AsyncSession, profile_id: str, evidence_items: List[Evidence]) -> List[Evidence]:
+    # Fetch LeetCode profile
+    lc_res = await session.execute(select(LeetCodeProfile).where(LeetCodeProfile.profile_id == profile_id))
+    lc_profile = lc_res.scalars().first()
+    if not lc_profile:
+        return evidence_items
+        
+    # Aggregate solved topics to generate evidence
+    query = (
+        select(LeetCodeProblemTopic.topic_name)
+        .join(LeetCodeProblem, LeetCodeProblem.question_id == LeetCodeProblemTopic.question_id)
+        .join(LeetCodeSolvedProblem, LeetCodeSolvedProblem.question_id == LeetCodeProblem.question_id)
+        .where(LeetCodeSolvedProblem.leetcode_profile_id == lc_profile.id)
+    )
+    topics_res = await session.execute(query)
+    topic_counts = {}
+    for t in topics_res.scalars().all():
+        topic_counts[t] = topic_counts.get(t, 0) + 1
+        
+    for topic, count in topic_counts.items():
+        if count >= 3:
+            ev = Evidence(
+                id=f"lc_{topic.replace(' ', '_').lower()}_{count}",
+                profile_id=profile_id,
+                source="leetcode",
+                evidence_type="competitive_programming",
+                skill_hints=[topic, "Data Structures & Algorithms"],
+                reliability=0.85,
+                depth=min(0.9, 0.4 + (count * 0.05)),
+                recency=0.9,
+                authenticity=0.9,
+                locator={"platform": "LeetCode", "solved_count": count},
+            )
+            evidence_items.append(ev)
+            
+    if lc_profile.total_solved >= 10:
+        ev_dsa = Evidence(
+            id="lc_dsa",
+            profile_id=profile_id,
+            source="leetcode",
+            evidence_type="competitive_programming",
+            skill_hints=["Data Structures & Algorithms", "Problem Solving"],
+            reliability=0.9,
+            depth=min(0.95, 0.5 + (lc_profile.medium_solved * 0.02 + lc_profile.hard_solved * 0.05)),
+            recency=0.9,
+            authenticity=0.9,
+            locator={"platform": "LeetCode", "total_solved": lc_profile.total_solved},
+        )
+        evidence_items.append(ev_dsa)
+        
+    return evidence_items
 
 
 # ── GET /job-fit/preset-jobs ──────────────────────────────────────────────────
@@ -146,6 +200,7 @@ async def analyze_job_fit(
     ev_res = await session.execute(ev_stmt)
     evidence_items = list(ev_res.scalars().all())
     evidence_items = _get_evidence_fallback(profile_id, evidence_items)
+    evidence_items = await _add_leetcode_evidence(session, profile_id, evidence_items)
 
     # Parse JD
     jd_data = engine.parse_job_description(
@@ -196,6 +251,7 @@ async def compare_jobs(
     ev_res = await session.execute(ev_stmt)
     evidence_items = list(ev_res.scalars().all())
     evidence_items = _get_evidence_fallback(profile_id, evidence_items)
+    evidence_items = await _add_leetcode_evidence(session, profile_id, evidence_items)
 
     job_ids = req.job_ids if req.job_ids else ["jd-neuralflow-ai", "jd-cloudscale-swe", "jd-fintech-backend"]
     results = engine.compare_multiple_jobs(job_ids, profile, evidence_items)

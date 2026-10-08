@@ -1,16 +1,7 @@
 import asyncio
 import sqlite3
 from app.core.database import Base, engine
-from app.models import (
-    profile,
-    evidence,
-    score_run,
-    role_profile,
-    cohort,
-    consent,
-    audit_log,
-    dynamic_profile,
-)
+from app import models
 
 async def auto_sync_schema():
     conn = sqlite3.connect("careerlens_demo.db")

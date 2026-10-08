@@ -135,4 +135,16 @@ async def get_leetcode_problems(
             "topics": topics
         })
         
+    if not problems and hasattr(profile, 'aggregate_submissions') and isinstance(profile.aggregate_submissions, dict):
+        recent = profile.aggregate_submissions.get('recent', [])
+        for i, sub in enumerate(recent):
+            problems.append({
+                "question_id": i + 1,
+                "title": sub.get('title', 'Unknown'),
+                "difficulty": 'Unknown',
+                "status": sub.get('statusDisplay', 'Unknown'),
+                "last_accepted": None, # sub has timestamp but format varies
+                "topics": []
+            })
+            
     return problems

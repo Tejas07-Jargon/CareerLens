@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BASE } from '@/lib/api';
+import { FilterX } from 'lucide-react';
 
 interface Problem {
   question_id: number;
@@ -13,24 +14,32 @@ interface Problem {
 interface LeetCodeQuestionExplorerProps {
   profileId: string;
   capabilities: {
-    topics: boolean;
-    submissions: boolean;
-    languages: boolean;
+    topics?: boolean;
+    submissions?: boolean;
+    languages?: boolean;
   };
   selectedTopic?: string | null;
   selectedLanguage?: string | null;
+  selectedDifficulty?: string;
+  selectedStatus?: string;
+  onClearFilters: () => void;
 }
 
-export function LeetCodeQuestionExplorer({ profileId, capabilities, selectedTopic, selectedLanguage }: LeetCodeQuestionExplorerProps) {
+export function LeetCodeQuestionExplorer({ 
+  profileId, 
+  capabilities, 
+  selectedTopic, 
+  selectedLanguage, 
+  selectedDifficulty = "All",
+  selectedStatus = "All",
+  onClearFilters 
+}: LeetCodeQuestionExplorerProps) {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Basic filtering
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("All");
 
   useEffect(() => {
-    if (!capabilities.topics) {
+    if (!capabilities?.topics) {
       setLoading(false);
       return;
     }
@@ -54,10 +63,10 @@ export function LeetCodeQuestionExplorer({ profileId, capabilities, selectedTopi
     fetchProblems();
   }, [profileId, capabilities]);
 
-  if (!capabilities.topics) {
+  if (!capabilities?.topics) {
     return (
-      <div style={{ padding: 24, border: "1px solid var(--border)", borderRadius: 12, marginTop: 24 }}>
-        <h4 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>Question Explorer</h4>
+      <div className="card" style={{ padding: 24, marginTop: 24 }}>
+        <h4 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", color: "var(--text)" }}>Question Explorer</h4>
         <div style={{ padding: 40, textAlign: "center", color: "var(--text-mid)", background: "var(--bg-soft)", borderRadius: 8 }}>
           Question-level data is not available from the connected data source. 
           <br/>
@@ -68,69 +77,93 @@ export function LeetCodeQuestionExplorer({ profileId, capabilities, selectedTopi
   }
 
   if (loading) {
-    return <div style={{ marginTop: 24 }}>Loading Question Explorer...</div>;
+    return <div style={{ marginTop: 24, color: "var(--text-mid)", textAlign: "center", padding: 40 }}>Loading Question Explorer...</div>;
   }
 
   if (error) {
-    return <div style={{ marginTop: 24, color: "var(--red)" }}>{error}</div>;
+    return <div style={{ marginTop: 24, color: "var(--red)", textAlign: "center", padding: 20 }}>{error}</div>;
   }
 
   const filteredProblems = problems.filter(p => {
-    if (difficultyFilter !== "All" && p.difficulty !== difficultyFilter) return false;
+    if (selectedDifficulty !== "All" && p.difficulty !== selectedDifficulty) return false;
     if (selectedTopic && !p.topics.includes(selectedTopic)) return false;
+    if (selectedStatus !== "All" && p.status !== selectedStatus) return false;
+    // We cannot filter by language purely from the problems endpoint right now, so we skip it or note it.
     return true;
   });
 
+  const hasActiveFilters = selectedDifficulty !== "All" || selectedTopic || selectedLanguage || selectedStatus !== "All";
+
   return (
-    <div style={{ padding: 24, border: "1px solid var(--border)", borderRadius: 12, marginTop: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h4 style={{ margin: 0, fontSize: "1.1rem" }}>Question Explorer</h4>
-        <div style={{ display: "flex", gap: 12 }}>
-          <select 
-            value={difficultyFilter} 
-            onChange={(e) => setDifficultyFilter(e.target.value)}
-            style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border)", background: "var(--bg-surface)", color: "var(--text)" }}
-          >
-            <option value="All">All Difficulties</option>
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
+    <div className="card" style={{ padding: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <h4 style={{ margin: 0, fontSize: "1.1rem", color: "var(--text)" }}>Question Explorer</h4>
+          <span style={{ background: "var(--bg-soft)", padding: "2px 10px", borderRadius: 12, fontSize: "0.85rem", color: "var(--text-mid)", border: "1px solid var(--border)" }}>
+            {filteredProblems.length} records
+          </span>
         </div>
+        
+        {hasActiveFilters && (
+          <button 
+            onClick={onClearFilters}
+            style={{ 
+              display: "flex", alignItems: "center", gap: 6, 
+              background: "var(--bg-surface)", border: "1px solid var(--border)", 
+              padding: "6px 12px", borderRadius: 6, fontSize: "0.85rem", 
+              cursor: "pointer", color: "var(--text-mid)", fontWeight: 600,
+              transition: "all 0.2s"
+            }}
+          >
+            <FilterX size={14} /> Clear Active Filters
+          </button>
+        )}
       </div>
+
+      {hasActiveFilters && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          {selectedDifficulty !== "All" && <span style={{ background: "rgba(255,145,0,0.1)", color: "var(--orange)", padding: "4px 10px", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600 }}>Difficulty: {selectedDifficulty}</span>}
+          {selectedTopic && <span style={{ background: "rgba(100,50,255,0.1)", color: "var(--purple)", padding: "4px 10px", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600 }}>Topic: {selectedTopic}</span>}
+          {selectedStatus !== "All" && <span style={{ background: "rgba(0,200,100,0.1)", color: "var(--green)", padding: "4px 10px", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600 }}>Status: {selectedStatus}</span>}
+          {selectedLanguage && <span style={{ background: "rgba(255,100,50,0.1)", color: "var(--text-mid)", padding: "4px 10px", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600 }}>Language: {selectedLanguage} (UI only)</span>}
+        </div>
+      )}
       
-      <div style={{ overflowX: "auto" }}>
+      <div style={{ overflowX: "auto", border: "1px solid var(--border)", borderRadius: 8 }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid var(--border)", textAlign: "left" }}>
-              <th style={{ padding: "12px 8px", color: "var(--text-mid)" }}>#</th>
-              <th style={{ padding: "12px 8px", color: "var(--text-mid)" }}>Title</th>
-              <th style={{ padding: "12px 8px", color: "var(--text-mid)" }}>Difficulty</th>
-              <th style={{ padding: "12px 8px", color: "var(--text-mid)" }}>Topics</th>
-              <th style={{ padding: "12px 8px", color: "var(--text-mid)" }}>Status</th>
+            <tr style={{ background: "var(--bg-soft)", borderBottom: "2px solid var(--border)", textAlign: "left" }}>
+              <th style={{ padding: "12px 16px", color: "var(--text-mid)", fontWeight: 600, width: "60px" }}>#</th>
+              <th style={{ padding: "12px 16px", color: "var(--text-mid)", fontWeight: 600 }}>Title</th>
+              <th style={{ padding: "12px 16px", color: "var(--text-mid)", fontWeight: 600, width: "100px" }}>Difficulty</th>
+              <th style={{ padding: "12px 16px", color: "var(--text-mid)", fontWeight: 600 }}>Topics</th>
+              <th style={{ padding: "12px 16px", color: "var(--text-mid)", fontWeight: 600, width: "120px" }}>Status</th>
             </tr>
           </thead>
           <tbody>
-            {filteredProblems.map(p => (
-              <tr key={p.question_id} style={{ borderBottom: "1px solid var(--border)" }}>
-                <td style={{ padding: "12px 8px", color: "var(--text-mid)" }}>{p.question_id}</td>
-                <td style={{ padding: "12px 8px", fontWeight: 500 }}>{p.title}</td>
-                <td style={{ padding: "12px 8px" }}>
+            {filteredProblems.map((p, i) => (
+              <tr key={p.question_id || i} style={{ borderBottom: "1px solid var(--border)", background: "var(--white)", transition: "background 0.2s" }}>
+                <td style={{ padding: "12px 16px", color: "var(--text-mid)" }}>{p.question_id}</td>
+                <td style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text)" }}>{p.title}</td>
+                <td style={{ padding: "12px 16px" }}>
                   <span style={{ 
-                    color: p.difficulty === 'Easy' ? 'var(--green)' : p.difficulty === 'Medium' ? 'var(--orange)' : 'var(--red)'
+                    color: p.difficulty === 'Easy' ? 'var(--green)' : p.difficulty === 'Medium' ? 'var(--orange)' : p.difficulty === 'Hard' ? 'var(--red)' : 'var(--text-mid)',
+                    fontWeight: 600,
+                    fontSize: "0.85rem"
                   }}>
                     {p.difficulty}
                   </span>
                 </td>
-                <td style={{ padding: "12px 8px", color: "var(--text-mid)" }}>
+                <td style={{ padding: "12px 16px", color: "var(--text-mid)", fontSize: "0.85rem" }}>
                   {p.topics.join(', ') || '-'}
                 </td>
-                <td style={{ padding: "12px 8px" }}>
+                <td style={{ padding: "12px 16px" }}>
                   <span style={{ 
-                    padding: "2px 8px", 
+                    padding: "4px 10px", 
                     borderRadius: 12, 
                     fontSize: "0.8rem",
-                    background: p.status === 'Accepted' ? 'rgba(0,255,0,0.1)' : 'var(--bg-soft)',
+                    fontWeight: 600,
+                    background: p.status === 'Accepted' ? 'rgba(0,200,83,0.1)' : 'var(--bg-soft)',
                     color: p.status === 'Accepted' ? 'var(--green)' : 'var(--text-mid)'
                   }}>
                     {p.status}
@@ -140,8 +173,8 @@ export function LeetCodeQuestionExplorer({ profileId, capabilities, selectedTopi
             ))}
             {filteredProblems.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: 32, textAlign: "center", color: "var(--text-mid)" }}>
-                  No questions match the current filters.
+                <td colSpan={5} style={{ padding: 40, textAlign: "center", color: "var(--text-mid)" }}>
+                  No canonical questions match the current filters.
                 </td>
               </tr>
             )}

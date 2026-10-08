@@ -15,6 +15,7 @@ import {
   Code2
 } from "lucide-react";
 import LeetCodeAnalyzer from "@/components/leetcode/LeetCodeAnalyzer";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 type Tab = "dashboard" | "analyse" | "ownership" | "roadmap" | "leetcode" | "quiz" | "batch" | "evidence";
 
@@ -216,7 +217,9 @@ export default function LeetCodePage() {
       <div className="container" style={{ padding: "28px 24px 60px", flex: 1 }}>
         <div className="fade-in-up">
            {profileId ? (
-             <LeetCodeAnalyzer profileId={profileId} />
+             <ErrorBoundary componentName="LeetCode Analyzer">
+               <LeetCodeAnalyzer profileId={profileId} />
+             </ErrorBoundary>
            ) : (
              <div style={{ textAlign: "center", padding: 40, color: "var(--text-mid)" }}>
                Loading active profile...

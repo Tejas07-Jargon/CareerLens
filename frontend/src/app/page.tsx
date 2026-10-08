@@ -19,6 +19,7 @@ import ResumeBuilderTab from "@/components/resume/ResumeBuilderTab";
 import JobFitTab from "@/components/job-fit/JobFitTab";
 import OwnershipPanel from "@/components/ownership/OwnershipPanel";
 import LeetCodeAnalyzer from "@/components/leetcode/LeetCodeAnalyzer";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import type { ProfileReport } from "@/types";
 import {
   Search,
@@ -580,12 +581,14 @@ export default function HomePage() {
           {/* TAB 3: JOB FIT INTELLIGENCE */}
           {activeTab === "jobfit" && (
             <div key="job-fit-view" className="fade-in-up">
-              <JobFitTab
-                profileId={profileId}
-                report={report}
-                persona={persona}
-                onNavigateTab={handleTabSwitch}
-              />
+              <ErrorBoundary componentName="Job Fit Intelligence">
+                <JobFitTab
+                  profileId={profileId}
+                  report={report}
+                  persona={persona}
+                  onNavigateTab={handleTabSwitch}
+                />
+              </ErrorBoundary>
             </div>
           )}
 
@@ -689,7 +692,9 @@ export default function HomePage() {
           {/* TAB 6: LEETCODE */}
           {activeTab === "leetcode" && (
             <div key="leetcode-view" className="fade-in-up">
-              <LeetCodeAnalyzer profileId={profileId || ""} />
+              <ErrorBoundary componentName="LeetCode Analyzer">
+                <LeetCodeAnalyzer profileId={profileId || ""} />
+              </ErrorBoundary>
             </div>
           )}
 
