@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 import CareerLensLoading from "@/components/loading/CareerLensLoading";
 import { SocialFlipButton } from "@/components/ui/social-flip-button";
@@ -467,6 +468,7 @@ export default function HomePage() {
                       }
                     }}
                     style={{
+                      position: "relative",
                       display: "flex",
                       alignItems: "center",
                       gap: 7,
@@ -474,19 +476,36 @@ export default function HomePage() {
                       fontFamily: "var(--font)",
                       fontWeight: 800,
                       fontSize: "0.88rem",
-                      border: "2px solid",
-                      borderColor: isActive ? "var(--text)" : "transparent",
-                      background: isActive ? "var(--bg-soft)" : "transparent",
                       cursor: "pointer",
                       color: isActive ? "var(--text)" : "var(--text-mid)",
                       whiteSpace: "nowrap",
-                      borderRadius: "10px 12px 8px 11px",
-                      boxShadow: isActive ? "2px 2px 0 var(--text)" : "none",
-                      transition: "background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out)",
+                      background: "transparent",
+                      border: "none",
+                      outline: "none",
+                      transition: "color var(--dur-fast) var(--ease-out)",
                     }}
                   >
-                    <span style={{ fontSize: "1.05rem", display: "flex" }}>{tab.icon}</span>
-                    {tab.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="active-nav-tab"
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "var(--bg-soft)",
+                          border: "2px solid var(--text)",
+                          borderRadius: "10px 12px 8px 11px",
+                          boxShadow: "2px 2px 0 var(--text)",
+                          zIndex: 0,
+                        }}
+                        transition={{
+                          type: "spring",
+                          bounce: 0.18,
+                          duration: 0.6,
+                        }}
+                      />
+                    )}
+                    <span style={{ fontSize: "1.05rem", display: "flex", position: "relative", zIndex: 1 }}>{tab.icon}</span>
+                    <span style={{ position: "relative", zIndex: 1 }}>{tab.label}</span>
                   </button>
                 );
               })}

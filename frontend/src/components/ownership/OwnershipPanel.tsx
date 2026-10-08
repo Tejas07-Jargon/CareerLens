@@ -276,10 +276,10 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
   const hasIncomplete = data.repositories.some((r) => r.incomplete || r.status === "incomplete");
 
   return (
-    <div className="fade-in-up" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* ── Top Summary Header ────────────────────────────────────────── */}
       <div
-        className="card"
+        className="card fade-in-up stagger-1"
         style={{
           padding: "24px 28px",
           borderColor: "var(--blue)",
@@ -369,7 +369,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
       {/* ── Discovery Error Banner ────────────────────────────────────── */}
       {data.discovery_error && (
         <div
-          className="card fade-in"
+          className="card fade-in-up stagger-2"
           style={{
             padding: "16px 20px",
             background: "#fff8e1",
@@ -426,7 +426,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
       {/* ── Active Analysis Progress Banner ────────────────────────────── */}
       {isAnyRepoProcessing && (
         <div
-          className="card fade-in"
+          className="card fade-in-up stagger-2"
           style={{
             padding: "16px 20px",
             background: "var(--blue-light)",
@@ -462,7 +462,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
 
       {/* ── Empty Repositories Action ──────────────────────────────────── */}
       {data.repositories.length === 0 && !data.discovery_error && (
-        <div className="card" style={{ padding: "32px 24px", textAlign: "center", background: "var(--bg-soft)" }}>
+        <div className="card fade-in-up stagger-2" style={{ padding: "32px 24px", textAlign: "center", background: "var(--bg-soft)" }}>
           <FolderGit2 size={32} color="var(--blue)" style={{ margin: "0 auto 12px" }} />
           <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text)", marginBottom: 6 }}>
             No Repository Attribution Records Yet
@@ -486,7 +486,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
 
       {/* ── Owned Repositories Section ─────────────────────────────────── */}
       {ownedRepos.length > 0 && (
-        <div>
+        <div className="fade-in-up stagger-3">
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <FolderGit2 size={20} color="var(--blue)" />
             <h3 style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--text)" }}>
@@ -511,7 +511,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
 
       {/* ── Contributed Repositories Section ───────────────────────────── */}
       {contributedRepos.length > 0 && (
-        <div style={{ marginTop: 8 }}>
+        <div className="fade-in-up stagger-4" style={{ marginTop: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <GitPullRequest size={20} color="var(--purple)" />
             <h3 style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--text)" }}>
@@ -529,7 +529,7 @@ export default function OwnershipPanel({ profileId, onNavigateToAnalyse, onAddGi
 
       {/* Skill breakdown if available */}
       {data.skills && data.skills.length > 0 && (
-        <div>
+        <div className="fade-in-up stagger-5">
           <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
             Skill-Level Attribution
           </div>

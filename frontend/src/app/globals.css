@@ -77,7 +77,7 @@
   
   --dur-fast:   120ms;
   --dur-norm:   200ms;
-  --dur-enter:  260ms;
+  --dur-enter:  550ms;
 }
 
 *, *::before, *::after {
@@ -489,6 +489,26 @@ select.input {
   cursor: pointer;
 }
 
+/* ── Entry Animations ────────────────────────────────────────────────────────── */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: fadeInUp var(--dur-enter) var(--ease-smooth) forwards;
+}
+
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Accessibility: Reduced Motion ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -503,4 +523,3 @@ select.input {
     transform: none !important;
   }
 }
-

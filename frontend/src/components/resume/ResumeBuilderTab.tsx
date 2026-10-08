@@ -306,7 +306,7 @@ export default function ResumeBuilderTab({
           TOP CONTROL BAR & HEADER
           ══════════════════════════════════════════════════════════════════════════ */}
       <div
-        className="card"
+        className="card fade-in-up stagger-1"
         style={{
           background: "var(--white)",
           borderColor: "var(--text)",
@@ -394,6 +394,7 @@ export default function ResumeBuilderTab({
           MULTI-STEP WORKFLOW INDICATOR
           ══════════════════════════════════════════════════════════════════════════ */}
       <div
+        className="fade-in-up stagger-2"
         style={{
           display: "flex",
           gap: 6,
@@ -447,6 +448,7 @@ export default function ResumeBuilderTab({
           MAIN 2-COLUMN LAYOUT: LEFT EDITOR | RIGHT PREVIEW
           ══════════════════════════════════════════════════════════════════════════ */}
       <div
+        className="fade-in-up stagger-3"
         style={{
           display: "grid",
           gridTemplateColumns: activeStep === "preview" ? "1fr" : "minmax(340px, 1.15fr) minmax(360px, 1fr)",

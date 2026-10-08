@@ -119,7 +119,7 @@ export default function JobFitTab({
           TOP PRESET JOB PICKER & COMPARISON BAR
           ══════════════════════════════════════════════════════════════════════════ */}
       <div
-        className="card"
+        className="card fade-in-up stagger-1"
         style={{
           background: "var(--white)",
           borderColor: "var(--text)",
@@ -185,18 +185,21 @@ export default function JobFitTab({
       {/* ══════════════════════════════════════════════════════════════════════════
           HERO JOB FIT SCORE & GROUNDED INSIGHTS
           ══════════════════════════════════════════════════════════════════════════ */}
-      <JobFitHero
-        jobFit={jobFitData}
-        onOpenJDSelector={() => setIsCustomJDOpen(true)}
-        onOptimizeResume={() => {
-          onNavigateTab?.("resume");
-        }}
-      />
+      <div className="fade-in-up stagger-2">
+        <JobFitHero
+          jobFit={jobFitData}
+          onOpenJDSelector={() => setIsCustomJDOpen(true)}
+          onOptimizeResume={() => {
+            onNavigateTab?.("resume");
+          }}
+        />
+      </div>
 
       {/* ══════════════════════════════════════════════════════════════════════════
           2-COLUMN EXECUTION SECTION: WHAT'S HOLDING YOU BACK & WHAT-IF
           ══════════════════════════════════════════════════════════════════════════ */}
       <div
+        className="fade-in-up stagger-3"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
@@ -218,10 +221,12 @@ export default function JobFitTab({
       {/* ══════════════════════════════════════════════════════════════════════════
           SKILL-BY-SKILL JOB MATCH TABLE (CLAIM VS PROOF)
           ══════════════════════════════════════════════════════════════════════════ */}
-      <JobFitSkillMatrix
-        skillMatches={jobFitData.skill_matches}
-        onSelectSkillForEvidence={(s) => setInspectedSkill(s)}
-      />
+      <div className="fade-in-up stagger-4">
+        <JobFitSkillMatrix
+          skillMatches={jobFitData.skill_matches}
+          onSelectSkillForEvidence={(s) => setInspectedSkill(s)}
+        />
+      </div>
 
       {/* ══════════════════════════════════════════════════════════════════════════
           MODALS & DRAWERS

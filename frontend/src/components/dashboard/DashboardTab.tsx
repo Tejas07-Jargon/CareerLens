@@ -486,7 +486,6 @@ export default function DashboardTab({
 
   return (
     <div
-      className="fade-in-up"
       style={{
         maxWidth: 1100,
         margin: "0 auto",
@@ -503,6 +502,7 @@ export default function DashboardTab({
 
       {/* ── TOP HEADER / CONTEXT BAR ─────────────────────────────────────────── */}
       <div
+        className="fade-in-up stagger-1"
         style={{
           background: "var(--white)",
           border: "2px solid var(--border)",
@@ -713,7 +713,7 @@ export default function DashboardTab({
       >
         {/* Left Hero Card: Circular Score & 5-Dimension Bars */}
         <div
-          className="card"
+          className="card fade-in-up stagger-2"
           style={{
             borderColor: "var(--blue)",
             boxShadow: "4px 4px 0 var(--blue)",
@@ -875,7 +875,7 @@ export default function DashboardTab({
 
         {/* Right Hero Card: "Why This Score?" Explainability Engine */}
         <div
-          className="card"
+          className="card fade-in-up stagger-3"
           style={{
             borderColor: "var(--purple)",
             boxShadow: "4px 4px 0 var(--purple)",
@@ -998,7 +998,7 @@ export default function DashboardTab({
       >
         {/* Card 1: Role / Job Fit */}
         <div
-          className="card"
+          className="card fade-in-up stagger-4"
           style={{
             borderColor: "var(--blue)",
             boxShadow: "3px 3px 0 var(--blue)",
@@ -1081,7 +1081,7 @@ export default function DashboardTab({
 
         {/* Card 2: Evidence Health & Multi-Source Verification */}
         <div
-          className="card"
+          className="card fade-in-up stagger-5"
           style={{
             borderColor: "var(--green)",
             boxShadow: "3px 3px 0 var(--green)",
