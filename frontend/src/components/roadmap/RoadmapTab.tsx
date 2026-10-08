@@ -135,6 +135,13 @@ export default function RoadmapTab({ profileId, report, onNavigateToAnalyse }: P
     return data.milestones;
   }, [data, statusFilter, completedMap]);
 
+  // Calculate dynamic progress combining backend status and local completedMap
+  const totalCount = data?.milestones?.length || 0;
+  const completedCount = totalCount > 0 ? data!.milestones.filter(
+    (m) => m.status === "STRONG" || m.status === "VERIFIED" || completedMap[m.id]
+  ).length : 0;
+  const dynamicProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
   // Status badge config
   const getStatusBadge = (status: PersonalizedMilestone["status"], isManualDone: boolean) => {
     if (isManualDone) {
@@ -342,7 +349,7 @@ export default function RoadmapTab({ profileId, report, onNavigateToAnalyse }: P
                 letterSpacing: "-0.02em",
               }}
             >
-              {data?.overall_progress ?? 0}%
+              {dynamicProgress}%
             </span>
           </div>
 
@@ -358,7 +365,7 @@ export default function RoadmapTab({ profileId, report, onNavigateToAnalyse }: P
             <div
               className="progress-bar-fill"
               style={{
-                width: `${data?.overall_progress ?? 0}%`,
+                width: `${dynamicProgress}%`,
                 background: "linear-gradient(90deg, var(--green), #10b981)",
                 transition: "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}

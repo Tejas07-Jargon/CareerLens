@@ -127,6 +127,8 @@ export default function DashboardTab({
     job_offer?: { company: string | null; offered_at: string | null };
     quiz_stats?: { total_quizzes: number; average_score: number; current_streak: number };
     readiness?: { score: number; change: number; trend: string };
+    strongest_skills?: { name: string; score: number; trend: string }[];
+    weakest_skills?: { name: string; score: number; trend: string }[];
   } | null>(null);
   const [loadingRoadmap, setLoadingRoadmap] = useState<boolean>(false);
   const [loadingEvidence, setLoadingEvidence] = useState<boolean>(false);
@@ -143,25 +145,6 @@ export default function DashboardTab({
       setSelectedRole(report.role_fits[0].role);
     }
   }, [report]);
-
-  // Fetch Dashboard Meta Data
-  useEffect(() => {
-    let isMounted = true;
-    if (!profileId) return;
-
-    async function loadMeta() {
-      try {
-        const meta = await getDashboardData(profileId!);
-        if (isMounted && meta) {
-          setDashboardMeta(meta);
-        }
-      } catch (err) {
-        // Fallback gracefully without throwing
-      }
-    }
-    loadMeta();
-    return () => { isMounted = false; };
-  }, [profileId]);
 
   // Fetch Personalized Roadmap for next milestone
   useEffect(() => {
@@ -203,11 +186,15 @@ export default function DashboardTab({
   // Fetch interconnected dashboard data (Quiz stats, etc)
   useEffect(() => {
     let isMounted = true;
+    if (!profileId || profileId === "demo-candidate-82") return;
+    
     async function loadDashboard() {
-      if (!profileId || profileId === "demo-candidate-82") return;
       try {
-        const data = await getDashboardData(profileId);
-        if (isMounted) setDashboardData(data);
+        const data = await getDashboardData(profileId!);
+        if (isMounted && data) {
+          setDashboardData(data);
+          setDashboardMeta(data);
+        }
       } catch (err) {
         console.warn("Could not fetch dashboard data:", err);
       }
@@ -1521,8 +1508,8 @@ export default function DashboardTab({
                 </div>
 
                 <div style={{ fontSize: "0.76rem", color: "var(--text-mid)", fontWeight: 600 }}>
-                  {dashboardMeta?.strongest_skills?.length > 0 ? (
-                    dashboardMeta.strongest_skills.slice(0, 2).map((skill: any, idx: number) => (
+                  {(dashboardMeta?.strongest_skills?.length ?? 0) > 0 ? (
+                    dashboardMeta!.strongest_skills!.slice(0, 2).map((skill: any, idx: number) => (
                       <div key={idx} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
                         <span>{skill.name}</span>
                         <strong style={{ color: "var(--green)" }}>{skill.score}% (Strong)</strong>
@@ -1534,7 +1521,7 @@ export default function DashboardTab({
                       <strong style={{ color: "var(--green)" }}>{Math.round(quizAvg)}% (Strong)</strong>
                     </div>
                   )}
-                  {dashboardMeta?.weakest_skills?.length > 0 && dashboardMeta.weakest_skills.slice(0, 1).map((skill: any, idx: number) => (
+                  {(dashboardMeta?.weakest_skills?.length ?? 0) > 0 && dashboardMeta!.weakest_skills!.slice(0, 1).map((skill: any, idx: number) => (
                     <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
                       <span>{skill.name}</span>
                       <strong style={{ color: "var(--orange)" }}>{skill.score}% (Needs Work)</strong>

@@ -21,6 +21,7 @@ log = structlog.get_logger(__name__)
 SAFE_GIT_ENV = {
     **os.environ,
     "GIT_TERMINAL_PROMPT": "0",
+    "GCM_INTERACTIVE": "false",
     "GIT_LFS_SKIP_SMUDGE": "1",
     "PAGER": "cat",
 }
@@ -46,6 +47,8 @@ class GitBlameRunner:
             env=SAFE_GIT_ENV,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout_sec,
             check=check,
         )
@@ -83,6 +86,8 @@ class GitBlameRunner:
                 env=SAFE_GIT_ENV,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=timeout_sec,
                 check=True
             )
