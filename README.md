@@ -594,4 +594,10 @@ Kareer Kranti is under active development as part of the DataQuest 3.0 hackathon
 
 ## License
 
-This project is licensed under the MIT License.
+## License
+
+No open-source license has been applied to this project at this time.
+
+All rights to the source code and project materials are reserved by the project authors. Public availability of this repository does not grant permission to copy, modify, distribute, or use the code as a separate project without authorization.
+
+If a license is added in the future, this section will be updated accordingly.
